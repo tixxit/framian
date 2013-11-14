@@ -9,6 +9,8 @@ import spire.algebra.Order
 case class Series[K,V](index: Index[K], column: Column[V]) {
   def keys: Vector[K] = index.keys.toVector
   def values: Vector[Cell[V]] = (0 until index.size).map(column(_)).toVector
+
+  def apply(key: K): Cell[V] = index.get(key) map (column(_)) getOrElse NA
 }
 
 object Series {
