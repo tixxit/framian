@@ -15,7 +15,10 @@ case class Frame[Row,Col](rowIndex: Index[Row], colIndex: Index[Col], cols: Arra
   def column[A: Typeable: TypeTag](k: Col): Option[Series[Row,A]] =
     rawColumn(k) map (Series(rowIndex, _))
 
-  def row[A](k: Row)(implicit t: Typeable[Column[A]]): Option[Series[Col,A]] = ???
+  def row[A: Typeable: TypeTag](k: Row)(implicit t: Typeable[Column[A]]): Option[Series[Col,A]] =
+    rowIndex get k map { row =>
+      Series(colIndex, CellColumn(cols map { col => Column.cast[A](col).apply(row) }))
+    }
 }
 
 object Frame {

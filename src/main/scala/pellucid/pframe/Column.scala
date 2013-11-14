@@ -53,6 +53,18 @@ case class DenseColumn[A](naValues: BitSet, nmValues: BitSet, values: Array[A])(
   def value(row: Int): A = values(row)
 }
 
+case class CellColumn[A](values: IndexedSeq[Cell[A]])(implicit val typeTag: TypeTag[A]) extends Column[A] {
+  def exists(row: Int): Boolean = !values(row).isMissing
+  def missing(row: Int): Missing = values(row) match {
+    case Value(_) => throw new IllegalStateException()
+    case (ms: Missing) => ms
+  }
+  def value(row: Int): A = values(row) match {
+    case Value(x) => x
+    case (_: Missing) => throw new IllegalStateException()
+  }
+}
+
 case class MapColumn[A](values: Map[Int,A])(implicit val typeTag: TypeTag[A]) extends Column[A] {
   def exists(row: Int): Boolean = values contains row
   def missing(row: Int): Missing = NA
