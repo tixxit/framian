@@ -20,15 +20,29 @@ case class Frame[Row,Col](rowIndex: Index[Row], colIndex: Index[Col], cols: Arra
       Series(colIndex, CellColumn(cols map { col => Column.cast[A](col).apply(row) }))
     }
 
-  def getRowHList[L <: HList: HListRowExtractor](row: Row): Option[L] = HListRowExtractor.extract(this, row)
+  def getRowRecord[L: RowExtractor](row: Row): Option[L] = RowExtractor.extract(this, row)
 }
 
-trait HListRowExtractor[L <: HList] {
-  def extract[Row,Col](frame: Frame[Row,Col], row: Row, cols: List[Col]): Option[L]
+object Frame {
+  def apply[Row,Col: Order: ClassTag](rowIndex: Index[Row], colPairs: (Col,Column[_])*): Frame[Row,Col] = {
+    val (colKeys, cols) = colPairs.unzip
+    Frame(rowIndex, Index(colKeys: _*), cols.toArray)
+  }
 }
 
-trait HListRowExtractorLow {
-  implicit def hnilRowExtractor = new HListRowExtractor[HNil] {
+trait RowExtractor[A] {
+  def extract[Row,Col](frame: Frame[Row,Col], row: Row, cols: List[Col]): Option[A]
+}
+
+trait RowExtractorLow0 {
+  implicit def generic[A,B](implicit generic: Generic.Aux[A,B], extractor: RowExtractor[B]) = new RowExtractor[A] {
+    def extract[Row,Col](frame: Frame[Row,Col], row: Row, cols: List[Col]): Option[A] =
+      extractor.extract(frame, row, cols) map (generic.from(_))
+  }
+}
+
+trait RowExtractorLow1 extends RowExtractorLow0 {
+  implicit def hnilRowExtractor = new RowExtractor[HNil] {
     def extract[Row,Col](frame: Frame[Row,Col], row: Row, cols: List[Col]): Option[HNil] = cols match {
       case Nil => Some(HNil)
       case _ => None
@@ -36,8 +50,8 @@ trait HListRowExtractorLow {
   }
 }
 
-object HListRowExtractor extends HListRowExtractorLow {
-  implicit def hlistRowExtractor[H: Typeable: TypeTag, T <: HList](implicit tailExtractor: HListRowExtractor[T]) = new HListRowExtractor[H :: T] {
+object RowExtractor extends RowExtractorLow1 {
+  implicit def hlistRowExtractor[H: Typeable: TypeTag, T <: HList](implicit tailExtractor: RowExtractor[T]) = new RowExtractor[H :: T] {
     def extract[Row,Col](frame: Frame[Row,Col], row: Row, colIndices: List[Col]): Option[H :: T] = for {
       idx <- colIndices.headOption
       tail <- tailExtractor.extract(frame, row, colIndices.tail)
@@ -48,13 +62,7 @@ object HListRowExtractor extends HListRowExtractorLow {
     }
   }
 
-  def extract[Row, Col, L <: HList](frame: Frame[Row,Col], row: Row)(implicit extractor: HListRowExtractor[L]): Option[L] =
+  def extract[Row, Col, A](frame: Frame[Row,Col], row: Row)(implicit extractor: RowExtractor[A]): Option[A] =
     extractor.extract(frame, row, frame.colIndex.keys.toList)
 }
 
-object Frame {
-  def apply[Row,Col: Order: ClassTag](rowIndex: Index[Row], colPairs: (Col,Column[_])*): Frame[Row,Col] = {
-    val (colKeys, cols) = colPairs.unzip
-    Frame(rowIndex, Index(colKeys: _*), cols.toArray)
-  }
-}
