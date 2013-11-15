@@ -25,6 +25,8 @@ object Column {
 
   def apply[A: TypeTag](values: Map[Int, A]): Column[A] = MapColumn(values)
 
+  def filtered[A](filter: BitSet, underlying: Column[A]): Column[A] = new FilteredColumn(filter, underlying)
+
   def empty[A: TypeTag] = new EmptyColumn[A]
 
   def cast[A: Typeable: TypeTag](col: Column[_]): Column[A] = {
@@ -40,6 +42,13 @@ final class EmptyColumn[A](implicit val typeTag: TypeTag[A]) extends Column[A] {
   def exists(row: Int): Boolean = false
   def missing(row: Int): Missing = NA
   def value(row: Int): A = throw new UnsupportedOperationException()
+}
+
+final class FilteredColumn[A](filter: BitSet, underlying: Column[A]) extends Column[A] {
+  def typeTag = underlying.typeTag
+  def exists(row: Int): Boolean = underlying.exists(row) && filter(row)
+  def missing(row: Int): Missing = if (!filter(row)) NA else underlying.missing(row) // TODO: Should swap order.
+  def value(row: Int): A = underlying.value(row)
 }
 
 final class CastColumn[A: Typeable](col: Column[_])(implicit val typeTag: TypeTag[A]) extends Column[A] {
