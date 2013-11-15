@@ -51,6 +51,14 @@ case class Frame[Row,Col](rowIndex: Index[Row], colIndex: Index[Col], cols: Arra
   def mapRows[F, L <: HList, B](f: F)(implicit fntop: FnToProduct.Aux[F, L => B], ex: RowExtractor[L], ttB: TypeTag[B]): Series[Row,B] =
     mapRows(colIndex.keys: _*)(f)
 
+  def mapRowsWithIndex[F, L <: HList, B](cols: Col*)(f: F)(implicit fntop: FnToProduct.Aux[F, (Row :: L) => B], ex: RowExtractor[L], ttB: TypeTag[B]): Series[Row,B] = {
+    val fn = fntop(f)
+    val cells = rowIndex.keys map { row =>
+      RowExtractor.extract(this, row, cols.toList) map (row :: _) map fn map (Value(_)) getOrElse NA
+    }
+    Series(rowIndex, CellColumn(cells.toVector))
+  }
+
   def filter[F, L <: HList](colKeys: Col*)(f: F)(implicit fntop: FnToProduct.Aux[F, L => Boolean], ex: RowExtractor[L]): Frame[Row,Col] = {
     val fn = fntop(f)
     val bits = new scala.collection.mutable.BitSet
