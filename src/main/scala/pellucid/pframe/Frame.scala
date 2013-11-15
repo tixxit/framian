@@ -14,8 +14,18 @@ case class Frame[Row,Col](rowIndex: Index[Row], colIndex: Index[Col], cols: Arra
     i <- colIndex.get(k)
   } yield Column.cast[A](cols(i))
 
-  def column[A: Typeable: TypeTag](k: Col): Option[Series[Row,A]] =
-    rawColumn(k) map (Series(rowIndex, _))
+  def column[A: Typeable: TypeTag](k: Col): Series[Row,A] =
+    Series(rowIndex, rawColumn(k) getOrElse Column.empty[A])
+
+  def columns[A: Typeable: TypeTag](col: Col): Series[Row,A] = column(col)
+
+  def columns[A: RowExtractor: TypeTag](col0: Col, col1: Col, rest: Col*): Series[Row,A] = {
+    val cols = col0 :: col1 :: rest.toList
+    val cells = rowIndex.keys map { row =>
+      RowExtractor.extract(this, row, cols) map (Value(_)) getOrElse NA
+    }
+    Series(rowIndex, CellColumn(cells.toVector))
+  }
 
   def row[A: Typeable: TypeTag](k: Row)(implicit t: Typeable[Column[A]]): Option[Series[Col,A]] =
     rowIndex get k map { row =>
@@ -25,14 +35,10 @@ case class Frame[Row,Col](rowIndex: Index[Row], colIndex: Index[Col], cols: Arra
   def getRecord[A: RowExtractor](row: Row): Option[A] = RowExtractor.extract(this, row)
 
   def sum[A: Typeable: TypeTag](col: Col)(implicit A: AdditiveMonoid[A]): A =
-    column[A](col) map (_.sum) getOrElse A.zero
+    columns[A](col).sum
 
-  def sum[A: RowExtractor](col0: Col, col1: Col, rest: Col*)(implicit A: AdditiveMonoid[A]): A = {
-    val cols = col0 :: col1 :: rest.toList
-    rowIndex.keys.foldLeft(A.zero) { (sum, row) =>
-      sum + RowExtractor.extract(this, row, cols).getOrElse(A.zero)
-    }
-  }
+  def sum[A: RowExtractor: TypeTag](col0: Col, col1: Col, rest: Col*)(implicit A: AdditiveMonoid[A]): A =
+    columns[A](col0, col1, rest: _*).sum
 
   def mapRows[F, L <: HList, B](cols: Col*)(f: F)(implicit fntop: FnToProduct.Aux[F, L => B], ex: RowExtractor[L], ttB: TypeTag[B]): Series[Row,B] = {
     val fn = fntop(f)
@@ -78,8 +84,7 @@ object RowExtractor extends RowExtractorLow1 {
     def extract[Row,Col](frame: Frame[Row,Col], row: Row, colIndices: List[Col]): Option[H :: T] = for {
       idx <- colIndices.headOption
       tail <- tailExtractor.extract(frame, row, colIndices.tail)
-      col <- frame.column[H](idx)
-      value <- col(row).value
+      value <- frame.column[H](idx).apply(row).value
     } yield {
       value :: tail
     }

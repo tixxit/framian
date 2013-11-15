@@ -25,6 +25,8 @@ object Column {
 
   def apply[A: TypeTag](values: Map[Int, A]): Column[A] = MapColumn(values)
 
+  def empty[A: TypeTag] = new EmptyColumn[A]
+
   def cast[A: Typeable: TypeTag](col: Column[_]): Column[A] = {
     if (col.typeTag.tpe <:< typeTag[A].tpe) {
       col.asInstanceOf[Column[A]]
@@ -32,6 +34,12 @@ object Column {
       new CastColumn[A](col)
     }
   }
+}
+
+final class EmptyColumn[A](implicit val typeTag: TypeTag[A]) extends Column[A] {
+  def exists(row: Int): Boolean = false
+  def missing(row: Int): Missing = NA
+  def value(row: Int): A = throw new UnsupportedOperationException()
 }
 
 final class CastColumn[A: Typeable](col: Column[_])(implicit val typeTag: TypeTag[A]) extends Column[A] {
