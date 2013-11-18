@@ -2,10 +2,11 @@ package pellucid
 package pframe
 
 import scala.reflect.ClassTag
-import scala.reflect.runtime.universe.{ TypeTag, typeTag }
 
 import spire.algebra._
+// import spire.std.option._
 import spire.syntax.additiveMonoid._
+import spire.syntax.monoid._
 import spire.syntax.cfor._
 
 case class Series[K,V](index: Index[K], column: Column[V]) {
@@ -14,20 +15,29 @@ case class Series[K,V](index: Index[K], column: Column[V]) {
 
   def apply(key: K): Cell[V] = index.get(key) map (column(_)) getOrElse NA
 
-  def sum(implicit V: AdditiveMonoid[V]): V = {
+  def mapValues[W](f: V => W): Series[K, W] =
+    Series(index, column map f)
+
+  def reduce(implicit V: Monoid[V]): V = {
     val indices = index.indices
-    var sum: V = V.zero
+    var sum: V = V.id
     cfor(0)(_ < indices.length, _ + 1) { i =>
       val row = indices(i)
       if (column.exists(row))
-        sum += column.value(row)
+        sum = sum |+| column.value(row)
     }
     sum
   }
+
+  // def reduceOption(implicit V: Semigroup[V]): Option[V] =
+  //   this.mapValues[Option[V]](Some(_)).reduce
+
+  def sum(implicit V: AdditiveMonoid[V]): V =
+    reduce(V.additive)
 }
 
 object Series {
-  def apply[K: Order: ClassTag, V: TypeTag: ClassTag](kvs: (K, V)*): Series[K,V] = {
+  def apply[K: Order: ClassTag, V: ClassTag](kvs: (K, V)*): Series[K,V] = {
     val (keys, values) = kvs.unzip
     Series(Index(keys.toArray), Column(values.toArray))
   }

@@ -9,10 +9,10 @@ import spire.syntax.additiveMonoid._
 import shapeless._
 import shapeless.ops.function._
 
-case class Frame[Row,Col](rowIndex: Index[Row], colIndex: Index[Col], cols: Array[Column[_]]) {
-  def rawColumn[A: Typeable: TypeTag](k: Col): Option[Column[A]] = for {
+case class Frame[Row,Col](rowIndex: Index[Row], colIndex: Index[Col], cols: Array[UntypedColumn]) {
+  private def rawColumn[A: Typeable: TypeTag](k: Col): Option[Column[A]] = for {
     i <- colIndex.get(k)
-  } yield Column.cast[A](cols(i))
+  } yield cols(i).cast[A]
 
   def column[A: Typeable: TypeTag](k: Col): Series[Row,A] =
     Series(rowIndex, rawColumn(k) getOrElse Column.empty[A])
@@ -29,16 +29,10 @@ case class Frame[Row,Col](rowIndex: Index[Row], colIndex: Index[Col], cols: Arra
 
   def row[A: Typeable: TypeTag](k: Row)(implicit t: Typeable[Column[A]]): Option[Series[Col,A]] =
     rowIndex get k map { row =>
-      Series(colIndex, CellColumn(cols map { col => Column.cast[A](col).apply(row) }))
+      Series(colIndex, CellColumn(cols map { _.cast[A].apply(row) }))
     }
 
   def getRecord[A: RowExtractor](row: Row): Option[A] = RowExtractor.extract(this, row)
-
-  def sum[A: Typeable: TypeTag](col: Col)(implicit A: AdditiveMonoid[A]): A =
-    columns[A](col).sum
-
-  def sum[A: RowExtractor: TypeTag](col0: Col, col1: Col, rest: Col*)(implicit A: AdditiveMonoid[A]): A =
-    columns[A](col0, col1, rest: _*).sum
 
   def mapRows[F, L <: HList, B](cols: Col*)(f: F)(implicit fntop: FnToProduct.Aux[F, L => B], ex: RowExtractor[L], ttB: TypeTag[B]): Series[Row,B] = {
     val fn = fntop(f)
@@ -66,12 +60,24 @@ case class Frame[Row,Col](rowIndex: Index[Row], colIndex: Index[Col], cols: Arra
       bits(row) = RowExtractor.extract(this, key, colKeys.toList) map fn getOrElse false
     }
     val exists = bits.toImmutable
-    Frame(rowIndex, colIndex, cols map { col => Column.filtered(bits.toImmutable, col) })
+    Frame(rowIndex, colIndex, cols map { _.mask(exists) })
   }
+
+  def reduce[A: Typeable: TypeTag](col: Col)(implicit A: Monoid[A]): A =
+    columns[A](col).reduce
+
+  def reduce[A: RowExtractor: TypeTag](col0: Col, col1: Col, rest: Col*)(implicit A: Monoid[A]): A =
+    columns[A](col0, col1, rest: _*).reduce
+
+  def sum[A: Typeable: TypeTag](col: Col)(implicit A: AdditiveMonoid[A]): A =
+    columns[A](col).sum
+
+  def sum[A: RowExtractor: TypeTag](col0: Col, col1: Col, rest: Col*)(implicit A: AdditiveMonoid[A]): A =
+    columns[A](col0, col1, rest: _*).sum
 }
 
 object Frame {
-  def apply[Row,Col: Order: ClassTag](rowIndex: Index[Row], colPairs: (Col,Column[_])*): Frame[Row,Col] = {
+  def apply[Row,Col: Order: ClassTag](rowIndex: Index[Row], colPairs: (Col,UntypedColumn)*): Frame[Row,Col] = {
     val (colKeys, cols) = colPairs.unzip
     Frame(rowIndex, Index(colKeys: _*), cols.toArray)
   }
