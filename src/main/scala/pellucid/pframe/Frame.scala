@@ -9,7 +9,21 @@ import spire.syntax.additiveMonoid._
 import shapeless._
 import shapeless.ops.function._
 
+// trait Frame[Row,Col] {
+//   def column[A: Typeable: TypeTag](col: Col): Series[Row,A]
+//   def row[A: Typeable: TypeTag](row: Row): Series[Col,A]
+// }
+
+//trait RowExtractorOps[Row,Col] {
+//  def frame: Frame[Row,Col]
+//
+//  def getRecord[A](row: Row)(implicit re: RowExtractor[A,Col]): Option[A] =
+//    RowExtractor.extract(frame, row)
+//}
+
 case class Frame[Row,Col](rowIndex: Index[Row], colIndex: Index[Col], cols: Array[UntypedColumn]) {
+  type RowExtractorAux[A] = RowExtractor[A,Col]
+
   private def rawColumn[A: Typeable: TypeTag](k: Col): Option[Column[A]] = for {
     i <- colIndex.get(k)
   } yield cols(i).cast[A]
@@ -19,7 +33,7 @@ case class Frame[Row,Col](rowIndex: Index[Row], colIndex: Index[Col], cols: Arra
 
   def columns[A: Typeable: TypeTag](col: Col): Series[Row,A] = column(col)
 
-  def columns[A: RowExtractor: TypeTag](col0: Col, col1: Col, rest: Col*): Series[Row,A] = {
+  def columns[A: RowExtractorAux: TypeTag](col0: Col, col1: Col, rest: Col*): Series[Row,A] = {
     val cols = col0 :: col1 :: rest.toList
     val cells = rowIndex.keys map { row =>
       RowExtractor.extract(this, row, cols) map (Value(_)) getOrElse NA
@@ -32,9 +46,9 @@ case class Frame[Row,Col](rowIndex: Index[Row], colIndex: Index[Col], cols: Arra
       Series(colIndex, Column.fromCells(cols map { _.cast[A].apply(row) }))
     }
 
-  def getRecord[A: RowExtractor](row: Row): Option[A] = RowExtractor.extract(this, row)
+  def getRecord[A: RowExtractorAux](row: Row): Option[A] = RowExtractor.extract(this, row)
 
-  def mapRows[F, L <: HList, B](cols: Col*)(f: F)(implicit fntop: FnToProduct.Aux[F, L => B], ex: RowExtractor[L], ttB: TypeTag[B]): Series[Row,B] = {
+  def mapRows[F, L <: HList, B](cols: Col*)(f: F)(implicit fntop: FnToProduct.Aux[F, L => B], ex: RowExtractor[L,Col], ttB: TypeTag[B]): Series[Row,B] = {
     val fn = fntop(f)
     val cells = rowIndex.keys map { row =>
       RowExtractor.extract(this, row, cols.toList) map fn map (Value(_)) getOrElse NA
@@ -42,10 +56,10 @@ case class Frame[Row,Col](rowIndex: Index[Row], colIndex: Index[Col], cols: Arra
     Series(rowIndex, Column.fromCells(cells.toVector))
   }
 
-  def mapRows[F, L <: HList, B](f: F)(implicit fntop: FnToProduct.Aux[F, L => B], ex: RowExtractor[L], ttB: TypeTag[B]): Series[Row,B] =
+  def mapRows[F, L <: HList, B](f: F)(implicit fntop: FnToProduct.Aux[F, L => B], ex: RowExtractor[L,Col], ttB: TypeTag[B]): Series[Row,B] =
     mapRows(colIndex.keys: _*)(f)
 
-  def mapRowsWithIndex[F, L <: HList, B](cols: Col*)(f: F)(implicit fntop: FnToProduct.Aux[F, (Row :: L) => B], ex: RowExtractor[L], ttB: TypeTag[B]): Series[Row,B] = {
+  def mapRowsWithIndex[F, L <: HList, B](cols: Col*)(f: F)(implicit fntop: FnToProduct.Aux[F, (Row :: L) => B], ex: RowExtractor[L,Col], ttB: TypeTag[B]): Series[Row,B] = {
     val fn = fntop(f)
     val cells = rowIndex.keys map { row =>
       RowExtractor.extract(this, row, cols.toList) map (row :: _) map fn map (Value(_)) getOrElse NA
@@ -53,7 +67,7 @@ case class Frame[Row,Col](rowIndex: Index[Row], colIndex: Index[Col], cols: Arra
     Series(rowIndex, Column.fromCells(cells.toVector))
   }
 
-  def filter[F, L <: HList](colKeys: Col*)(f: F)(implicit fntop: FnToProduct.Aux[F, L => Boolean], ex: RowExtractor[L]): Frame[Row,Col] = {
+  def filter[F, L <: HList](colKeys: Col*)(f: F)(implicit fntop: FnToProduct.Aux[F, L => Boolean], ex: RowExtractor[L,Col]): Frame[Row,Col] = {
     val fn = fntop(f)
     val bits = new scala.collection.mutable.BitSet
     val cells = (rowIndex.keys zip rowIndex.indices) map { case (key, row) =>
@@ -66,13 +80,13 @@ case class Frame[Row,Col](rowIndex: Index[Row], colIndex: Index[Col], cols: Arra
   def reduce[A: Typeable: TypeTag](col: Col)(implicit A: Monoid[A]): A =
     columns[A](col).reduce
 
-  def reduce[A: RowExtractor: TypeTag](col0: Col, col1: Col, rest: Col*)(implicit A: Monoid[A]): A =
+  def reduce[A: RowExtractorAux: TypeTag](col0: Col, col1: Col, rest: Col*)(implicit A: Monoid[A]): A =
     columns[A](col0, col1, rest: _*).reduce
 
   def sum[A: Typeable: TypeTag](col: Col)(implicit A: AdditiveMonoid[A]): A =
     columns[A](col).sum
 
-  def sum[A: RowExtractor: TypeTag](col0: Col, col1: Col, rest: Col*)(implicit A: AdditiveMonoid[A]): A =
+  def sum[A: RowExtractorAux: TypeTag](col0: Col, col1: Col, rest: Col*)(implicit A: AdditiveMonoid[A]): A =
     columns[A](col0, col1, rest: _*).sum
 }
 
@@ -83,20 +97,20 @@ object Frame {
   }
 }
 
-trait RowExtractor[A] {
-  def extract[Row,Col](frame: Frame[Row,Col], row: Row, cols: List[Col]): Option[A]
+trait RowExtractor[A,Col] {
+  def extract[Row](frame: Frame[Row,Col], row: Row, cols: List[Col]): Option[A]
 }
 
 trait RowExtractorLow0 {
-  implicit def generic[A,B](implicit generic: Generic.Aux[A,B], extractor: RowExtractor[B]) = new RowExtractor[A] {
-    def extract[Row,Col](frame: Frame[Row,Col], row: Row, cols: List[Col]): Option[A] =
+  implicit def generic[A,B,Col](implicit generic: Generic.Aux[A,B], extractor: RowExtractor[B,Col]) = new RowExtractor[A,Col] {
+    def extract[Row](frame: Frame[Row,Col], row: Row, cols: List[Col]): Option[A] =
       extractor.extract(frame, row, cols) map (generic.from(_))
   }
 }
 
 trait RowExtractorLow1 extends RowExtractorLow0 {
-  implicit def hnilRowExtractor = new RowExtractor[HNil] {
-    def extract[Row,Col](frame: Frame[Row,Col], row: Row, cols: List[Col]): Option[HNil] = cols match {
+  implicit def hnilRowExtractor[Col] = new RowExtractor[HNil, Col] {
+    def extract[Row](frame: Frame[Row,Col], row: Row, cols: List[Col]): Option[HNil] = cols match {
       case Nil => Some(HNil)
       case _ => None
     }
@@ -104,8 +118,8 @@ trait RowExtractorLow1 extends RowExtractorLow0 {
 }
 
 object RowExtractor extends RowExtractorLow1 {
-  implicit def hlistRowExtractor[H: Typeable: TypeTag, T <: HList](implicit tailExtractor: RowExtractor[T]) = new RowExtractor[H :: T] {
-    def extract[Row,Col](frame: Frame[Row,Col], row: Row, colIndices: List[Col]): Option[H :: T] = for {
+  implicit def hlistRowExtractor[H: Typeable: TypeTag, T <: HList, Col](implicit tailExtractor: RowExtractor[T,Col]) = new RowExtractor[H :: T, Col] {
+    def extract[Row](frame: Frame[Row,Col], row: Row, colIndices: List[Col]): Option[H :: T] = for {
       idx <- colIndices.headOption
       tail <- tailExtractor.extract(frame, row, colIndices.tail)
       value <- frame.column[H](idx).apply(row).value
@@ -114,9 +128,9 @@ object RowExtractor extends RowExtractorLow1 {
     }
   }
 
-  def extract[Row, Col, A](frame: Frame[Row,Col], row: Row)(implicit extractor: RowExtractor[A]): Option[A] =
+  def extract[Row, Col, A](frame: Frame[Row,Col], row: Row)(implicit extractor: RowExtractor[A,Col]): Option[A] =
     extractor.extract(frame, row, frame.colIndex.keys.toList)
 
-  def extract[Row, Col, A](frame: Frame[Row,Col], row: Row, cols: List[Col])(implicit extractor: RowExtractor[A]): Option[A] =
+  def extract[Row, Col, A](frame: Frame[Row,Col], row: Row, cols: List[Col])(implicit extractor: RowExtractor[A,Col]): Option[A] =
     extractor.extract(frame, row, cols)
 }

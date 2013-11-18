@@ -34,6 +34,11 @@ case class Series[K,V](index: Index[K], column: Column[V]) {
 
   def sum(implicit V: AdditiveMonoid[V]): V =
     reduce(V.additive)
+
+  override def toString: String =
+    (keys zip values).map { case (key, value) =>
+      s"$key -> $value"
+    }.mkString("Series(", ", ", ")")
 }
 
 object Series {

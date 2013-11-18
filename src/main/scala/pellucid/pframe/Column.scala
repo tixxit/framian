@@ -145,11 +145,14 @@ final class DenseColumn[A](naValues: BitSet, nmValues: BitSet, values: Array[A])
 }
 
 final class CellColumn[A](values: IndexedSeq[Cell[A]]) extends Column[A] {
-  def exists(row: Int): Boolean = !values(row).isMissing
-  def missing(row: Int): Missing = values(row) match {
-    case Value(_) => throw new IllegalStateException()
-    case (ms: Missing) => ms
-  }
+  private final def valid(row: Int): Boolean = row >= 0 && row < values.size
+  def exists(row: Int): Boolean = valid(row) && !values(row).isMissing
+  def missing(row: Int): Missing = if (valid(row)) {
+    values(row) match {
+      case Value(_) => throw new IllegalStateException()
+      case (ms: Missing) => ms
+    }
+  } else NA
   def value(row: Int): A = values(row) match {
     case Value(x) => x
     case (_: Missing) => throw new IllegalStateException()
