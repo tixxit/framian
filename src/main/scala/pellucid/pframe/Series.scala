@@ -39,7 +39,7 @@ case class Series[K,V](index: Index[K], column: Column[V]) {
 object Series {
   def apply[K: Order: ClassTag, V: ClassTag](kvs: (K, V)*): Series[K,V] = {
     val (keys, values) = kvs.unzip
-    Series(Index(keys.toArray), Column(values.toArray))
+    Series(Index(keys.toArray), Column.fromArray(values.toArray))
   }
 }
 

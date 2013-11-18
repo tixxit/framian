@@ -6,13 +6,43 @@ import scala.collection.immutable.BitSet
 import shapeless._
 import shapeless.syntax.typeable._
 
+/**
+ * A `Column` represents an `Int`-indexed set of values. The defining
+ * characteristic is that a column is always defined for all `Int` values. In
+ * order to interact with a column in an optimal and concrete way, we need an
+ * external notion of valid rows to restrict the input by. A [[Series]], for
+ * instance, ties a `Column` together with an [[Index]] to restrict the set of
+ * rows being used.
+ */
 trait Column[A] {
+
+  /**
+   * Returns `true` if the value exists; that is, it is available and
+   * meaningful. This method must be called before any calls to `missing` or
+   * `value`, since it is essentially the switch that let's you know which
+   * one to call.
+   */
   def exists(row: Int): Boolean
+
+  /**
+   * If `exists(row) == false`, then this will return either `NA` or `NM` to
+   * indicate the value is not available or not meaningful (resp.). If
+   * `exists(row) == true`, then the result of calling this is undefined.
+   */
   def missing(row: Int): Missing
+
+  /**
+   * If `exists(row) == true`, then this will return the value stored in row
+   * `row`. If `exists(row) == false`, then the result of calling this is
+   * undefined.
+   */
   def value(row: Int): A
 
+  def foldRow[B](row: Int)(f: A => B, g: Missing => B): B =
+    if (exists(row)) f(value(row)) else g(missing(row))
+
   def apply(row: Int): Cell[A] =
-    if (exists(row)) Value(value(row)) else missing(row)
+    foldRow(row)(Value(_), m => m)
 
   /**
    * Map all existing values to a given value.
@@ -48,17 +78,21 @@ trait Column[A] {
   def optimize(index: Index[_]): Column[A] = ???
 
   override def toString: String =
-    (0 until 5).map(apply(_)).mkString("Column(", ", ", ")")
+    ((0 until Column.ToStringLength).map(apply(_)).map(_.toString) :+ "...").mkString("Column(", ", ", ")")
 }
 
 object Column {
-  def apply[A](values: Array[A]): Column[A] = DenseColumn(BitSet.empty, BitSet.empty, values)
-
-  def apply[A](f: Int => A): Column[A] = InfiniteColumn(f)
-
-  def apply[A](values: Map[Int, A]): Column[A] = MapColumn(values)
+  private val ToStringLength = 5
 
   def empty[A] = new EmptyColumn[A]
+
+  def apply[A](f: Int => A): Column[A] = new InfiniteColumn(f)
+
+  def fromCells[A](cells: IndexedSeq[Cell[A]]): Column[A] = new CellColumn(cells)
+
+  def fromArray[A](values: Array[A]): Column[A] = new DenseColumn(BitSet.empty, BitSet.empty, values)
+
+  def fromMap[A](values: Map[Int, A]): Column[A] = new MapColumn(values)
 }
 
 final class EmptyColumn[A] extends Column[A] {
@@ -97,20 +131,20 @@ final class CastColumn[A: Typeable](col: Column[_]) extends Column[A] {
   def value(row: Int): A = col.value(row).cast[A].get
 }
 
-case class InfiniteColumn[A](f: Int => A) extends Column[A] {
+final class InfiniteColumn[A](f: Int => A) extends Column[A] {
   def exists(row: Int): Boolean = true
   def missing(row: Int): Missing = NA
   def value(row: Int): A = f(row)
 }
 
-case class DenseColumn[A](naValues: BitSet, nmValues: BitSet, values: Array[A]) extends Column[A] {
+final class DenseColumn[A](naValues: BitSet, nmValues: BitSet, values: Array[A]) extends Column[A] {
   private final def valid(row: Int) = row >= 0 && row < values.length
   def exists(row: Int): Boolean = valid(row) && !naValues(row) && !nmValues(row)
   def missing(row: Int): Missing = if (nmValues(row)) NM else NA
   def value(row: Int): A = values(row)
 }
 
-case class CellColumn[A](values: IndexedSeq[Cell[A]]) extends Column[A] {
+final class CellColumn[A](values: IndexedSeq[Cell[A]]) extends Column[A] {
   def exists(row: Int): Boolean = !values(row).isMissing
   def missing(row: Int): Missing = values(row) match {
     case Value(_) => throw new IllegalStateException()
@@ -122,7 +156,7 @@ case class CellColumn[A](values: IndexedSeq[Cell[A]]) extends Column[A] {
   }
 }
 
-case class MapColumn[A](values: Map[Int,A]) extends Column[A] {
+final class MapColumn[A](values: Map[Int,A]) extends Column[A] {
   def exists(row: Int): Boolean = values contains row
   def missing(row: Int): Missing = NA
   def value(row: Int): A = values(row)

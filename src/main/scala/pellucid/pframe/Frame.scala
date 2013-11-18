@@ -24,12 +24,12 @@ case class Frame[Row,Col](rowIndex: Index[Row], colIndex: Index[Col], cols: Arra
     val cells = rowIndex.keys map { row =>
       RowExtractor.extract(this, row, cols) map (Value(_)) getOrElse NA
     }
-    Series(rowIndex, CellColumn(cells.toVector))
+    Series(rowIndex, Column.fromCells(cells.toVector))
   }
 
   def row[A: Typeable: TypeTag](k: Row)(implicit t: Typeable[Column[A]]): Option[Series[Col,A]] =
     rowIndex get k map { row =>
-      Series(colIndex, CellColumn(cols map { _.cast[A].apply(row) }))
+      Series(colIndex, Column.fromCells(cols map { _.cast[A].apply(row) }))
     }
 
   def getRecord[A: RowExtractor](row: Row): Option[A] = RowExtractor.extract(this, row)
@@ -39,7 +39,7 @@ case class Frame[Row,Col](rowIndex: Index[Row], colIndex: Index[Col], cols: Arra
     val cells = rowIndex.keys map { row =>
       RowExtractor.extract(this, row, cols.toList) map fn map (Value(_)) getOrElse NA
     }
-    Series(rowIndex, CellColumn(cells.toVector))
+    Series(rowIndex, Column.fromCells(cells.toVector))
   }
 
   def mapRows[F, L <: HList, B](f: F)(implicit fntop: FnToProduct.Aux[F, L => B], ex: RowExtractor[L], ttB: TypeTag[B]): Series[Row,B] =
@@ -50,7 +50,7 @@ case class Frame[Row,Col](rowIndex: Index[Row], colIndex: Index[Col], cols: Arra
     val cells = rowIndex.keys map { row =>
       RowExtractor.extract(this, row, cols.toList) map (row :: _) map fn map (Value(_)) getOrElse NA
     }
-    Series(rowIndex, CellColumn(cells.toVector))
+    Series(rowIndex, Column.fromCells(cells.toVector))
   }
 
   def filter[F, L <: HList](colKeys: Col*)(f: F)(implicit fntop: FnToProduct.Aux[F, L => Boolean], ex: RowExtractor[L]): Frame[Row,Col] = {
