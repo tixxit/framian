@@ -19,6 +19,8 @@ trait Index[K] {
     if (i >= 0) Some(i) else None
   }
 
+  def foreach[U](f: (K, Int) => U): Unit
+
   def keys: Seq[K]
   def indices: Array[Int]
 }
@@ -81,6 +83,15 @@ final class UnorderedIndex[K: Order](keys0: Array[K], indices0: Array[Int]) exte
       indices0(i)
     }
   }
+
+  def foreach[U](f: (K, Int) => U): Unit = {
+    cfor(0)(_ < indices0.length, _ + 1) { i =>
+      val idx = indices0(i)
+      val key = keys0(idx)
+      f(key, idx)
+    }
+  }
+
   def keys = indices0 map (keys0(_))
   def indices = indices0.clone()
 }
@@ -90,4 +101,10 @@ final class OrderedIndex[K: Order](keys0: Array[K]) extends Index[K] {
   def indices = Array.range(0, keys0.length)
   def size: Int = keys0.size
   def apply(k: K): Int = Searching.search(keys0, k)
+
+  def foreach[U](f: (K, Int) => U): Unit = {
+    cfor(0)(_ < keys0.length, _ + 1) { i =>
+      f(keys0(i), i)
+    }
+  }
 }

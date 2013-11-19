@@ -9,85 +9,20 @@ import spire.syntax.additiveMonoid._
 import shapeless._
 import shapeless.ops.function._
 
-// trait Frame[Row,Col] {
-//   def column[A: Typeable: TypeTag](col: Col): Series[Row,A]
-//   def row[A: Typeable: TypeTag](row: Row): Series[Col,A]
-// }
-
-//trait RowExtractorOps[Row,Col] {
-//  def frame: Frame[Row,Col]
-//
-//  def getRecord[A](row: Row)(implicit re: RowExtractor[A,Col]): Option[A] =
-//    RowExtractor.extract(frame, row)
-//}
-
 case class Frame[Row,Col](rowIndex: Index[Row], colIndex: Index[Col], cols: Array[UntypedColumn]) {
-  type RowExtractorAux[A] = RowExtractor[A,Col]
-
-  private def rawColumn[A: Typeable: TypeTag](k: Col): Option[Column[A]] = for {
-    i <- colIndex.get(k)
-  } yield cols(i).cast[A]
-
   def column[A: Typeable: TypeTag](k: Col): Series[Row,A] =
     Series(rowIndex, rawColumn(k) getOrElse Column.empty[A])
-
-  def columns[A: Typeable: TypeTag](col: Col): Series[Row,A] = column(col)
-
-  def columns[A: RowExtractorAux: TypeTag](col0: Col, col1: Col, rest: Col*): Series[Row,A] = {
-    val cols = col0 :: col1 :: rest.toList
-    val cells = rowIndex.keys map { row =>
-      RowExtractor.extract(this, row, cols) map (Value(_)) getOrElse NA
-    }
-    Series(rowIndex, Column.fromCells(cells.toVector))
-  }
 
   def row[A: Typeable: TypeTag](k: Row)(implicit t: Typeable[Column[A]]): Option[Series[Col,A]] =
     rowIndex get k map { row =>
       Series(colIndex, Column.fromCells(cols map { _.cast[A].apply(row) }))
     }
 
-  def getRecord[A: RowExtractorAux](row: Row): Option[A] = RowExtractor.extract(this, row)
+  def columns: ColumnSelector[Row, Col, Variable] = ColumnSelector(this, colIndex.keys.toList)
 
-  def mapRows[F, L <: HList, B](cols: Col*)(f: F)(implicit fntop: FnToProduct.Aux[F, L => B], ex: RowExtractor[L,Col], ttB: TypeTag[B]): Series[Row,B] = {
-    val fn = fntop(f)
-    val cells = rowIndex.keys map { row =>
-      RowExtractor.extract(this, row, cols.toList) map fn map (Value(_)) getOrElse NA
-    }
-    Series(rowIndex, Column.fromCells(cells.toVector))
-  }
-
-  def mapRows[F, L <: HList, B](f: F)(implicit fntop: FnToProduct.Aux[F, L => B], ex: RowExtractor[L,Col], ttB: TypeTag[B]): Series[Row,B] =
-    mapRows(colIndex.keys: _*)(f)
-
-  def mapRowsWithIndex[F, L <: HList, B](cols: Col*)(f: F)(implicit fntop: FnToProduct.Aux[F, (Row :: L) => B], ex: RowExtractor[L,Col], ttB: TypeTag[B]): Series[Row,B] = {
-    val fn = fntop(f)
-    val cells = rowIndex.keys map { row =>
-      RowExtractor.extract(this, row, cols.toList) map (row :: _) map fn map (Value(_)) getOrElse NA
-    }
-    Series(rowIndex, Column.fromCells(cells.toVector))
-  }
-
-  def filter[F, L <: HList](colKeys: Col*)(f: F)(implicit fntop: FnToProduct.Aux[F, L => Boolean], ex: RowExtractor[L,Col]): Frame[Row,Col] = {
-    val fn = fntop(f)
-    val bits = new scala.collection.mutable.BitSet
-    val cells = (rowIndex.keys zip rowIndex.indices) map { case (key, row) =>
-      bits(row) = RowExtractor.extract(this, key, colKeys.toList) map fn getOrElse false
-    }
-    val exists = bits.toImmutable
-    Frame(rowIndex, colIndex, cols map { _.mask(exists) })
-  }
-
-  def reduce[A: Typeable: TypeTag](col: Col)(implicit A: Monoid[A]): A =
-    columns[A](col).reduce
-
-  def reduce[A: RowExtractorAux: TypeTag](col0: Col, col1: Col, rest: Col*)(implicit A: Monoid[A]): A =
-    columns[A](col0, col1, rest: _*).reduce
-
-  def sum[A: Typeable: TypeTag](col: Col)(implicit A: AdditiveMonoid[A]): A =
-    columns[A](col).sum
-
-  def sum[A: RowExtractorAux: TypeTag](col0: Col, col1: Col, rest: Col*)(implicit A: AdditiveMonoid[A]): A =
-    columns[A](col0, col1, rest: _*).sum
+  private def rawColumn[A: Typeable: TypeTag](k: Col): Option[Column[A]] = for {
+    i <- colIndex.get(k)
+  } yield cols(i).cast[A]
 }
 
 object Frame {
@@ -97,40 +32,55 @@ object Frame {
   }
 }
 
-trait RowExtractor[A,Col] {
-  def extract[Row](frame: Frame[Row,Col], row: Row, cols: List[Col]): Option[A]
-}
+final case class ColumnSelector[Row, Col, Sz <: Size](frame: Frame[Row, Col], cols: List[Col]) {
+  import Nat._
 
-trait RowExtractorLow0 {
-  implicit def generic[A,B,Col](implicit generic: Generic.Aux[A,B], extractor: RowExtractor[B,Col]) = new RowExtractor[A,Col] {
-    def extract[Row](frame: Frame[Row,Col], row: Row, cols: List[Col]): Option[A] =
-      extractor.extract(frame, row, cols) map (generic.from(_))
-  }
-}
+  type RowExtractorAux[A] = RowExtractor[A, Col, Sz]
 
-trait RowExtractorLow1 extends RowExtractorLow0 {
-  implicit def hnilRowExtractor[Col] = new RowExtractor[HNil, Col] {
-    def extract[Row](frame: Frame[Row,Col], row: Row, cols: List[Col]): Option[HNil] = cols match {
-      case Nil => Some(HNil)
-      case _ => None
+  def apply(col: Col): ColumnSelector[Row, Col, Fixed[_1]] =
+    new ColumnSelector[Row, Col, Fixed[_1]](frame, col :: Nil)
+
+  def apply(col0: Col, col1: Col): ColumnSelector[Row, Col, Fixed[_2]] =
+    new ColumnSelector[Row, Col, Fixed[_2]](frame, col0 :: col1 :: Nil)
+
+  def apply(col0: Col, col1: Col, col2: Col): ColumnSelector[Row, Col, Fixed[_3]] =
+    new ColumnSelector[Row, Col, Fixed[_3]](frame, col0 :: col1 :: col2 :: Nil)
+
+  def getRowAs[A: RowExtractorAux](row: Row) = RowExtractor.extract(frame, row, cols)
+
+  def as[A: RowExtractorAux]: Series[Row, A] = {
+    val cells = frame.rowIndex.keys map { row =>
+      RowExtractor.extract(frame, row, cols) map (Value(_)) getOrElse NA
     }
+    Series(frame.rowIndex, Column.fromCells(cells.toVector))
   }
-}
 
-object RowExtractor extends RowExtractorLow1 {
-  implicit def hlistRowExtractor[H: Typeable: TypeTag, T <: HList, Col](implicit tailExtractor: RowExtractor[T,Col]) = new RowExtractor[H :: T, Col] {
-    def extract[Row](frame: Frame[Row,Col], row: Row, colIndices: List[Col]): Option[H :: T] = for {
-      idx <- colIndices.headOption
-      tail <- tailExtractor.extract(frame, row, colIndices.tail)
-      value <- frame.column[H](idx).apply(row).value
-    } yield {
-      value :: tail
+  def map[F, L <: HList, A](f: F)(implicit fntop: FnToProduct.Aux[F, L => A],
+      e: RowExtractor[L, Col, Sz]): Series[Row, A] = {
+    val fn = fntop(f)
+    val cells = frame.rowIndex.keys map { row =>
+      RowExtractor.extract(frame, row, cols) map fn map (Value(_)) getOrElse NA
     }
+    Series(frame.rowIndex, Column.fromCells(cells.toVector))
   }
 
-  def extract[Row, Col, A](frame: Frame[Row,Col], row: Row)(implicit extractor: RowExtractor[A,Col]): Option[A] =
-    extractor.extract(frame, row, frame.colIndex.keys.toList)
+  def mapWithIndex[F, L <: HList, A](f: F)(implicit fntop: FnToProduct.Aux[F, (Row :: L) => A],
+      e: RowExtractorAux[L]): Series[Row, A] = {
+    val fn = fntop(f)
+    val cells = frame.rowIndex.keys map { row =>
+      RowExtractor.extract(frame, row, cols) map (row :: _) map fn map (Value(_)) getOrElse NA
+    }
+    Series(frame.rowIndex, Column.fromCells(cells.toVector))
+  }
 
-  def extract[Row, Col, A](frame: Frame[Row,Col], row: Row, cols: List[Col])(implicit extractor: RowExtractor[A,Col]): Option[A] =
-    extractor.extract(frame, row, cols)
+  def filter[F, L <: HList](f: F)(implicit fntop: FnToProduct.Aux[F, L => Boolean],
+      e: RowExtractorAux[L]): Frame[Row,Col] = {
+    val fn = fntop(f)
+    val bits = new scala.collection.mutable.BitSet
+    frame.rowIndex foreach { (key, row) =>
+      bits(row) = RowExtractor.extract(frame, key, cols) map fn getOrElse false
+    }
+    val exists = bits.toImmutable
+    Frame(frame.rowIndex, frame.colIndex, frame.cols map { _.mask(exists) })
+  }
 }
