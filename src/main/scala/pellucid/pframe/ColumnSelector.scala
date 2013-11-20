@@ -108,8 +108,7 @@ final case class ColumnSelector[Row, Col, Sz <: Size](frame: Frame[Row, Col], co
    * }}}
    */
   def map[F, L <: HList, A](f: F)(implicit fntop: FnToProduct.Aux[F, L => A],
-      e: RowExtractor[L, Col, Sz]): Series[Row, A] = {
-    val extractor = RowExtractor[L, Col, Sz]
+      extractor: RowExtractor[L, Col, Sz]): Series[Row, A] = {
     val column = extractor.prepare(frame, cols).fold(Column.empty[A]) { p =>
       val fn = fntop(f)
       val cells = frame.rowIndex map { case (key, row) =>
@@ -156,20 +155,30 @@ final case class ColumnSelector[Row, Col, Sz <: Size](frame: Frame[Row, Col], co
     frame.withRowIndex(filteredIndex)
   }
 
-  def groupBy[F, L <: HList, A](f: F)(implicit fntop: FnToProduct.Aux[F, L => A],
-      extractor: RowExtractorAux[L], order: Order[A], ct: ClassTag[A]): Frame[A, Col] = {
+  // TODO: Grouping should take a strategy so that we can deal with missing values.
+
+  private def groupBy0[A: RowExtractorAux, B: Order: ClassTag](f: A => B): Frame[B, Col] = {
     import spire.compat._
 
-    var groups: SortedMap[A, List[Int]] = SortedMap.empty // TODO: Lots of room for optimization here.
-    extractor.prepare(frame, cols) foreach { p =>
-      val fn = fntop(f)
+    val extractor = RowExtractor[A, Col, Sz]
+    var groups: SortedMap[B, List[Int]] = SortedMap.empty // TODO: Lots of room for optimization here.
+    for (p <- extractor.prepare(frame, cols)) {
       frame.rowIndex foreach { case (key, row) =>
-        for (group <- extractor.extract(frame, key, row, p).map(fn)) {
+        for (group0 <- extractor.extract(frame, key, row, p)) {
+          val group = f(group0)
           groups += (group -> (row :: groups.getOrElse(group, Nil)))
         }
       }
     }
+
     val groupedIndex = Index.ordered(groups.toList flatMap { case (group, rows) => rows map (group -> _) })
     frame.withRowIndex(groupedIndex)
   }
+
+  def groupAs[A: RowExtractorAux: Order: ClassTag]: Frame[A, Col] =
+    groupBy0[A, A](a => a)
+
+  def groupBy[F, L <: HList, A](f: F)(implicit fntop: FnToProduct.Aux[F, L => A],
+      extractor: RowExtractorAux[L], order: Order[A], ct: ClassTag[A]): Frame[A, Col] =
+    groupBy0[L, A](fntop(f))
 }
