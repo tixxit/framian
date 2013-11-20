@@ -44,6 +44,23 @@ final case class ColumnSelector[Row, Col, Sz <: Size](frame: Frame[Row, Col], co
   def apply(col0: Col, col1: Col, col2: Col): ColumnSelector[Row, Col, Fixed[_3]] =
     new ColumnSelector[Row, Col, Fixed[_3]](frame, col0 :: col1 :: col2 :: Nil)
 
+  def apply(col0: Col, col1: Col, col2: Col, col3: Col): ColumnSelector[Row, Col, Fixed[_4]] =
+    new ColumnSelector[Row, Col, Fixed[_4]](frame, col0 :: col1 :: col2 :: col3 :: Nil)
+
+  def apply(col0: Col, col1: Col, col2: Col, col3: Col, col4: Col): ColumnSelector[Row, Col, Fixed[_5]] =
+    new ColumnSelector[Row, Col, Fixed[_5]](frame, col0 :: col1 :: col2 :: col3 :: col4 :: Nil)
+
+  def apply(col0: Col, col1: Col, col2: Col, col3: Col, col4: Col, col5: Col): ColumnSelector[Row, Col, Fixed[_6]] =
+    new ColumnSelector[Row, Col, Fixed[_6]](frame, col0 :: col1 :: col2 :: col3 :: col4 :: col5 :: Nil)
+
+  def apply(col0: Col, col1: Col, col2: Col, col3: Col, col4: Col, col5: Col, col6: Col): ColumnSelector[Row, Col, Fixed[_7]] =
+    new ColumnSelector[Row, Col, Fixed[_7]](frame, col0 :: col1 :: col2 :: col3 :: col4 :: col5 :: col6 :: Nil)
+
+  def apply(col0: Col, col1: Col, col2: Col, col3: Col, col4: Col, col5: Col, col6: Col, col7: Col): ColumnSelector[Row, Col, Fixed[_8]] =
+    new ColumnSelector[Row, Col, Fixed[_8]](frame, col0 :: col1 :: col2 :: col3 :: col4 :: col5 :: col6 :: col7 :: Nil)
+
+  // TODO: The above was created easily w/ a Vim macro, but should be code-gen.
+
   def apply[N <: Nat](sized: Sized[Iterable[Col], N]): ColumnSelector[Row, Col, Fixed[N]] =
     new ColumnSelector[Row, Col, Fixed[N]](frame, sized.unsized.toList)
 
