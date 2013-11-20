@@ -47,7 +47,7 @@ object Index {
       def apply(from: Index[_]): Builder[(K, Int), Index[K]] = apply()
     }
 
-  def empty[K: Order: ClassTag]: Index[K] = new OrderedIndex[K](new Array[K](0))
+  def empty[K: Order: ClassTag]: Index[K] = new OrderedIndex[K](new Array[K](0), new Array[Int](0))
 
   def apply[K: Order: ClassTag](keys: K*): Index[K] =
     unordered(keys.toArray)
@@ -71,8 +71,13 @@ object Index {
     }
   }
 
+  def ordered[K: Order: ClassTag](pairs: Seq[(K, Int)]): Index[K] = {
+    val (keys, indices) = pairs.unzip
+    new OrderedIndex(keys.toArray, indices.toArray)
+  }
+
   def ordered[K: Order: ClassTag](keys: Array[K]): Index[K] =
-    new OrderedIndex(keys)
+    new OrderedIndex(keys, Array.range(0, keys.length))
 
   def unordered[K: Order: ClassTag](keys: Array[K]): Index[K] =
     unordered(keys, Array.range(0, keys.length))
@@ -162,18 +167,18 @@ final class UnorderedIndex[K: Order: ClassTag](
   }
 }
 
-final class OrderedIndex[K: Order: ClassTag](keys0: Array[K]) extends BaseIndex[K] {
+final class OrderedIndex[K: Order: ClassTag](keys0: Array[K], indices0: Array[Int]) extends BaseIndex[K] {
   def keys = keys0
-  def indices = Array.range(0, keys0.length)
+  def indices = indices0.clone()
   override def size: Int = keys0.size
   def search(k: K): Int = Searching.search(keys0, k)
   def iterator: Iterator[(K, Int)] = Iterator.tabulate(keys0.length) { i =>
-    (keys0(i), i)
+    (keys0(i), indices0(i))
   }
 
   override def foreach[U](f: ((K, Int)) => U): Unit = {
     cfor(0)(_ < keys0.length, _ + 1) { i =>
-      f((keys0(i), i))
+      f((keys0(i), indices0(i)))
     }
   }
 }

@@ -1,6 +1,10 @@
 package pellucid
 package pframe
 
+import scala.reflect.ClassTag
+
+import scala.collection.SortedMap
+
 import spire.algebra._
 import spire.syntax.additiveMonoid._
 
@@ -20,6 +24,12 @@ import shapeless.ops.function._
  * which includes `map` and `filter` for instance. However, we can still cast
  * the selector (via `as`) to types that don't require a fixed size, such as
  * lists of strings or JSON objects.
+ *
+ * TODO: Split this up into 2 classes: ColumnSelection and ColumnSelector. The
+ *       first provides the lovely methods like map, filter, etc. The 2nd
+ *       inherits from this, but then provides methods for creating selections.
+ *       The ColumnSelector only wraps frame and just uses all cols from the
+ *       frame as its list.
  */
 final case class ColumnSelector[Row, Col, Sz <: Size](frame: Frame[Row, Col], cols: List[Col]) {
   import Nat._
@@ -124,8 +134,7 @@ final case class ColumnSelector[Row, Col, Sz <: Size](frame: Frame[Row, Col], co
    * }}}
    */
   def mapWithIndex[F, L <: HList, A](f: F)(implicit fntop: FnToProduct.Aux[F, (Row :: L) => A],
-      e: RowExtractorAux[L]): Series[Row, A] = {
-    val extractor = RowExtractor[L, Col, Sz]
+      extractor: RowExtractorAux[L]): Series[Row, A] = {
     val column = extractor.prepare(frame, cols).fold(Column.empty[A]) { p =>
       val fn = fntop(f)
       val cells = frame.rowIndex map { case (key, row) =>
@@ -137,14 +146,30 @@ final case class ColumnSelector[Row, Col, Sz <: Size](frame: Frame[Row, Col], co
   }
 
   def filter[F, L <: HList](f: F)(implicit fntop: FnToProduct.Aux[F, L => Boolean],
-      e: RowExtractorAux[L]): Frame[Row,Col] = {
-    val extractor = RowExtractor[L, Col, Sz]
+      extractor: RowExtractorAux[L]): Frame[Row,Col] = {
     val filteredIndex = extractor.prepare(frame, cols).fold(frame.rowIndex.empty) { p =>
+      val fn = fntop(f)
       frame.rowIndex filter { case (key, row) =>
-        val fn = fntop(f)
         extractor.extract(frame, key, row, p) map fn getOrElse false
       }
     }
     frame.withRowIndex(filteredIndex)
+  }
+
+  def groupBy[F, L <: HList, A](f: F)(implicit fntop: FnToProduct.Aux[F, L => A],
+      extractor: RowExtractorAux[L], order: Order[A], ct: ClassTag[A]): Frame[A, Col] = {
+    import spire.compat._
+
+    var groups: SortedMap[A, List[Int]] = SortedMap.empty // TODO: Lots of room for optimization here.
+    extractor.prepare(frame, cols) foreach { p =>
+      val fn = fntop(f)
+      frame.rowIndex foreach { case (key, row) =>
+        for (group <- extractor.extract(frame, key, row, p).map(fn)) {
+          groups += (group -> (row :: groups.getOrElse(group, Nil)))
+        }
+      }
+    }
+    val groupedIndex = Index.ordered(groups.toList flatMap { case (group, rows) => rows map (group -> _) })
+    frame.withRowIndex(groupedIndex)
   }
 }

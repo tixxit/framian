@@ -38,6 +38,11 @@ sealed trait Cell[+A] {
     case Value(a) if !f(a) => NA
     case other => other
   }
+
+  def foreach[U](f: A => U): Unit = this match {
+    case Value(a) => f(a)
+    case _ =>
+  }
 }
 
 object Cell {

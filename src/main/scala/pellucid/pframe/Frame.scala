@@ -16,8 +16,8 @@ trait Frame[Row, Col] {
 
   def columns: ColumnSelector[Row, Col, Variable] = ColumnSelector(this, colIndex.keys.toList)
 
-  def withColIndex(ci: Index[Col]): Frame[Row, Col]
-  def withRowIndex(ri: Index[Row]): Frame[Row, Col]
+  def withColIndex[C1](ci: Index[C1]): Frame[Row, C1]
+  def withRowIndex[R1](ri: Index[R1]): Frame[R1, Col]
 }
 
 case class ColOrientedFrame[Row, Col](
@@ -34,10 +34,10 @@ case class ColOrientedFrame[Row, Col](
       Column.fromCells(cols map { _.cast[A].apply(row) })
     } getOrElse Column.empty[A])
 
-  def withColIndex(ci: Index[Col]): Frame[Row, Col] =
+  def withColIndex[C1](ci: Index[C1]): Frame[Row, C1] =
     ColOrientedFrame(rowIndex, ci, cols)
 
-  def withRowIndex(ri: Index[Row]): Frame[Row, Col] =
+  def withRowIndex[R1](ri: Index[R1]): Frame[R1, Col] =
     ColOrientedFrame(ri, colIndex, cols)
 
   private def rawColumn[A: Typeable: TypeTag](k: Col): Option[Column[A]] = for {
