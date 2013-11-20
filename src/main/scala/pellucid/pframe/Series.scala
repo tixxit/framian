@@ -42,9 +42,10 @@ case class Series[K,V](index: Index[K], column: Column[V]) {
 }
 
 object Series {
+  def empty[K: Order: ClassTag, V] = Series(Index.empty[K], Column.empty[V])
+
   def apply[K: Order: ClassTag, V: ClassTag](kvs: (K, V)*): Series[K,V] = {
     val (keys, values) = kvs.unzip
     Series(Index(keys.toArray), Column.fromArray(values.toArray))
   }
 }
-

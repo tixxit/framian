@@ -17,6 +17,11 @@ sealed trait Cell[+A] {
     case Value(a) => f(a)
   }
 
+  def getOrElse[B >: A](default: => B): B = this match {
+    case Value(a) => a
+    case _ => default
+  }
+
   def map[B](f: A => B): Cell[B] = this match {
     case Value(a) => Value(f(a))
     case NA => NA
@@ -32,6 +37,13 @@ sealed trait Cell[+A] {
   def filter(f: A => Boolean): Cell[A] = this match {
     case Value(a) if !f(a) => NA
     case other => other
+  }
+}
+
+object Cell {
+  def fromOption[A](opt: Option[A]): Cell[A] = opt match {
+    case Some(a) => Value(a)
+    case None => NA
   }
 }
 

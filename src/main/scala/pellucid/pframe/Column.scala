@@ -84,7 +84,7 @@ trait Column[A] {
 object Column {
   private val ToStringLength = 5
 
-  def empty[A] = new EmptyColumn[A]
+  def empty[A]: Column[A] = new EmptyColumn[A]
 
   def apply[A](f: Int => A): Column[A] = new InfiniteColumn(f)
 
