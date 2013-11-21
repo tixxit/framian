@@ -26,6 +26,9 @@ trait Frame[Row, Col] {
   def withColIndex[C1](ci: Index[C1]): Frame[Row, C1]
   def withRowIndex[R1](ri: Index[R1]): Frame[R1, Col]
 
+  def sortedColIndex: Frame[Row, Col] = withColIndex(colIndex.sorted)
+  def sortedRowIndex: Frame[Row, Col] = withRowIndex(rowIndex.sorted)
+
   def join(that: Frame[Row, Col])(join: Join): Frame[Row, Col] = {
     // TODO: This should use simpler things, like:
     //   this.reindex(lIndex).withRowIndex(newRowIndex) ++

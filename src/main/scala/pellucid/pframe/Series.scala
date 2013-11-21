@@ -4,6 +4,7 @@ package pframe
 import scala.annotation.tailrec
 import scala.collection.mutable.{ ArrayBuilder, Builder }
 import scala.reflect.ClassTag
+import scala.reflect.runtime.universe.TypeTag
 
 import spire.algebra._
 // import spire.std.option._
@@ -19,6 +20,24 @@ case class Series[K,V](index: Index[K], column: Column[V]) {
   def values: Vector[Cell[V]] = index.map({ case (_, i) => column(i) })(collection.breakOut)
 
   def apply(key: K): Cell[V] = index.get(key) map (column(_)) getOrElse NA
+
+  def zipMap[W, X: ClassTag](that: Series[K, W])(f: (V, W) => X): Series[K, X] = {
+    val joiner = Joiner[K](Join.Inner)
+    val (keys, lIndices, rIndices) = Index.cogroup(this.index, that.index)(joiner).result()
+    val values = new Array[X](keys.length)
+    val lCol = this.column
+    val rCol = that.column
+    cfor(0)(_ < keys.length, _ + 1) { i =>
+      val key = keys(i)
+      values(i) = f(lCol.value(lIndices(i)), rCol.value(rIndices(i)))
+    }
+    Series(Index.ordered(keys), Column.fromArray(values))
+  }
+
+  def sorted: Series[K, V] = Series(index.sorted, column)
+
+  def toFrame[C: Order: ClassTag](col: C)(implicit tt: TypeTag[V]): Frame[K, C] =
+    Frame(index, col -> TypedColumn(column))
 
   def mapValues[W](f: V => W): Series[K, W] =
     Series(index, column map f)
