@@ -11,13 +11,39 @@ trait Frame[Row, Col] {
   def rowIndex: Index[Row]
   def colIndex: Index[Col]
 
+  private implicit def rowClassTag = rowIndex.classTag
+  private implicit def rowOrder = rowIndex.order
+  private implicit def colClassTag = colIndex.classTag
+  private implicit def colOrder = colIndex.order
+
+  def getColumns: Seq[(Col, UntypedColumn)]
+
   def column[A: Typeable: TypeTag](col: Col): Series[Row,A]
   def row[A: Typeable: TypeTag](row: Row): Series[Col,A]
 
-  def columns: ColumnSelector[Row, Col, Variable] = ColumnSelector(this, colIndex.keys.toList)
+  def columns: ColumnSelector[Row, Col, Variable] =
+    ColumnSelector(this, colIndex.map(_._1)(collection.breakOut))
 
   def withColIndex[C1](ci: Index[C1]): Frame[Row, C1]
   def withRowIndex[R1](ri: Index[R1]): Frame[R1, Col]
+
+  def join(that: Frame[Row, Col])(join: Join): Frame[Row, Col] = {
+    // TODO: This should use simpler things, like:
+    //   this.reindex(lIndex).withRowIndex(newRowIndex) ++
+    //   that.reindex(rIndex).withRowIndex(newRowIndex)
+
+    val joiner = Joiner[Row](join)(rowIndex.classTag)
+    val (keys, lIndex, rIndex) = Index.cogroup(this.rowIndex, that.rowIndex)(joiner).result()
+    val newRowIndex = Index.ordered(keys)
+    val cols0 = this.getColumns map { case (key, col) =>
+      (key, col.setNA(Joiner.Skip).reindex(lIndex))
+    }
+    val cols1 = that.getColumns map { case (key, col) =>
+      (key, col.setNA(Joiner.Skip).reindex(rIndex))
+    }
+    val (newColIndex, cols) = (cols0 ++ cols1).unzip
+    ColOrientedFrame(newRowIndex, Index(newColIndex: _*), cols.toArray)
+  }
 }
 
 case class ColOrientedFrame[Row, Col](
@@ -25,6 +51,10 @@ case class ColOrientedFrame[Row, Col](
       colIndex: Index[Col],
       cols: Array[UntypedColumn])
     extends Frame[Row, Col] {
+
+  def getColumns: Seq[(Col, UntypedColumn)] = colIndex.map({ case (key, i) =>
+    (key, cols(i))
+  })(collection.breakOut)
 
   def column[A: Typeable: TypeTag](k: Col): Series[Row,A] =
     Series(rowIndex, rawColumn(k) getOrElse Column.empty[A])

@@ -163,7 +163,7 @@ final case class ColumnSelector[Row, Col, Sz <: Size](frame: Frame[Row, Col], co
     val extractor = RowExtractor[A, Col, Sz]
     var groups: SortedMap[B, List[Int]] = SortedMap.empty // TODO: Lots of room for optimization here.
     for (p <- extractor.prepare(frame, cols)) {
-      frame.rowIndex foreach { case (key, row) =>
+      frame.rowIndex foreach { (key, row) =>
         for (group0 <- extractor.extract(frame, key, row, p)) {
           val group = f(group0)
           groups += (group -> (row :: groups.getOrElse(group, Nil)))

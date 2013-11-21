@@ -10,8 +10,8 @@ import spire.syntax.monoid._
 import spire.syntax.cfor._
 
 case class Series[K,V](index: Index[K], column: Column[V]) {
-  def keys: Vector[K] = index.keys.toVector
-  def values: Vector[Cell[V]] = (0 until index.size).map(column(_)).toVector
+  def keys: Vector[K] = index.map(_._1)(collection.breakOut)
+  def values: Vector[Cell[V]] = index.map({ case (_, i) => column(i) })(collection.breakOut)
 
   def apply(key: K): Cell[V] = index.get(key) map (column(_)) getOrElse NA
 
@@ -19,10 +19,8 @@ case class Series[K,V](index: Index[K], column: Column[V]) {
     Series(index, column map f)
 
   def reduce(implicit V: Monoid[V]): V = {
-    val indices = index.indices
-    var sum: V = V.id
-    cfor(0)(_ < indices.length, _ + 1) { i =>
-      val row = indices(i)
+    var sum: V = V.id // TODO: Closing over a var.
+    index.foreach { (_, row) =>
       if (column.exists(row))
         sum = sum |+| column.value(row)
     }

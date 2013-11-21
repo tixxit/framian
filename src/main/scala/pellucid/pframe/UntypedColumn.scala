@@ -15,6 +15,8 @@ trait UntypedColumn {
 
   def mask(bits: Int => Boolean): UntypedColumn
   def shift(rows: Int): UntypedColumn
+  def reindex(index: Array[Int]): UntypedColumn
+  def setNA(row: Int): UntypedColumn
 }
 
 case class TypedColumn[A](column: Column[A])(implicit val typeTagA: TypeTag[A]) extends UntypedColumn {
@@ -28,4 +30,6 @@ case class TypedColumn[A](column: Column[A])(implicit val typeTagA: TypeTag[A]) 
 
   def mask(bits: Int => Boolean): UntypedColumn = TypedColumn(column.mask(bits))
   def shift(rows: Int): UntypedColumn = TypedColumn(column.shift(rows))
+  def reindex(index: Array[Int]): UntypedColumn = TypedColumn(column.reindex(index))
+  def setNA(row: Int): UntypedColumn = TypedColumn(column.setNA(row))
 }

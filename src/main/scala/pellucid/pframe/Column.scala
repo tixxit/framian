@@ -70,6 +70,18 @@ trait Column[A] {
   def shift(rows: Int): Column[A] = new ShiftColumn(rows, this)
 
   /**
+   * Returns a Column whose rows are mapped with the given `index` to rows in
+   * this column. If a row doesn't exist in the index (ie. is less than 0 or
+   * greater than or equal to `index.length`), then `NA` is returned.
+   */
+  def reindex(index: Array[Int]): Column[A] = new ReindexColumn(index, this)
+
+  /**
+   * Force a specific row to be not available (`NA`).
+   */
+  def setNA(row: Int): Column[A] = new SetNAColumn(row, this)
+
+  /**
    * This method should be used to return a column specialized on a particular
    * index. That means it can drop all values that aren't being accessed by
    * the index and remove some of the indirection built-up via things like
@@ -99,6 +111,19 @@ final class EmptyColumn[A] extends Column[A] {
   def exists(row: Int): Boolean = false
   def missing(row: Int): Missing = NA
   def value(row: Int): A = throw new UnsupportedOperationException()
+}
+
+final class SetNAColumn[A](na: Int, underlying: Column[A]) extends Column[A] {
+  def exists(row: Int): Boolean = row != na && underlying.exists(row)
+  def missing(row: Int): Missing = if (row == na) NA else underlying.missing(row)
+  def value(row: Int): A = underlying.value(row)
+}
+
+final class ReindexColumn[A](index: Array[Int], underlying: Column[A]) extends Column[A] {
+  private final def valid(row: Int) = row >= 0 && row < index.length
+  def exists(row: Int): Boolean = valid(row) && underlying.exists(index(row))
+  def missing(row: Int): Missing = if (valid(row)) underlying.missing(index(row)) else NA
+  def value(row: Int): A = underlying.value(index(row))
 }
 
 final class ShiftColumn[A](shift: Int, underlying: Column[A]) extends Column[A] {

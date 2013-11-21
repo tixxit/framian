@@ -10,11 +10,13 @@ import scala.collection.mutable.{ ArrayBuilder, Builder }
 
 import spire.algebra.Order
 import spire.math.Searching
+
 import shapeless._
 
+import spire.syntax.order._
 import spire.syntax.cfor._
 
-trait Index[K] extends Iterable[(K, Int)] with IterableLike[(K, Int), Index[K]] {
+sealed trait Index[K] extends Iterable[(K, Int)] with IterableLike[(K, Int), Index[K]] {
   implicit def classTag: ClassTag[K]
   implicit def order: Order[K]
 
@@ -26,6 +28,10 @@ trait Index[K] extends Iterable[(K, Int)] with IterableLike[(K, Int), Index[K]] 
 
   def search(k: K): Int
 
+  def foreach[U](f: (K, Int) => U): Unit
+
+  override def foreach[U](f: ((K, Int)) => U): Unit = foreach(Function.untupled(f))
+
   override def seq: Index[K] = this
 
   override protected def newBuilder: Builder[(K, Int), Index[K]] =
@@ -36,8 +42,8 @@ trait Index[K] extends Iterable[(K, Int)] with IterableLike[(K, Int), Index[K]] 
     if (i >= 0) Some(i) else None
   }
 
-  def keys: Seq[K]
-  def indices: Array[Int]
+  private[pframe] def keys: Array[K]
+  private[pframe] def indices: Array[Int]
 }
 
 object Index {
@@ -108,7 +114,7 @@ object Index {
     val order0 = Array.range(0, keys.length).qsortedBy(keys(_))
     val indices0 = shuffle(indices, order0)
     val keys0 = shuffle(keys, order0)
-    new UnorderedIndex(keys0, flip(order0), indices0)
+    new UnorderedIndex(keys0, indices0, flip(order0))
   }
 
   private final class IndexBuilder[K: Order: ClassTag] extends Builder[(K, Int), Index[K]] {
@@ -128,57 +134,98 @@ object Index {
 
     def result(): Index[K] = Index.unordered(keys.result(), indices.result())
   }
+
+  def cogroup[K: Order](lhs: Index[K], rhs: Index[K])
+      (cogrouper: Cogrouper[K]): cogrouper.State = {
+    val lKeys = lhs.keys
+    val lIndices = lhs.indices
+    val rKeys = rhs.keys
+    val rIndices = rhs.indices
+
+    @tailrec def spanEnd(keys: Array[K], key: K, i: Int): Int =
+      if (i < keys.length && keys(i) === key) spanEnd(keys, key, i + 1)
+      else i
+
+    @tailrec def loop(s0: cogrouper.State, lStart: Int, rStart: Int): cogrouper.State =
+      if (lStart < lKeys.length && rStart < rKeys.length) {
+        val lKey = lKeys(lStart)
+        val rKey = rKeys(rStart)
+        val ord = lKey compare rKey
+        val lEnd = if (ord <= 0) spanEnd(lKeys, lKey, lStart + 1) else lStart
+        val rEnd = if (ord >= 0) spanEnd(rKeys, rKey, rStart + 1) else rStart
+        val s1 = cogrouper.cogroup(s0)(lKeys, lIndices, lStart, lEnd, rKeys, rIndices, rStart, rEnd)
+        loop(s1, lEnd, rEnd)
+      } else if (lStart < lKeys.length) {
+        val lEnd = spanEnd(lKeys, lKeys(lStart), lStart + 1)
+        val s1 = cogrouper.cogroup(s0)(lKeys, lIndices, lStart, lEnd, rKeys, rIndices, rStart, rStart)
+        loop(s1, lEnd, rStart)
+      } else if (rStart < rKeys.length) {
+        val rEnd = spanEnd(rKeys, rKeys(rStart), rStart + 1)
+        val s1 = cogrouper.cogroup(s0)(lKeys, lIndices, lStart, lStart, rKeys, rIndices, rStart, rEnd)
+        loop(s1, lStart, rEnd)
+      } else {
+        s0
+      }
+
+    loop(cogrouper.init, 0, 0)
+  }
 }
 
-abstract class BaseIndex[K](implicit
+sealed abstract class BaseIndex[K](implicit
     val order: Order[K], val classTag: ClassTag[K]) extends Index[K]
 
-final class UnorderedIndex[K: Order: ClassTag](
-      keys0: Array[K], order0: Array[Int], indices0: Array[Int])
+final case class UnorderedIndex[K: Order: ClassTag](
+      keys: Array[K], indices: Array[Int], ord: Array[Int])
     extends BaseIndex[K] {
 
-  def keys = order0 map (keys0(_))
-  def indices = order0.clone()
+  override def size: Int = keys.size
 
-  override def size: Int = order0.size
   def search(k: K): Int = {
-    val i = Searching.search(keys0, k)
+    val i = Searching.search(keys, k)
     if (i < 0) {
       val j = -i - 1
-      if (j < indices0.length) {
-        -indices0(-i - 1) - 1
+      if (j < indices.length) {
+        -indices(-i - 1) - 1
       } else {
         -j - 1
       }
     } else {
-      indices0(i)
+      indices(i)
     }
   }
 
-  def iterator: Iterator[(K, Int)] = order0.iterator map { i =>
-    (keys0(i), i)
+  def iterator: Iterator[(K, Int)] = ord.iterator map { i =>
+    (keys(i), indices(i))
   }
 
-  override def foreach[U](f: ((K, Int)) => U): Unit = {
-    cfor(0)(_ < order0.length, _ + 1) { i =>
-      val ord = order0(i)
-      f((keys0(ord), indices0(ord)))
+  def foreach[U](f: (K, Int) => U): Unit = {
+    cfor(0)(_ < ord.length, _ + 1) { i =>
+      val j = ord(i)
+      f(keys(j), indices(j))
     }
   }
 }
 
-final class OrderedIndex[K: Order: ClassTag](keys0: Array[K], indices0: Array[Int]) extends BaseIndex[K] {
-  def keys = keys0
-  def indices = indices0.clone()
-  override def size: Int = keys0.size
-  def search(k: K): Int = Searching.search(keys0, k)
-  def iterator: Iterator[(K, Int)] = Iterator.tabulate(keys0.length) { i =>
-    (keys0(i), indices0(i))
+final case class OrderedIndex[K: Order: ClassTag](keys: Array[K], indices: Array[Int]) extends BaseIndex[K] {
+  override def size: Int = keys.size
+  def search(k: K): Int = Searching.search(keys, k)
+  def iterator: Iterator[(K, Int)] = Iterator.tabulate(keys.length) { i =>
+    (keys(i), indices(i))
   }
 
-  override def foreach[U](f: ((K, Int)) => U): Unit = {
-    cfor(0)(_ < keys0.length, _ + 1) { i =>
-      f((keys0(i), indices0(i)))
+  def foreach[U](f: (K, Int) => U): Unit = {
+    cfor(0)(_ < keys.length, _ + 1) { i =>
+      f(keys(i), indices(i))
     }
   }
+}
+
+trait Cogrouper[K] {
+  type State
+
+  def init: State
+
+  def cogroup(state: State)(
+      lKeys: Array[K], lIdx: Array[Int], lStart: Int, lEnd: Int,
+      rKeys: Array[K], rIdx: Array[Int], rStart: Int, rEnd: Int): State
 }
