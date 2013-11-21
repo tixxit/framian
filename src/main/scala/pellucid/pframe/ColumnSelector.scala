@@ -129,7 +129,11 @@ trait ColumnSelection[Row, Col, Sz <: Size] {
       }
     }
 
-    val groupedIndex = Index.ordered(groups.toList flatMap { case (group, rows) => rows map (group -> _) })
+    val (keys, rows) = (for {
+      (group, rows) <- groups
+      row <- rows
+    } yield (group -> row)).unzip
+    val groupedIndex = Index.ordered(keys.toArray, rows.toArray)
     frame.withRowIndex(groupedIndex)
   }
 

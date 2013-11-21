@@ -8,7 +8,7 @@ import scala.collection.{ IterableLike, Iterable }
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable.{ ArrayBuilder, Builder }
 
-import spire.algebra.Order
+import spire.algebra.{ Order, Eq }
 import spire.math.Searching
 
 import shapeless._
@@ -42,6 +42,8 @@ sealed trait Index[K] extends Iterable[(K, Int)] with IterableLike[(K, Int), Ind
     if (i >= 0) Some(i) else None
   }
 
+  def sorted: Index[K] = Index.ordered(keys, indices)
+
   private[pframe] def keys: Array[K]
   private[pframe] def indices: Array[Int]
 }
@@ -55,10 +57,18 @@ object Index {
 
   def empty[K: Order: ClassTag]: Index[K] = new OrderedIndex[K](new Array[K](0), new Array[Int](0))
 
-  def apply[K: Order: ClassTag](keys: K*): Index[K] =
-    unordered(keys.toArray)
+  def fromKeys[K: Order: ClassTag](keys: K*): Index[K] =
+    Index(keys.zipWithIndex: _*)
 
-  def apply[K: Order: ClassTag](keys: Array[K]): Index[K] = {
+  def apply[K: Order: ClassTag](keys: Array[K]): Index[K] =
+    Index(keys, Array.range(0, keys.length))
+
+  def apply[K: Order: ClassTag](pairs: (K, Int)*): Index[K] = {
+    val (keys, indices) = pairs.unzip
+    apply(keys.toArray, indices.toArray)
+  }
+
+  def apply[K: Order: ClassTag](keys: Array[K], indices: Array[Int]): Index[K] = {
     import spire.syntax.order._
 
     @tailrec
@@ -71,19 +81,17 @@ object Index {
     }
 
     if (isOrdered(1)) {
-      ordered(keys)
+      ordered(keys, indices)
     } else {
-      unordered(keys)
+      unordered(keys, indices)
     }
   }
 
-  def ordered[K: Order: ClassTag](pairs: Seq[(K, Int)]): Index[K] = {
-    val (keys, indices) = pairs.unzip
-    new OrderedIndex(keys.toArray, indices.toArray)
-  }
-
   def ordered[K: Order: ClassTag](keys: Array[K]): Index[K] =
-    new OrderedIndex(keys, Array.range(0, keys.length))
+    ordered(keys, Array.range(0, keys.length))
+
+  def ordered[K: Order: ClassTag](keys: Array[K], indices: Array[Int]): Index[K] =
+    new OrderedIndex(keys, indices)
 
   def unordered[K: Order: ClassTag](keys: Array[K]): Index[K] =
     unordered(keys, Array.range(0, keys.length))
@@ -133,6 +141,54 @@ object Index {
     }
 
     def result(): Index[K] = Index.unordered(keys.result(), indices.result())
+  }
+
+  @tailrec
+  private final def spanEnd[K: Eq](keys: Array[K], key: K, i: Int): Int =
+    if (i < keys.length && keys(i) === key) spanEnd(keys, key, i + 1)
+    else i
+
+  trait Grouper[K] {
+    type State
+
+    def init: State
+    
+    def group(state: State)(keys: Array[K], indices: Array[Int], start: Int, end: Int): State
+  }
+
+  def group[K: Order](index: Index[K])(grouper: Grouper[K]): grouper.State = {
+    val keys = index.keys
+    val indices = index.indices
+
+    @tailrec def loop(s0: grouper.State, start: Int): grouper.State =
+      if (start < keys.length) {
+        val end = spanEnd(keys, keys(start), start)
+        val s1 = grouper.group(s0)(keys, indices, start, end)
+        loop(s1, end)
+      } else {
+        s0
+      }
+
+    loop(grouper.init, 0)
+  }
+
+  /**
+   * `Cogrouper` provides the abstraction used by `Index.cogroup` to work with
+   * the result of a cogroup. Essentially, the cogroup will initiate some state,
+   * then perform a cogroup on the 2 [[Index]]es, with each unique key resulting
+   * in one call to `cogroup`. The reason the signature is a bit weird, with
+   * the start/end offsets being passed in is to avoid copying and allocation
+   * where possible. All implementations of [[Index]] can perform this operation
+   * efficiently.
+   */
+  trait Cogrouper[K] {
+    type State
+
+    def init: State
+
+    def cogroup(state: State)(
+        lKeys: Array[K], lIdx: Array[Int], lStart: Int, lEnd: Int,
+        rKeys: Array[K], rIdx: Array[Int], rStart: Int, rEnd: Int): State
   }
 
   def cogroup[K: Order](lhs: Index[K], rhs: Index[K])
@@ -218,14 +274,4 @@ final case class OrderedIndex[K: Order: ClassTag](keys: Array[K], indices: Array
       f(keys(i), indices(i))
     }
   }
-}
-
-trait Cogrouper[K] {
-  type State
-
-  def init: State
-
-  def cogroup(state: State)(
-      lKeys: Array[K], lIdx: Array[Int], lStart: Int, lEnd: Int,
-      rKeys: Array[K], rIdx: Array[Int], rStart: Int, rEnd: Int): State
 }

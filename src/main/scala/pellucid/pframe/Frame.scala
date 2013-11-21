@@ -41,7 +41,7 @@ trait Frame[Row, Col] {
       (key, col.setNA(Joiner.Skip).reindex(rIndex))
     }
     val (newColIndex, cols) = (cols0 ++ cols1).unzip
-    ColOrientedFrame(newRowIndex, Index(newColIndex: _*), cols.toArray)
+    ColOrientedFrame(newRowIndex, Index(newColIndex.toArray), cols.toArray)
   }
 }
 
@@ -77,6 +77,6 @@ case class ColOrientedFrame[Row, Col](
 object Frame {
   def apply[Row,Col: Order: ClassTag](rowIndex: Index[Row], colPairs: (Col,UntypedColumn)*): Frame[Row,Col] = {
     val (colKeys, cols) = colPairs.unzip
-    ColOrientedFrame(rowIndex, Index(colKeys: _*), cols.toArray)
+    ColOrientedFrame(rowIndex, Index(colKeys.toArray), cols.toArray)
   }
 }
