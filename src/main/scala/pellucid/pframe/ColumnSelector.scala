@@ -24,55 +24,13 @@ import shapeless.ops.function._
  * which includes `map` and `filter` for instance. However, we can still cast
  * the selector (via `as`) to types that don't require a fixed size, such as
  * lists of strings or JSON objects.
- *
- * TODO: Split this up into 2 classes: ColumnSelection and ColumnSelector. The
- *       first provides the lovely methods like map, filter, etc. The 2nd
- *       inherits from this, but then provides methods for creating selections.
- *       The ColumnSelector only wraps frame and just uses all cols from the
- *       frame as its list.
  */
-final case class ColumnSelector[Row, Col, Sz <: Size](frame: Frame[Row, Col], cols: List[Col]) {
-  import Nat._
+trait ColumnSelection[Row, Col, Sz <: Size] {
 
   type RowExtractorAux[A] = RowExtractor[A, Col, Sz]
 
-  /**
-   * Constructs a `ColumnSelector` from an unsized collection of columns. This
-   * means the selector will have only a [[Variable]] size, which limits the
-   * operations that can be performed on it. If possible, one of the sized
-   * variants should be used instead.
-   */
-  def apply(cols: Seq[Col]): ColumnSelector[Row, Col, Variable] =
-    new ColumnSelector[Row, Col, Variable](frame, cols.toList)
-
-  def apply(col: Col): ColumnSelector[Row, Col, Fixed[_1]] =
-    new ColumnSelector[Row, Col, Fixed[_1]](frame, col :: Nil)
-
-  def apply(col0: Col, col1: Col): ColumnSelector[Row, Col, Fixed[_2]] =
-    new ColumnSelector[Row, Col, Fixed[_2]](frame, col0 :: col1 :: Nil)
-
-  def apply(col0: Col, col1: Col, col2: Col): ColumnSelector[Row, Col, Fixed[_3]] =
-    new ColumnSelector[Row, Col, Fixed[_3]](frame, col0 :: col1 :: col2 :: Nil)
-
-  def apply(col0: Col, col1: Col, col2: Col, col3: Col): ColumnSelector[Row, Col, Fixed[_4]] =
-    new ColumnSelector[Row, Col, Fixed[_4]](frame, col0 :: col1 :: col2 :: col3 :: Nil)
-
-  def apply(col0: Col, col1: Col, col2: Col, col3: Col, col4: Col): ColumnSelector[Row, Col, Fixed[_5]] =
-    new ColumnSelector[Row, Col, Fixed[_5]](frame, col0 :: col1 :: col2 :: col3 :: col4 :: Nil)
-
-  def apply(col0: Col, col1: Col, col2: Col, col3: Col, col4: Col, col5: Col): ColumnSelector[Row, Col, Fixed[_6]] =
-    new ColumnSelector[Row, Col, Fixed[_6]](frame, col0 :: col1 :: col2 :: col3 :: col4 :: col5 :: Nil)
-
-  def apply(col0: Col, col1: Col, col2: Col, col3: Col, col4: Col, col5: Col, col6: Col): ColumnSelector[Row, Col, Fixed[_7]] =
-    new ColumnSelector[Row, Col, Fixed[_7]](frame, col0 :: col1 :: col2 :: col3 :: col4 :: col5 :: col6 :: Nil)
-
-  def apply(col0: Col, col1: Col, col2: Col, col3: Col, col4: Col, col5: Col, col6: Col, col7: Col): ColumnSelector[Row, Col, Fixed[_8]] =
-    new ColumnSelector[Row, Col, Fixed[_8]](frame, col0 :: col1 :: col2 :: col3 :: col4 :: col5 :: col6 :: col7 :: Nil)
-
-  // TODO: The above was created easily w/ a Vim macro, but should be code-gen.
-
-  def apply[N <: Nat](sized: Sized[Iterable[Col], N]): ColumnSelector[Row, Col, Fixed[N]] =
-    new ColumnSelector[Row, Col, Fixed[N]](frame, sized.unsized.toList)
+  def frame: Frame[Row, Col]
+  def cols: List[Col] // TODO: This should just be an Index or something.
 
   def get[A: RowExtractorAux](key: Row): Cell[A] = for {
     i <- Cell.fromOption(frame.rowIndex.get(key))
@@ -181,4 +139,54 @@ final case class ColumnSelector[Row, Col, Sz <: Size](frame: Frame[Row, Col], co
   def groupBy[F, L <: HList, A](f: F)(implicit fntop: FnToProduct.Aux[F, L => A],
       extractor: RowExtractorAux[L], order: Order[A], ct: ClassTag[A]): Frame[A, Col] =
     groupBy0[L, A](fntop(f))
+}
+
+final case class SimpleColumnSelection[Row, Col, Sz <: Size](frame: Frame[Row, Col], cols: List[Col]) extends ColumnSelection[Row, Col, Sz]
+
+/*
+ * Extends [[ColumnSelection]] with methods to select sub-sets of columns.
+ * This wraps the entire frame and represents all columns in it.
+ */
+final case class ColumnSelector[Row, Col](frame: Frame[Row, Col]) extends ColumnSelection[Row, Col, Variable] {
+  import Nat._
+
+  def cols: List[Col] = frame.colIndex.map(_._1)(collection.breakOut)
+
+  /**
+   * Constructs a `ColumnSelector` from an unsized collection of columns. This
+   * means the selector will have only a [[Variable]] size, which limits the
+   * operations that can be performed on it. If possible, one of the sized
+   * variants should be used instead.
+   */
+  def apply(cols: Seq[Col]): ColumnSelection[Row, Col, Variable] =
+    SimpleColumnSelection[Row, Col, Variable](frame, cols.toList)
+
+  def apply(col: Col): ColumnSelection[Row, Col, Fixed[_1]] =
+    SimpleColumnSelection[Row, Col, Fixed[_1]](frame, col :: Nil)
+
+  def apply(col0: Col, col1: Col): ColumnSelection[Row, Col, Fixed[_2]] =
+    SimpleColumnSelection[Row, Col, Fixed[_2]](frame, col0 :: col1 :: Nil)
+
+  def apply(col0: Col, col1: Col, col2: Col): ColumnSelection[Row, Col, Fixed[_3]] =
+    SimpleColumnSelection[Row, Col, Fixed[_3]](frame, col0 :: col1 :: col2 :: Nil)
+
+  def apply(col0: Col, col1: Col, col2: Col, col3: Col): ColumnSelection[Row, Col, Fixed[_4]] =
+    SimpleColumnSelection[Row, Col, Fixed[_4]](frame, col0 :: col1 :: col2 :: col3 :: Nil)
+
+  def apply(col0: Col, col1: Col, col2: Col, col3: Col, col4: Col): ColumnSelection[Row, Col, Fixed[_5]] =
+    SimpleColumnSelection[Row, Col, Fixed[_5]](frame, col0 :: col1 :: col2 :: col3 :: col4 :: Nil)
+
+  def apply(col0: Col, col1: Col, col2: Col, col3: Col, col4: Col, col5: Col): ColumnSelection[Row, Col, Fixed[_6]] =
+    SimpleColumnSelection[Row, Col, Fixed[_6]](frame, col0 :: col1 :: col2 :: col3 :: col4 :: col5 :: Nil)
+
+  def apply(col0: Col, col1: Col, col2: Col, col3: Col, col4: Col, col5: Col, col6: Col): ColumnSelection[Row, Col, Fixed[_7]] =
+    SimpleColumnSelection[Row, Col, Fixed[_7]](frame, col0 :: col1 :: col2 :: col3 :: col4 :: col5 :: col6 :: Nil)
+
+  def apply(col0: Col, col1: Col, col2: Col, col3: Col, col4: Col, col5: Col, col6: Col, col7: Col): ColumnSelection[Row, Col, Fixed[_8]] =
+    SimpleColumnSelection[Row, Col, Fixed[_8]](frame, col0 :: col1 :: col2 :: col3 :: col4 :: col5 :: col6 :: col7 :: Nil)
+
+  // TODO: The above was created easily w/ a Vim macro, but should be code-gen.
+
+  def apply[N <: Nat](sized: Sized[Iterable[Col], N]): ColumnSelection[Row, Col, Fixed[N]] =
+    SimpleColumnSelection[Row, Col, Fixed[N]](frame, sized.unsized.toList)
 }

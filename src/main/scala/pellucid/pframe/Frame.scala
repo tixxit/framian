@@ -21,8 +21,7 @@ trait Frame[Row, Col] {
   def column[A: Typeable: TypeTag](col: Col): Series[Row,A]
   def row[A: Typeable: TypeTag](row: Row): Series[Col,A]
 
-  def columns: ColumnSelector[Row, Col, Variable] =
-    ColumnSelector(this, colIndex.map(_._1)(collection.breakOut))
+  def columns: ColumnSelector[Row, Col] = ColumnSelector(this)
 
   def withColIndex[C1](ci: Index[C1]): Frame[Row, C1]
   def withRowIndex[R1](ri: Index[R1]): Frame[R1, Col]

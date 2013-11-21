@@ -10,13 +10,8 @@ import shapeless.syntax.typeable._
  * casting to a real, typed column. Values that cannot be cast are treated as
  * `NM` (not meaningful) values.
  */
-trait UntypedColumn {
+trait UntypedColumn extends ColumnLike[UntypedColumn] {
   def cast[A: Typeable: TypeTag]: Column[A]
-
-  def mask(bits: Int => Boolean): UntypedColumn
-  def shift(rows: Int): UntypedColumn
-  def reindex(index: Array[Int]): UntypedColumn
-  def setNA(row: Int): UntypedColumn
 }
 
 case class TypedColumn[A](column: Column[A])(implicit val typeTagA: TypeTag[A]) extends UntypedColumn {
