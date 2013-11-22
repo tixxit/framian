@@ -16,6 +16,9 @@ trait Frame[Row, Col] {
   private implicit def colClassTag = colIndex.classTag
   private implicit def colOrder = colIndex.order
 
+  def columnsAsSeries: Series[Col, UntypedColumn]
+  def rowsAsSeries: Series[Row, UntypedColumn]
+
   def getColumns: Seq[(Col, UntypedColumn)]
 
   def column[A: Typeable: TypeTag](col: Col): Series[Row,A]
@@ -44,18 +47,23 @@ trait Frame[Row, Col] {
       (key, col.setNA(Joiner.Skip).reindex(rIndex))
     }
     val (newColIndex, cols) = (cols0 ++ cols1).unzip
-    ColOrientedFrame(newRowIndex, Index(newColIndex.toArray), cols.toArray)
+    ColOrientedFrame(newRowIndex, Index(newColIndex.toArray), Column.fromArray(cols.toArray))
   }
 }
 
 case class ColOrientedFrame[Row, Col](
       rowIndex: Index[Row],
       colIndex: Index[Col],
-      cols: Array[UntypedColumn])
+      cols: Column[UntypedColumn])
     extends Frame[Row, Col] {
 
+  def columnsAsSeries: Series[Col, UntypedColumn] = Series(colIndex, cols)
+  def rowsAsSeries: Series[Row, UntypedColumn] = Series(rowIndex, Column[UntypedColumn]({ row =>
+    new RowView(col => col, row)
+  }))
+
   def getColumns: Seq[(Col, UntypedColumn)] = colIndex.map({ case (key, i) =>
-    (key, cols(i))
+    (key, cols.value(i))
   })(collection.breakOut)
 
   def column[A: Typeable: TypeTag](k: Col): Series[Row,A] =
@@ -63,7 +71,9 @@ case class ColOrientedFrame[Row, Col](
 
   def row[A: Typeable: TypeTag](k: Row): Series[Col,A] =
     Series(colIndex, rowIndex get k map { row =>
-      Column.fromCells(cols map { _.cast[A].apply(row) })
+      Column.fromCells(colIndex.map({ case (_, i) =>
+        cols.value(i).cast[A].apply(row)
+      })(collection.breakOut))
     } getOrElse Column.empty[A])
 
   def withColIndex[C1](ci: Index[C1]): Frame[Row, C1] =
@@ -74,12 +84,26 @@ case class ColOrientedFrame[Row, Col](
 
   private def rawColumn[A: Typeable: TypeTag](k: Col): Option[Column[A]] = for {
     i <- colIndex.get(k)
-  } yield cols(i).cast[A]
+  } yield cols.value(i).cast[A]
+
+  private final class RowView(trans: UntypedColumn => UntypedColumn, row: Int) extends UntypedColumn {
+    def cast[B: Typeable: TypeTag]: Column[B] = Column.wrap[B] { colIdx =>
+      for {
+        col <- cols(colIndex.indexAt(colIdx))
+        value <- trans(col).cast[B].apply(row)
+      } yield value
+    }
+    private def transform(f: UntypedColumn => UntypedColumn) = new RowView(trans andThen f, row)
+    def mask(bits: Int => Boolean): UntypedColumn = transform(_.mask(bits))
+    def shift(rows: Int): UntypedColumn = transform(_.shift(rows))
+    def reindex(index: Array[Int]): UntypedColumn = transform(_.reindex(index))
+    def setNA(na: Int): UntypedColumn = transform(_.setNA(na))
+  }
 }
 
 object Frame {
   def apply[Row,Col: Order: ClassTag](rowIndex: Index[Row], colPairs: (Col,UntypedColumn)*): Frame[Row,Col] = {
     val (colKeys, cols) = colPairs.unzip
-    ColOrientedFrame(rowIndex, Index(colKeys.toArray), cols.toArray)
+    ColOrientedFrame(rowIndex, Index(colKeys.toArray), Column.fromArray(cols.toArray))
   }
 }

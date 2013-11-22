@@ -3,6 +3,8 @@ package pframe
 
 import scala.collection.immutable.BitSet
 
+import spire.algebra._
+
 import shapeless._
 import shapeless.syntax.typeable._
 
@@ -105,6 +107,13 @@ object Column {
   def fromArray[A](values: Array[A]): Column[A] = new DenseColumn(BitSet.empty, BitSet.empty, values)
 
   def fromMap[A](values: Map[Int, A]): Column[A] = new MapColumn(values)
+
+  def wrap[A](f: Int => Cell[A]): Column[A] = new WrappedColumn(f)
+
+  implicit def monoid[A] = new Monoid[Column[A]] {
+    def id: Column[A] = empty[A]
+    def op(lhs: Column[A], rhs: Column[A]): Column[A] = new MergedColumn(lhs, rhs)
+  }
 }
 
 final class EmptyColumn[A] extends Column[A] {
@@ -188,4 +197,22 @@ final class MapColumn[A](values: Map[Int,A]) extends Column[A] {
   def exists(row: Int): Boolean = values contains row
   def missing(row: Int): Missing = NA
   def value(row: Int): A = values(row)
+}
+
+final class MergedColumn[A](left: Column[A], right: Column[A]) extends Column[A] {
+  def exists(row: Int): Boolean = left.exists(row) || right.exists(row)
+  def missing(row: Int): Missing = if (!right.exists(row)) right.missing(row) else left.missing(row)
+  def value(row: Int): A = if (right.exists(row)) right.value(row) else left.value(row)
+}
+
+final class WrappedColumn[A](f: Int => Cell[A]) extends Column[A] {
+  def exists(row: Int): Boolean = !f(row).isMissing
+  def missing(row: Int): Missing = f(row) match {
+    case Value(_) => throw new IllegalArgumentException(s"row:$row is not missing")
+    case (m: Missing) => m
+  }
+  def value(row: Int): A = f(row) match {
+    case Value(a) => a
+    case _ => throw new IllegalArgumentException(s"row:$row is missing (${missing(row)})")
+  }
 }

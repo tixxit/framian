@@ -9,6 +9,7 @@ package pframe
  */
 sealed trait Cell[+A] {
   def isMissing: Boolean
+
   def value: Option[A]
 
   def fold[B](na: => B, nm: => B)(f: A => B): B = this match {

@@ -32,6 +32,8 @@ trait ColumnSelection[Row, Col, Sz <: Size] {
   def frame: Frame[Row, Col]
   def cols: List[Col] // TODO: This should just be an Index or something.
 
+  // def selection: Index[Col]
+
   def get[A: RowExtractorAux](key: Row): Cell[A] = for {
     i <- Cell.fromOption(frame.rowIndex.get(key))
     extractor = RowExtractor[A, Col, Sz]
