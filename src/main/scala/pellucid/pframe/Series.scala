@@ -42,29 +42,23 @@ case class Series[K,V](index: Index[K], column: Column[V]) {
   def mapValues[W](f: V => W): Series[K, W] =
     Series(index, column map f)
 
-  def reduceByKey(implicit V: Monoid[V], ct: ClassTag[V]): Series[K, V] = {
-    val reduction = new Reduction[K, V](column)
+  def reduceByKey[W: ClassTag](reducer: Reducer[V, W]): Series[K, W] = {
+    val reduction = new Reduction[K, V, W](column, reducer)
     val (keys, values) = Index.group(index)(reduction).result()
     Series(Index.ordered(keys), Column.fromArray(values))
   }
 
-  def reduce(implicit V: Monoid[V]): V = {
-    var sum: V = V.id // TODO: Closing over a var.
-    index.foreach { (_, row) =>
-      if (column.exists(row))
-        sum = sum |+| column.value(row)
-    }
-    sum
-  }
+  def reduce[W: ClassTag](reducer: Reducer[V, W]): W =
+    reducer.reduce(column, index.indices, 0, index.size) // TODO: This is incorrect. Should be index.ord.
 
   // def reduceOption(implicit V: Semigroup[V]): Option[V] =
   //   this.mapValues[Option[V]](Some(_)).reduce
 
-  def sum(implicit V: AdditiveMonoid[V]): V =
-    reduce(V.additive)
+  def sum(implicit V: AdditiveMonoid[V], ct: ClassTag[V]): V =
+    reduce(Reducers.monoid(V.additive))
 
   def sumByKey(implicit V: AdditiveMonoid[V], ct: ClassTag[V]): Series[K, V] =
-    reduceByKey(V.additive, ct)
+    reduceByKey(Reducers.monoid(V.additive))
 
   override def toString: String =
     (keys zip values).map { case (key, value) =>
@@ -78,31 +72,5 @@ object Series {
   def apply[K: Order: ClassTag, V: ClassTag](kvs: (K, V)*): Series[K,V] = {
     val (keys, values) = kvs.unzip
     Series(Index(keys.toArray), Column.fromArray(values.toArray))
-  }
-}
-
-private final class Reduction[K: ClassTag, V: Monoid: ClassTag](column: Column[V]) extends Index.Grouper[K] {
-  final class State {
-    val keys = ArrayBuilder.make[K]
-    val values = ArrayBuilder.make[V]
-
-    def add(key: K, value: V) {
-      keys += key
-      values += value
-    }
-
-    def result() = (keys.result(), values.result())
-  }
-
-  def init = new State
-
-  def group(state: State)(keys: Array[K], indices: Array[Int], start: Int, end: Int): State = {
-    @tailrec def reduce(i: Int, acc: V): V = if (i < end) {
-      val row = indices(i)
-      reduce(i + 1, if (column.exists(row)) acc |+| column.value(row) else acc)
-    } else acc
-
-    state.add(keys(start), reduce(start, Monoid[V].id))
-    state
   }
 }
