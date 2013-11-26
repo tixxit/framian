@@ -23,7 +23,7 @@ object Utilities {
     quote: String = '"',
     rowIndex: Option[Int] = None,
     columnIndex: Boolean = false,
-    columnsToParse: List[Int] = List()
+    contentColumnsToParse: List[Int] = List()
   ) = {
     val stripWhitespaceCheckQuoteState =
       s"(?:[\\s]*($quote[^$quote]*$quote|[^\\s$quote]*)[\\s]*)|[\\s]*($quote[^$quote]*)".r
@@ -66,7 +66,9 @@ object Utilities {
 
     val file = new BufferedReader(new FileReader(location))
     var nextLine = file.readLine()
-    //
+
+
+    val columns
     val firstParsedLine = parseLine(nextLine, columnsToParse.sorted)
     val numberOfColumns = firstParsedLine.length + (if (rowIndex.isDefined) 1 else 0)
     val columnsSeq = 0 to numberOfColumns
