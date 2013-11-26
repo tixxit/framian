@@ -67,12 +67,16 @@ object Utilities {
     val file = new BufferedReader(new FileReader(location))
     var nextLine = file.readLine()
 
-
-    val columns
-    val firstParsedLine = parseLine(nextLine, columnsToParse.sorted)
-    val numberOfColumns = firstParsedLine.length + (if (rowIndex.isDefined) 1 else 0)
+    // if you want a row index, you don't have to explicitly specify the first column in columnsToParse
+    val columnsToParse = rowIndex.fold(contentColumnsToParse) {
+      indexPosition =>
+      if (!contentColumnsToParse.isEmpty && !contentColumnsToParse.contains(indexPosition)) indexPosition :: contentColumnsToParse
+      else contentColumnsToParse
+    }
+    // first line might be the column index and not real values, also want to instantiate column cache
+    val firstParsedLine = parseLine(nextLine, columnsToParse)
+    val numberOfColumns = firstParsedLine.length
     val columnsSeq = 0 to numberOfColumns
-
     val (colIndexArray, columns) =
       if (columnIndex) (firstParsedLine, ArrayBuffer[ArrayBuffer[String]](columnsSeq map { _ => ArrayBuffer[String]() }))
       else (Array(columnsSeq: _*), ArrayBuffer[ArrayBuffer[String]]())
@@ -84,5 +88,7 @@ object Utilities {
       position += 1
     }
     file.close()
+
+    Frame(Index(columns(0)), colIndexArray.zip(columns(1:columns.length)))
   }
 }
