@@ -102,6 +102,18 @@ case class ColOrientedFrame[Row, Col](
 }
 
 object Frame {
+  def empty[Row: Order: ClassTag, Col: Order: ClassTag]: Frame[Row, Col] =
+    ColOrientedFrame[Row, Col](Index.empty, Index.empty, Column.empty)
+
+  def apply[A, Col](rows: A*)(implicit pop: RowPopulator[A, Int, Col]): Frame[Int, Col] =
+    pop.frame(rows.zipWithIndex.foldLeft(pop.init) { case (state, (data, row)) =>
+      pop.populate(state, row, data)
+    })
+
+  def fromColumns[Row, Col](rowIdx: Index[Row], colIdx: Index[Col],
+      cols: Column[UntypedColumn]): Frame[Row, Col] =
+    ColOrientedFrame(rowIdx, colIdx, cols)
+
   def apply[Row,Col: Order: ClassTag](rowIndex: Index[Row], colPairs: (Col,UntypedColumn)*): Frame[Row,Col] = {
     val (colKeys, cols) = colPairs.unzip
     ColOrientedFrame(rowIndex, Index(colKeys.toArray), Column.fromArray(cols.toArray))
