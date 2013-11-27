@@ -47,6 +47,10 @@ sealed trait Cell[+A] {
 }
 
 object Cell {
+  def value[A](x: A): Cell[A] = Value(x)
+  def notAvailable[A]: Cell[A] = NA
+  def notMeaningful[A]: Cell[A] = NM
+
   def fromOption[A](opt: Option[A]): Cell[A] = opt match {
     case Some(a) => Value(a)
     case None => NA
