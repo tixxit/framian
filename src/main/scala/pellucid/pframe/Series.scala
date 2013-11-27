@@ -38,26 +38,55 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     Series(Index.ordered(keys), Column.fromArray(values))
   }
 
+  /**
+   * Sort this series by index keys and return it. The sort should be stable,
+   * so the relative order within a key will remain the same.
+   */
   def sorted: Series[K, V] = Series(index.sorted, column)
 
+  /**
+   * Convert this Series to a single column [[Frame]].
+   */
   def toFrame[C: Order: ClassTag](col: C)(implicit tt: TypeTag[V]): Frame[K, C] =
     Frame(index, col -> TypedColumn(column))
 
+  /**
+   * Map the values of this series only. Note that the function `f` will be
+   * called every time a value is accessed. To prevent this, you must `compact`
+   * the Series.
+   */
   def mapValues[W](f: V => W): Series[K, W] =
     Series(index, column map f)
 
-  def reduceByKey[W: ClassTag](reducer: Reducer[V, W]): Series[K, W] = {
-    val reduction = new Reduction[K, V, W](column, reducer)
-    val (keys, values) = Index.group(index)(reduction).result()
-    Series(Index.ordered(keys), Column.fromArray(values))
-  }
+  /**
+   * Returns a compacted version of this `Series`. The new series will be equal
+   * to the old one, but the backing column will be dropped and replaced with a
+   * version that only contains the values needed for this series. It will also
+   * remove any indirection in the underlying column, such as that caused by
+   * reindexing, shifting, mapping values, etc.
+   */
+  def compacted[V: ClassTag]: Series[K, V] = ???
 
+  /**
+   * Reduce all the values in this `Series` using the given reducer.
+   */
   def reduce[W: ClassTag](reducer: Reducer[V, W]): W = {
     val indices = new Array[Int](index.size)
     cfor(0)(_ < indices.length, _ + 1) { i =>
       indices(i) = index.indexAt(i)
     }
     reducer.reduce(column, indices, 0, index.size)
+  }
+
+  /**
+   * For each unique key in this series, this reduces all the values for that
+   * key and returns a series with only the unique keys and reduced values. The
+   * new series will be in key order.
+   */
+  def reduceByKey[W: ClassTag](reducer: Reducer[V, W]): Series[K, W] = {
+    val reduction = new Reduction[K, V, W](column, reducer)
+    val (keys, values) = Index.group(index)(reduction).result()
+    Series(Index.ordered(keys), Column.fromArray(values))
   }
 
   override def toString: String =
