@@ -155,7 +155,7 @@ final class FilteredColumn[A](f: A => Boolean, underlying: Column[A]) extends Co
 
 final class MaskedColumn[A](bits: Int => Boolean, underlying: Column[A]) extends Column[A] {
   def exists(row: Int): Boolean = underlying.exists(row) && bits(row)
-  def missing(row: Int): Missing = if (!bits(row)) NA else underlying.missing(row) // TODO: Should swap order.
+  def missing(row: Int): Missing = if (bits(row)) underlying.missing(row) else NA
   def value(row: Int): A = underlying.value(row)
 }
 
@@ -201,7 +201,8 @@ final class MapColumn[A](values: Map[Int,A]) extends Column[A] {
 
 final class MergedColumn[A](left: Column[A], right: Column[A]) extends Column[A] {
   def exists(row: Int): Boolean = left.exists(row) || right.exists(row)
-  def missing(row: Int): Missing = if (!right.exists(row)) right.missing(row) else left.missing(row)
+  def missing(row: Int): Missing = 
+    if (!right.exists(row) && right.missing(row) == NM) NM else left.missing(row)
   def value(row: Int): A = if (right.exists(row)) right.value(row) else left.value(row)
 }
 

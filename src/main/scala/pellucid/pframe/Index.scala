@@ -26,7 +26,19 @@ sealed trait Index[K] extends Iterable[(K, Int)] with IterableLike[(K, Int), Ind
 
   def iterator: Iterator[(K, Int)]
 
-  def search(k: K): Int
+  def search(k: K): Int = {
+    val i = Searching.search(keys, k)
+    if (i < 0) {
+      val j = -i - 1
+      if (j < indices.length) {
+        -indices(-i - 1) - 1
+      } else {
+        -j - 1
+      }
+    } else {
+      indices(i)
+    }
+  }
 
   def apply(i: Int): (K, Int) = (keyAt(i), indexAt(i))
   def keyAt(i: Int): K
@@ -121,8 +133,6 @@ object Index {
       }
       ys
     }
-
-    // TODO: We can probably do better here. Especially once qsearchBy lands in Spire.
 
     val order0 = Array.range(0, keys.length).qsortedBy(keys(_))
     val indices0 = shuffle(indices, order0)
@@ -237,20 +247,6 @@ final case class UnorderedIndex[K: Order: ClassTag](
 
   override def size: Int = keys.size
 
-  def search(k: K): Int = {
-    val i = Searching.search(keys, k)
-    if (i < 0) {
-      val j = -i - 1
-      if (j < indices.length) {
-        -indices(-i - 1) - 1
-      } else {
-        -j - 1
-      }
-    } else {
-      indices(i)
-    }
-  }
-
   def keyAt(i: Int): K = keys(ord(i))
   def indexAt(i: Int): Int = indices(ord(i))
 
@@ -268,7 +264,6 @@ final case class UnorderedIndex[K: Order: ClassTag](
 
 final case class OrderedIndex[K: Order: ClassTag](keys: Array[K], indices: Array[Int]) extends BaseIndex[K] {
   override def size: Int = keys.size
-  def search(k: K): Int = Searching.search(keys, k)
   def keyAt(i: Int): K = keys(i)
   def indexAt(i: Int): Int = indices(i)
   def iterator: Iterator[(K, Int)] = Iterator.tabulate(keys.length) { i =>
