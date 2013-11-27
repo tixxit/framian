@@ -12,7 +12,7 @@ import spire.syntax.additiveMonoid._
 import spire.syntax.monoid._
 import spire.syntax.cfor._
 
-case class Series[K,V](index: Index[K], column: Column[V]) {
+final class Series[K,V](val index: Index[K], val column: Column[V]) {
   private implicit def classTag = index.classTag
   private implicit def order = index.order
 
@@ -21,6 +21,10 @@ case class Series[K,V](index: Index[K], column: Column[V]) {
 
   def apply(key: K): Cell[V] = index.get(key) map (column(_)) getOrElse NA
 
+  /**
+   * Performs an inner join on this `Series` with `that`. Each pair of values
+   * for a matching key is passed to `f`.
+   */
   def zipMap[W, X: ClassTag](that: Series[K, W])(f: (V, W) => X): Series[K, X] = {
     val joiner = Joiner[K](Join.Inner)
     val (keys, lIndices, rIndices) = Index.cogroup(this.index, that.index)(joiner).result()
@@ -48,26 +52,38 @@ case class Series[K,V](index: Index[K], column: Column[V]) {
     Series(Index.ordered(keys), Column.fromArray(values))
   }
 
-  def reduce[W: ClassTag](reducer: Reducer[V, W]): W =
-    reducer.reduce(column, index.indices, 0, index.size) // TODO: This is incorrect. Should be index.ord.
-
-  // def reduceOption(implicit V: Semigroup[V]): Option[V] =
-  //   this.mapValues[Option[V]](Some(_)).reduce
-
-  def sum(implicit V: AdditiveMonoid[V], ct: ClassTag[V]): V =
-    reduce(Reducers.monoid(V.additive))
-
-  def sumByKey(implicit V: AdditiveMonoid[V], ct: ClassTag[V]): Series[K, V] =
-    reduceByKey(Reducers.monoid(V.additive))
+  def reduce[W: ClassTag](reducer: Reducer[V, W]): W = {
+    val indices = new Array[Int](index.size)
+    cfor(0)(_ < indices.length, _ + 1) { i =>
+      indices(i) = index.indexAt(i)
+    }
+    reducer.reduce(column, indices, 0, index.size)
+  }
 
   override def toString: String =
     (keys zip values).map { case (key, value) =>
       s"$key -> $value"
     }.mkString("Series(", ", ", ")")
+
+  override def equals(that0: Any): Boolean = that0 match {
+    case (that: Series[_, _]) if this.index.size == that.index.size =>
+      (this.index.iterator zip that.index.iterator) forall {
+        case ((key0, idx0), (key1, idx1)) if key0 == key1 =>
+          this.column(idx0) == that.column(idx1)
+        case _ => false
+      }
+    case _ => false
+  }
+
+  override def hashCode: Int =
+    index.map { case (k, i) => (k, column(i)) }.hashCode
 }
 
 object Series {
   def empty[K: Order: ClassTag, V] = Series(Index.empty[K], Column.empty[V])
+
+  def apply[K, V](index: Index[K], column: Column[V]): Series[K, V] =
+    new Series(index, column)
 
   def apply[K: Order: ClassTag, V: ClassTag](kvs: (K, V)*): Series[K,V] = {
     val (keys, values) = kvs.unzip

@@ -16,7 +16,7 @@ import shapeless.syntax.typeable._
  * instance, ties a `Column` together with an [[Index]] to restrict the set of
  * rows being used.
  */
-trait Column[A] extends ColumnLike[Column[A]] {
+trait Column[+A] extends ColumnLike[Column[A]] {
 
   /**
    * Returns `true` if the value exists; that is, it is available and
