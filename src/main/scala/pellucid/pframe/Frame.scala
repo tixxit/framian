@@ -19,18 +19,13 @@ trait Frame[Row, Col] {
   def columnsAsSeries: Series[Col, UntypedColumn]
   def rowsAsSeries: Series[Row, UntypedColumn]
 
-  def getColumns: Seq[(Col, UntypedColumn)]
-
-  def column[A: Typeable: TypeTag](col: Col): Series[Row,A]
-  def row[A: Typeable: TypeTag](row: Row): Series[Col,A]
-
   def columns: ColumnSelector[Row, Col] = ColumnSelector(this)
 
   def withColIndex[C1](ci: Index[C1]): Frame[Row, C1]
   def withRowIndex[R1](ri: Index[R1]): Frame[R1, Col]
 
-  def sortedColIndex: Frame[Row, Col] = withColIndex(colIndex.sorted)
-  def sortedRowIndex: Frame[Row, Col] = withRowIndex(rowIndex.sorted)
+  def orderColumns: Frame[Row, Col] = withColIndex(colIndex.sorted)
+  def orderRows: Frame[Row, Col] = withRowIndex(rowIndex.sorted)
 
   def join(that: Frame[Row, Col])(join: Join): Frame[Row, Col] = {
     // TODO: This should use simpler things, like:
@@ -40,14 +35,77 @@ trait Frame[Row, Col] {
     val joiner = Joiner[Row](join)(rowIndex.classTag)
     val (keys, lIndex, rIndex) = Index.cogroup(this.rowIndex, that.rowIndex)(joiner).result()
     val newRowIndex = Index.ordered(keys)
-    val cols0 = this.getColumns map { case (key, col) =>
+    val cols0 = this.columnsAsSeries collect { case (key, Value(col)) =>
       (key, col.setNA(Joiner.Skip).reindex(lIndex))
     }
-    val cols1 = that.getColumns map { case (key, col) =>
+    val cols1 = that.columnsAsSeries collect { case (key, Value(col)) =>
       (key, col.setNA(Joiner.Skip).reindex(rIndex))
     }
     val (newColIndex, cols) = (cols0 ++ cols1).unzip
     ColOrientedFrame(newRowIndex, Index(newColIndex.toArray), Column.fromArray(cols.toArray))
+  }
+
+  override def equals(that: Any) = that match {
+    case (that: Frame[_, _]) =>
+      val cols0 = this.columnsAsSeries
+      val cols1 = that.columnsAsSeries
+      val rowIndex0 = this.rowIndex
+      val rowIndex1 = that.rowIndex
+      val keys0 = rowIndex0 map (_._1)
+      val keys1 = rowIndex1 map (_._1)
+      (cols0.size == cols1.size) && (keys0 == keys1) && (cols0 zip cols1).forall {
+        case ((k0, v0), (k1, v1)) if k0 == k1 =>
+          def col0 = v0.getOrElse(UntypedColumn.empty).cast[Any](Frame.anyTypeable, implicitly)
+          def col1 = v1.getOrElse(UntypedColumn.empty).cast[Any](Frame.anyTypeable, implicitly)
+          (v0 == v1) || (Series(rowIndex0, col0) == Series(rowIndex1, col1))
+
+        case _ => false
+      }
+
+    case _ => false
+  }
+
+  override def toString: String = {
+    def pad(repr: String, width: Int): String =
+      repr + (" " * (width - repr.length))
+
+    def justify(reprs: List[String]): List[String] = {
+      val width = reprs.maxBy(_.length).length
+      reprs map (pad(_, width))
+    }
+
+    def collapse(keys: List[String], cols: List[List[String]]): List[String] = {
+      import scala.collection.immutable.`::`
+
+      def loop(keys0: List[String], cols0: List[List[String]], lines: List[String]) :List[String] = {
+        keys0 match {
+          case key :: keys1 =>
+            val row = cols0 map (_.head)
+            val line = key + row.mkString(" : ", " | ", "")
+            loop(keys1, cols0 map (_.tail), line :: lines)
+
+          case Nil =>
+            lines.reverse
+        }
+      }
+
+      val header = keys.head + cols.map(_.head).mkString("   ", " . ", "")
+      header :: loop(keys.tail, cols map (_.tail), Nil)
+    }
+
+    val keys = justify("" :: rowIndex.map(_._1.toString).toList)
+    val cols = columnsAsSeries.map { case (key, cell) =>
+      val header = key.toString
+      val col = cell.getOrElse(UntypedColumn.empty)
+          .cast[Any](Frame.anyTypeable, implicitly)
+      val values = Series(rowIndex, col).map {
+        case (_, Value(value)) => value.toString
+        case (_, missing) => missing.toString
+      }.toList
+      justify(header :: values)
+    }.toList
+
+    collapse(keys, cols).mkString("\n")
   }
 }
 
@@ -61,20 +119,6 @@ case class ColOrientedFrame[Row, Col](
   def rowsAsSeries: Series[Row, UntypedColumn] = Series(rowIndex, Column[UntypedColumn]({ row =>
     new RowView(col => col, row)
   }))
-
-  def getColumns: Seq[(Col, UntypedColumn)] = colIndex.map({ case (key, i) =>
-    (key, cols.value(i))
-  })(collection.breakOut)
-
-  def column[A: Typeable: TypeTag](k: Col): Series[Row,A] =
-    Series(rowIndex, rawColumn(k) getOrElse Column.empty[A])
-
-  def row[A: Typeable: TypeTag](k: Row): Series[Col,A] =
-    Series(colIndex, rowIndex get k map { row =>
-      Column.fromCells(colIndex.map({ case (_, i) =>
-        cols.value(i).cast[A].apply(row)
-      })(collection.breakOut))
-    } getOrElse Column.empty[A])
 
   def withColIndex[C1](ci: Index[C1]): Frame[Row, C1] =
     ColOrientedFrame(rowIndex, ci, cols)
@@ -105,7 +149,7 @@ object Frame {
   def empty[Row: Order: ClassTag, Col: Order: ClassTag]: Frame[Row, Col] =
     ColOrientedFrame[Row, Col](Index.empty, Index.empty, Column.empty)
 
-  def apply[A, Col](rows: A*)(implicit pop: RowPopulator[A, Int, Col]): Frame[Int, Col] =
+  def fromRows[A, Col](rows: A*)(implicit pop: RowPopulator[A, Int, Col]): Frame[Int, Col] =
     pop.frame(rows.zipWithIndex.foldLeft(pop.init) { case (state, (data, row)) =>
       pop.populate(state, row, data)
     })
@@ -117,5 +161,9 @@ object Frame {
   def apply[Row,Col: Order: ClassTag](rowIndex: Index[Row], colPairs: (Col,UntypedColumn)*): Frame[Row,Col] = {
     val (colKeys, cols) = colPairs.unzip
     ColOrientedFrame(rowIndex, Index(colKeys.toArray), Column.fromArray(cols.toArray))
+  }
+
+  private[pframe] object anyTypeable extends Typeable[Any] {
+    def cast(t: Any): Option[Any] = Some(t)
   }
 }

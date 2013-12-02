@@ -42,7 +42,9 @@ trait RowExtractorLow2 extends RowExtractorLow1 {
     new RowExtractor[A, Col, Fixed[Nat._1]] {
       type P = Column[A]
       def prepare[Row](frame: Frame[Row, Col], cols: List[Col]): Option[Column[A]] =
-        cols.headOption map { idx => frame.column[A](idx).column }
+        cols.headOption flatMap { idx =>
+          frame.columnsAsSeries(idx).map(_.cast[A]).value
+        }
       def extract[Row](frame: Frame[Row, Col], key: Row, row: Int, col: Column[A]): Cell[A] =
         col(row)
     }
@@ -67,8 +69,8 @@ object RowExtractor extends RowExtractorLow3 {
       def prepare[Row](frame: Frame[Row, Col], cols: List[Col]): Option[P] = for {
         idx <- cols.headOption
         tail <- te.prepare(frame, cols.tail)
-        col = frame.column[H](idx).column
-      } yield (col -> tail)
+        col <- frame.columnsAsSeries(idx).value
+      } yield (col.cast[H] -> tail)
 
       def extract[Row](frame: Frame[Row, Col], key: Row, row: Int, p: P): Cell[H :: T] = {
         val (col, tp) = p

@@ -61,7 +61,7 @@ class SeriesSpec extends Specification {
 
     "reduce in order" in {
       val a = Series("c" -> 2, "a" -> 1, "b" -> 3)
-      a.mapValues(_ :: Nil).reduce(reduce.MonoidReducer) must_== List(2, 1, 3)
+      a.mapValues(_ :: Nil).reduce[List[Int]](reduce.MonoidReducer) must_== List(2, 1, 3)
     }
 
     "trivially reduce groups by key" in {

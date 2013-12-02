@@ -2,7 +2,9 @@ package pellucid
 package pframe
 
 import scala.annotation.tailrec
+import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable.{ ArrayBuilder, Builder }
+import scala.collection.{ IterableLike, Iterable }
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
 
@@ -12,9 +14,19 @@ import spire.syntax.additiveMonoid._
 import spire.syntax.monoid._
 import spire.syntax.cfor._
 
-final class Series[K,V](val index: Index[K], val column: Column[V]) {
+final class Series[K,V](val index: Index[K], val column: Column[V])
+    extends Iterable[(K, Cell[V])] with IterableLike[(K, Cell[V]), Series[K, V]] {
+
   private implicit def classTag = index.classTag
   private implicit def order = index.order
+
+  def empty: Series[K, V] = Series(Index.empty, Column.empty)
+  override def size: Int = index.size
+  def iterator: Iterator[(K, Cell[V])] = index.iterator map { case (k, row) =>
+    k -> column(row)
+  }
+  override protected def newBuilder: Builder[(K, Cell[V]), Series[K, V]] =
+    new SeriesBuilder
 
   def keys: Vector[K] = index.map(_._1)(collection.breakOut)
   def values: Vector[Cell[V]] = index.map({ case (_, i) => column(i) })(collection.breakOut)
@@ -118,4 +130,28 @@ object Series {
     val (keys, values) = kvs.unzip
     Series(Index(keys.toArray), Column.fromArray(values.toArray))
   }
+
+  implicit def cbf[K: Order: ClassTag, V]: CanBuildFrom[Series[_, _], (K, Cell[V]), Series[K, V]] =
+    new CanBuildFrom[Series[_, _], (K, Cell[V]), Series[K, V]] {
+      def apply(): Builder[(K, Cell[V]), Series[K, V]] = new SeriesBuilder[K, V]
+      def apply(from: Series[_, _]): Builder[(K, Cell[V]), Series[K, V]] = apply()
+    }
+}
+
+private final class SeriesBuilder[K: Order: ClassTag, V] extends Builder[(K, Cell[V]), Series[K, V]] {
+  val keys = ArrayBuilder.make[K]()
+  val values = ArrayBuilder.make[Cell[V]]()
+
+  def +=(elem: (K, Cell[V])) = {
+    keys += elem._1
+    values += elem._2
+    this
+  }
+
+  def clear(): Unit = {
+    keys.clear()
+    values.clear()
+  }
+
+  def result(): Series[K, V] = Series(Index.unordered(keys.result()), Column.fromCells(values.result()))
 }
