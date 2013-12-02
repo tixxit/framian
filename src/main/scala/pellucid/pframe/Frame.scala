@@ -45,6 +45,17 @@ trait Frame[Row, Col] {
     ColOrientedFrame(newRowIndex, Index(newColIndex.toArray), Column.fromArray(cols.toArray))
   }
 
+  override def hashCode: Int = {
+    val values = columnsAsSeries.iterator flatMap { case (colKey, cell) =>
+      val col = cell.getOrElse(UntypedColumn.empty)
+          .cast[Any](Frame.anyTypeable, implicitly)
+      Series(rowIndex, col).iterator map { case (rowKey, value) =>
+        (rowKey, colKey, value)
+      }
+    }
+    values.toList.hashCode
+  }
+
   override def equals(that: Any) = that match {
     case (that: Frame[_, _]) =>
       val cols0 = this.columnsAsSeries
