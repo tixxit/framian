@@ -1,6 +1,5 @@
 package pellucid.pframe
 
-import scala.reflect.runtime.universe.{ TypeTag, typeTag }
 import scala.reflect.ClassTag
 
 import spire.algebra.Order
@@ -81,10 +80,10 @@ trait HListColPopulator0 {
 }
 
 object HListColPopulator extends HListColPopulator0 {
-  implicit def HConsColPopulator[H: ClassTag: TypeTag, T <: HList](implicit tail: HListColPopulator[T]) =
+  implicit def HConsColPopulator[H: ClassTag, T <: HList](implicit tail: HListColPopulator[T]) =
     new HConsColPopulator(tail)
 
-  final class HConsColPopulator[H: ClassTag: TypeTag, T <: HList](val tail: HListColPopulator[T])
+  final class HConsColPopulator[H: ClassTag, T <: HList](val tail: HListColPopulator[T])
       extends HListColPopulator[H :: T] {
 
     type State = List[H] :: tail.State

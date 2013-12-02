@@ -2,7 +2,6 @@ package pellucid
 package pframe
 
 import scala.reflect.ClassTag
-import scala.reflect.runtime.universe.TypeTag
 
 import spire.algebra._
 import shapeless._
@@ -137,12 +136,12 @@ case class ColOrientedFrame[Row, Col](
   def withRowIndex[R1](ri: Index[R1]): Frame[R1, Col] =
     ColOrientedFrame(ri, colIndex, cols)
 
-  private def rawColumn[A: Typeable: TypeTag](k: Col): Option[Column[A]] = for {
+  private def rawColumn[A: Typeable: ClassTag](k: Col): Option[Column[A]] = for {
     i <- colIndex.get(k)
   } yield cols.value(i).cast[A]
 
   private final class RowView(trans: UntypedColumn => UntypedColumn, row: Int) extends UntypedColumn {
-    def cast[B: Typeable: TypeTag]: Column[B] = Column.wrap[B] { colIdx =>
+    def cast[B: Typeable: ClassTag]: Column[B] = Column.wrap[B] { colIdx =>
       for {
         col <- cols(colIndex.indexAt(colIdx))
         value <- trans(col).cast[B].apply(row)

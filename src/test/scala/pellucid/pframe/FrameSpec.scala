@@ -11,20 +11,20 @@ import spire.std.iterable._
 import shapeless._
 
 class FrameSpec extends Specification {
-  def f0 = Frame.fromRows(
+  val f0 = Frame.fromRows(
     "a" :: 1 :: HNil,
     "b" :: 2 :: HNil,
     "c" :: 3 :: HNil)
-  def f1 = Frame.fromRows(
+  val f1 = Frame.fromRows(
     "a" :: 3 :: HNil,
     "b" :: 2 :: HNil,
     "c" :: 1 :: HNil)
-  def homogeneous = Frame.fromRows(
+  val homogeneous = Frame.fromRows(
     1.0  :: 2.0 :: 3.0  :: HNil,
     0.5  :: 1.0 :: 1.5  :: HNil,
     0.25 :: 0.5 :: 0.75 :: HNil
   )
-  def people = Frame.fromRows(
+  val people = Frame.fromRows(
       "Bob"     :: 32 :: "Manager"  :: HNil,
       "Alice"   :: 24 :: "Employee" :: HNil,
       "Charlie" :: 44 :: "Employee"  :: HNil)
@@ -38,6 +38,14 @@ class FrameSpec extends Specification {
       f1 must_!= f0
       f0.columns(0).as[String].toFrame("abc") must_== f1.columns(0).as[String].toFrame("abc")
       f0.columns(1).as[Int].toFrame("123") must_!= f1.columns(1).as[Int].toFrame("123")
+    }
+
+    "have sane hashCode" in {
+      f0.hashCode must_== f0.hashCode
+      f0.hashCode must_!= f1.hashCode
+      f1.hashCode must_!= f0.hashCode
+      f0.columns(0).as[String].toFrame("abc").hashCode must_== f1.columns(0).as[String].toFrame("abc").hashCode
+      f0.columns(1).as[Int].toFrame("123").hashCode must_!= f1.columns(1).as[Int].toFrame("123").hashCode
     }
 
     "order columns" in {

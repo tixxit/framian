@@ -1,10 +1,11 @@
 package pellucid
 package pframe
 
-import scala.reflect.runtime.universe.TypeTag
+import scala.reflect.ClassTag
 
 import spire.algebra._
 import spire.syntax.additiveMonoid._
+
 import shapeless._
 import shapeless.ops.function._
 
@@ -38,7 +39,7 @@ trait RowExtractorLow1 {
 }
 
 trait RowExtractorLow2 extends RowExtractorLow1 {
-  implicit def simpleRowExtractor[A: Typeable: TypeTag, Col] =
+  implicit def simpleRowExtractor[A: Typeable: ClassTag, Col] =
     new RowExtractor[A, Col, Fixed[Nat._1]] {
       type P = Column[A]
       def prepare[Row](frame: Frame[Row, Col], cols: List[Col]): Option[Column[A]] =
@@ -61,7 +62,7 @@ trait RowExtractorLow3 extends RowExtractorLow2 {
 }
 
 object RowExtractor extends RowExtractorLow3 {
-  implicit def hlistRowExtractor[H: Typeable: TypeTag, T <: HList, Col, N <: Nat](implicit
+  implicit def hlistRowExtractor[H: Typeable: ClassTag, T <: HList, Col, N <: Nat](implicit
       te: RowExtractor[T, Col, Fixed[N]]) =
     new RowExtractor[H :: T, Col, Fixed[Succ[N]]] {
       type P = (Column[H], te.P)

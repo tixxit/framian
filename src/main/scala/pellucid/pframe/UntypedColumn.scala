@@ -1,6 +1,6 @@
 package pellucid.pframe
 
-import scala.reflect.runtime.universe.{ TypeTag, typeTag }
+import scala.reflect.{ ClassTag, classTag }
 
 import spire.algebra._
 import spire.syntax.monoid._
@@ -14,7 +14,7 @@ import shapeless.syntax.typeable._
  * `NM` (not meaningful) values.
  */
 trait UntypedColumn extends ColumnLike[UntypedColumn] {
-  def cast[A: Typeable: TypeTag]: Column[A]
+  def cast[A: Typeable: ClassTag]: Column[A]
 }
 
 object UntypedColumn {
@@ -31,16 +31,16 @@ object UntypedColumn {
 }
 
 final case object EmptyUntypedColumn extends UntypedColumn {
-  def cast[B: Typeable: TypeTag]: Column[B] = Column.empty
+  def cast[B: Typeable: ClassTag]: Column[B] = Column.empty
   def mask(bits: Int => Boolean): UntypedColumn = EmptyUntypedColumn
   def shift(rows: Int): UntypedColumn = EmptyUntypedColumn
   def reindex(index: Array[Int]): UntypedColumn = EmptyUntypedColumn
   def setNA(row: Int): UntypedColumn = EmptyUntypedColumn
 }
 
-case class TypedColumn[A](column: Column[A])(implicit val typeTagA: TypeTag[A]) extends UntypedColumn {
-  def cast[B: Typeable: TypeTag]: Column[B] = {
-    if (typeTagA.tpe <:< typeTag[B].tpe) {
+case class TypedColumn[A](column: Column[A])(implicit val classTagA: ClassTag[A]) extends UntypedColumn {
+  def cast[B: Typeable: ClassTag]: Column[B] = {
+    if (classTag[B].runtimeClass isAssignableFrom classTagA.runtimeClass) {
       column.asInstanceOf[Column[B]]
     } else {
       new CastColumn[B](column)
@@ -54,7 +54,7 @@ case class TypedColumn[A](column: Column[A])(implicit val typeTagA: TypeTag[A]) 
 }
 
 case class MergedUntypedColumn(left: UntypedColumn, right: UntypedColumn) extends UntypedColumn {
-  def cast[B: Typeable: TypeTag]: Column[B] = left.cast[B] |+| right.cast[B]
+  def cast[B: Typeable: ClassTag]: Column[B] = left.cast[B] |+| right.cast[B]
   def mask(bits: Int => Boolean): UntypedColumn = MergedUntypedColumn(left.mask(bits), right.mask(bits))
   def shift(rows: Int): UntypedColumn = MergedUntypedColumn(left.shift(rows), right.shift(rows))
   def reindex(index: Array[Int]): UntypedColumn = MergedUntypedColumn(left.reindex(index), right.reindex(index))

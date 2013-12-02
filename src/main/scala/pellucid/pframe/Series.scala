@@ -6,7 +6,6 @@ import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable.{ ArrayBuilder, Builder }
 import scala.collection.{ IterableLike, Iterable }
 import scala.reflect.ClassTag
-import scala.reflect.runtime.universe.TypeTag
 
 import spire.algebra._
 // import spire.std.option._
@@ -59,7 +58,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
   /**
    * Convert this Series to a single column [[Frame]].
    */
-  def toFrame[C: Order: ClassTag](col: C)(implicit tt: TypeTag[V]): Frame[K, C] =
+  def toFrame[C: Order: ClassTag](col: C)(implicit tt: ClassTag[V]): Frame[K, C] =
     Frame(index, col -> TypedColumn(column))
 
   /**
