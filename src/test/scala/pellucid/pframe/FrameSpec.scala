@@ -227,6 +227,45 @@ class FrameSpec extends Specification {
     }
   }
 
-  // "ColumnSelection" should {
-  // }
+  "ColumnSelection" should {
+    "get row as HList" in {
+      f0.columns(0, 1).get[String :: Int :: HNil](0) must_== Value("a" :: 1 :: HNil)
+      f0.columns(0, 1).get[String :: Int :: HNil](1) must_== Value("b" :: 2 :: HNil)
+      f0.columns(0, 1).get[String :: Int :: HNil](2) must_== Value("c" :: 3 :: HNil)
+      f0.columns(0, 1).get[String :: Int :: HNil](3) must_== NA
+      f0.columns(0).get[String :: HNil](0) must_== Value("a" :: HNil)
+      f0.columns(1).get[Int :: HNil](2) must_== Value(3 :: HNil)
+    }
+
+    "convert to series" in {
+      f0.columns(0).as[String] must_== Series(0 -> "a", 1 -> "b", 2 -> "c")
+      f0.columns(0).as[Int] must_== Series(Index.fromKeys(0, 1, 2), Column.fromCells(Vector(NM, NM, NM)))
+      f0.columns(1).as[Int] must_== Series(0 -> 1, 1 -> 2, 2 -> 3)
+      f0.columns(0, 1).as[String :: Int :: HNil] must_== Series(
+        0 -> ("a" :: 1 :: HNil),
+        1 -> ("b" :: 2 :: HNil),
+        2 -> ("c" :: 3 :: HNil))
+    }
+
+    "map to series" in {
+      f0.columns(1) map { (x: Int) => x + 1 } must_== Series(0 -> 2, 1 -> 3, 2 -> 4)
+      f0.columns(0) map { (x: String) => 42 } must_== Series(0 -> 42, 1 -> 42, 2 -> 42)
+      f0.columns(1, 0) map { (x: Int, y: String) => y + x } must_== Series(0 -> "a1", 1 -> "b2", 2 -> "c3")
+    }
+
+    "map with index to series" in {
+      f0.columns(0) mapWithIndex { (i: Int, x: String) => i + x } must_== Series(0 -> "0a", 1 -> "1b", 2 -> "2c")
+      f0.columns(1) mapWithIndex { (i: Int, j: Int) => i + j } must_== Series(0 -> 1, 1 -> 3, 2 -> 5)
+    }
+
+    "filter whole frame" in {
+      f0.columns(1) filter { (x: Int) => x % 2 == 0 } must_==
+        Frame.fromRows("b" :: 2 :: HNil).withRowIndex(Index.fromKeys(1))
+    }
+
+    "group by column values" in {
+      f0.columns(0).groupAs[String] must_== f0.withRowIndex(Index.fromKeys("a", "b", "c"))
+      f0.columns(1).groupBy { (x: Int) => -x } must_== f0.withRowIndex(Index(-3 -> 2, -2 -> 1, -1 -> 0))
+    }
+  }
 }
