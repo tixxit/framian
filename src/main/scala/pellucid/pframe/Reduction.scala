@@ -3,12 +3,7 @@ package pellucid.pframe
 import scala.collection.mutable.ArrayBuilder
 import scala.reflect.ClassTag
 
-/**
- * A low level trait for implementing reductions.
- */
-trait Reducer[-A, +B] {
-  def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): B
-}
+import pellucid.pframe.reduce.Reducer
 
 final class Reduction[K: ClassTag, A, B: ClassTag](column: Column[A], reducer: Reducer[A, B]) extends Index.Grouper[K] {
   final class State {
@@ -30,4 +25,3 @@ final class Reduction[K: ClassTag, A, B: ClassTag](column: Column[A], reducer: R
     state
   }
 }
-

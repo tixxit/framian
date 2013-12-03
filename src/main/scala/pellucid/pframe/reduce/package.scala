@@ -7,7 +7,7 @@ import spire.algebra._
 package object reduce {
   def MonoidReducer[A: Monoid]: Reducer[A, A] = new MonoidReducer[A]
 
-  def Mean[A: Field]: Reducer[A, A] = new Mean[A]
+  def Mean[A: Field]: Reducer[A, Option[A]] = new Mean[A]
 
   def Sum[A: AdditiveMonoid]: Reducer[A, A] = MonoidReducer(spire.algebra.Monoid.additive[A])
 

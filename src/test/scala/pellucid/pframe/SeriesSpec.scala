@@ -55,8 +55,8 @@ class SeriesSpec extends Specification {
     "reduce all values" in {
       val a = Series("a" -> 1D, "b" -> 2D, "c" -> 4D, "d" -> 5D)
       val b = Series("c" -> 1D, "a" -> 2D, "b" -> 4D, "a" -> 5D)
-      a.reduce(reduce.Mean) must_== 3D
-      b.reduce(reduce.Mean) must_== 3D
+      a.reduce(reduce.Mean) must_== Some(3D)
+      b.reduce(reduce.Mean) must_== Some(3D)
     }
 
     "reduce in order" in {
@@ -71,7 +71,7 @@ class SeriesSpec extends Specification {
     
     "reduce groups by key" in {
       val a = Series("c" -> 1D, "a" -> 2D, "b" -> 4D, "a" -> 5D, "b" -> 2D, "b" -> 1D)
-      val expected = Series("a" -> (2D + 5D) / 2, "b" -> (1D + 2D + 4D) / 3, "c" -> 1D)
+      val expected = Series("a" -> Some((2D + 5D) / 2), "b" -> Some((1D + 2D + 4D) / 3), "c" -> Some(1D))
       a.reduceByKey(reduce.Mean) must_== expected
     }
 

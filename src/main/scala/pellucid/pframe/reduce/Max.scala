@@ -7,7 +7,6 @@ import spire.algebra.Order
 import spire.syntax.order._
 
 private[reduce] final class Max[A: Order] extends Reducer[A, Option[A]] {
-
   def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Option[A] = {
     @tailrec def loop0(i: Int): Option[A] = if (i < end) {
       val row = indices(i)

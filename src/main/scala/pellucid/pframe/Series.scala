@@ -13,6 +13,8 @@ import spire.syntax.additiveMonoid._
 import spire.syntax.monoid._
 import spire.syntax.cfor._
 
+import pellucid.pframe.reduce.Reducer
+
 final class Series[K,V](val index: Index[K], val column: Column[V])
     extends Iterable[(K, Cell[V])] with IterableLike[(K, Cell[V]), Series[K, V]] {
 
