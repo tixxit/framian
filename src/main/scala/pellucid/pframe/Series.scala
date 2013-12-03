@@ -67,7 +67,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
    * the Series.
    */
   def mapValues[W](f: V => W): Series[K, W] =
-    Series(index, column map f)
+    Series(index, new MappedColumn(f, column)) // TODO: Use a macro here?
 
   /**
    * Returns a compacted version of this `Series`. The new series will be equal

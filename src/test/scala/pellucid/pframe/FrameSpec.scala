@@ -125,6 +125,108 @@ class FrameSpec extends Specification {
     }
   }
 
+  "Frame joins" should {
+    "inner join with empty frame" in {
+      val e = Frame.empty[Int, Int]
+      f0.join(e)(Join.Inner) must_== f0.withRowIndex(Index.empty[Int])
+      e.join(f0)(Join.Inner) must_== f0.withRowIndex(Index.empty[Int])
+      e.join(e)(Join.Inner) must_== e
+    }
+
+    "inner join with self" in {
+      f0.join(f0)(Join.Inner) must_== Frame.fromRows(
+          "a" :: 1 :: "a" :: 1 :: HNil,
+          "b" :: 2 :: "b" :: 2 :: HNil,
+          "c" :: 3 :: "c" :: 3 :: HNil)
+        .withColIndex(Index.fromKeys(0, 1, 0, 1))
+    }
+
+    "inner join only matching rows" in {
+      val a = Frame.fromRows(1 :: HNil, 2 :: HNil)
+        .withRowIndex(Index.fromKeys("a", "b"))
+      val b = Frame.fromRows(2.0 :: HNil, 3.0 :: HNil)
+        .withRowIndex(Index.fromKeys("b", "c"))
+      val c = Frame.fromRows(2 :: 2.0 :: HNil)
+        .withRowIndex(Index.fromKeys("b"))
+        .withColIndex(Index.fromKeys(0, 0))
+
+      a.join(b)(Join.Inner) must_== c
+    }
+
+    "inner join forms cross-product of matching rows" in {
+      val a = Frame.fromRows(1 :: HNil, 2 :: HNil)
+        .withRowIndex(Index.fromKeys("a", "a"))
+      val b = Frame.fromRows(2.0 :: HNil, 3.0 :: HNil)
+        .withRowIndex(Index.fromKeys("a", "a"))
+      val c = Frame.fromRows(
+        1 :: 2.0 :: HNil,
+        1 :: 3.0 :: HNil,
+        2 :: 2.0 :: HNil,
+        2 :: 3.0 :: HNil)
+        .withRowIndex(Index.fromKeys("a", "a", "a", "a"))
+        .withColIndex(Index.fromKeys(0, 0))
+
+      a.join(b)(Join.Inner) must_== c
+    }
+
+    "left join keeps left mismatched rows" in {
+      val a = Frame.fromRows(1 :: HNil, 2 :: HNil)
+        .withRowIndex(Index.fromKeys("a", "b"))
+      val b = Frame.fromRows(2.0 :: HNil, 3.0 :: HNil)
+        .withRowIndex(Index.fromKeys("b", "c"))
+      val c = Frame[String, Int](Index.fromKeys("a", "b"),
+        0 -> TypedColumn(Column.fromCells(Vector(Value(1), Value(2)))),
+        0 -> TypedColumn(Column.fromCells(Vector(NA, Value(2.0)))))
+      a.join(b)(Join.Left) must_== c
+    }
+
+    "left join with empty frame" in {
+      val a = Frame.fromRows(1 :: HNil, 2 :: HNil)
+        .withRowIndex(Index.fromKeys("a", "b"))
+      val e = Frame.empty[String, Int]
+      a.join(e)(Join.Left) must_== a
+      e.join(a)(Join.Left) must_== e.withColIndex(Index.fromKeys(0))
+    }
+
+    "right join keeps right mismatched rows" in {
+      val a = Frame.fromRows(1 :: HNil, 2 :: HNil)
+        .withRowIndex(Index.fromKeys("a", "b"))
+      val b = Frame.fromRows(2.0 :: HNil, 3.0 :: HNil)
+        .withRowIndex(Index.fromKeys("b", "c"))
+      val c = Frame[String, Int](Index.fromKeys("b", "c"),
+        0 -> TypedColumn(Column.fromCells(Vector(Value(2), NA))),
+        0 -> TypedColumn(Column.fromCells(Vector(Value(2.0), Value(3.0)))))
+      a.join(b)(Join.Right) must_== c
+    }
+
+    "right join with empty frame" in {
+      val a = Frame.fromRows(1 :: HNil, 2 :: HNil)
+        .withRowIndex(Index.fromKeys("a", "b"))
+      val e = Frame.empty[String, Int]
+      a.join(e)(Join.Right) must_== e.withColIndex(Index.fromKeys(0))
+      e.join(a)(Join.Right) must_== a
+    }
+
+    "outer join keeps all rows" in {
+      val a = Frame.fromRows(1 :: HNil, 2 :: HNil)
+        .withRowIndex(Index.fromKeys("a", "b"))
+      val b = Frame.fromRows(2.0 :: HNil, 3.0 :: HNil)
+        .withRowIndex(Index.fromKeys("b", "c"))
+      val c = Frame[String, Int](Index.fromKeys("a", "b", "c"),
+        0 -> TypedColumn(Column.fromCells(Vector(Value(1), Value(2), NA))),
+        0 -> TypedColumn(Column.fromCells(Vector(NA, Value(2.0), Value(3.0)))))
+      a.join(b)(Join.Outer) must_== c
+    }
+
+    "outer join with empty frame" in {
+      val a = Frame.fromRows(1 :: HNil, 2 :: HNil)
+        .withRowIndex(Index.fromKeys("a", "b"))
+      val e = Frame.empty[String, Int]
+      a.join(e)(Join.Outer) must_== a
+      e.join(a)(Join.Outer) must_== a
+    }
+  }
+
   // "ColumnSelection" should {
   // }
 }
