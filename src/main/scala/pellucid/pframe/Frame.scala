@@ -28,37 +28,8 @@ trait Frame[Row, Col] {
   def withColIndex[C1](ci: Index[C1]): Frame[Row, C1]
   def withRowIndex[R1](ri: Index[R1]): Frame[R1, Col]
 
-<<<<<<< HEAD
-  private def genericJoin[T](
-    getIndex: T => Index[Row],
-    reindexColumns: (Array[Row], Array[Int], Array[Int]) => T => Seq[(Col, UntypedColumn)]
-  )(that: T)(join: Join): Frame[Row, Col] = {
-=======
   def orderColumns: Frame[Row, Col] = withColIndex(colIndex.sorted)
   def orderRows: Frame[Row, Col] = withRowIndex(rowIndex.sorted)
-
-  def join(that: Frame[Row, Col])(join: Join): Frame[Row, Col] = {
->>>>>>> master
-    // TODO: This should use simpler things, like:
-    //   this.reindex(lIndex).withRowIndex(newRowIndex) ++
-    //   that.reindex(rIndex).withRowIndex(newRowIndex)
-    val joiner = Joiner[Row](join)(rowIndex.classTag)
-    val (keys, lIndex, rIndex) = Index.cogroup(this.rowIndex, getIndex(that))(joiner).result()
-    val newRowIndex = Index.ordered(keys)
-    val cols0 = this.columnsAsSeries collect { case (key, Value(col)) =>
-      (key, col.setNA(Joiner.Skip).reindex(lIndex))
-    }
-<<<<<<< HEAD
-    val cols1 = reindexColumns(keys, lIndex, rIndex)(that)
-
-=======
-    val cols1 = that.columnsAsSeries collect { case (key, Value(col)) =>
-      (key, col.setNA(Joiner.Skip).reindex(rIndex))
-    }
->>>>>>> master
-    val (newColIndex, cols) = (cols0 ++ cols1).unzip
-    ColOrientedFrame(newRowIndex, Index(newColIndex.toArray), Column.fromArray(cols.toArray))
-  }
 
   override def hashCode: Int = {
     val values = columnsAsSeries.iterator flatMap { case (colKey, cell) =>
@@ -134,17 +105,37 @@ trait Frame[Row, Col] {
     collapse(keys, cols).mkString("\n")
   }
 
+
+  private def genericJoin[T](
+    getIndex: T => Index[Row],
+    reindexColumns: (Array[Row], Array[Int], Array[Int]) => T => Seq[(Col, UntypedColumn)]
+  )(that: T)(join: Join): Frame[Row, Col] = {
+    // TODO: This should use simpler things, like:
+    //   this.reindex(lIndex).withRowIndex(newRowIndex) ++
+    //   that.reindex(rIndex).withRowIndex(newRowIndex)
+    val joiner = Joiner[Row](join)(rowIndex.classTag)
+    val (keys, lIndex, rIndex) = Index.cogroup(this.rowIndex, getIndex(that))(joiner).result()
+    val newRowIndex = Index.ordered(keys)
+    val cols0 = this.columnsAsSeries collect { case (key, Value(col)) =>
+      (key, col.setNA(Joiner.Skip).reindex(lIndex))
+    }
+    val cols1 = reindexColumns(keys, lIndex, rIndex)(that)
+    val (newColIndex, cols) = (cols0 ++ cols1).unzip
+
+    ColOrientedFrame(newRowIndex, Index(newColIndex.toArray), Column.fromArray(cols.toArray))
+  }
+
   def join(that: Frame[Row, Col])(join: Join): Frame[Row, Col] =
     genericJoin[Frame[Row, Col]](
       { frame: Frame[Row, Col] => frame.rowIndex },
       { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => frame: Frame[Row, Col] =>
-        frame.getColumns map { case (key, col) =>
+        frame.columnsAsSeries collect { case (key, Value(col)) =>
           (key, col.setNA(Joiner.Skip).reindex(rIndex))
-        }
+        } toSeq
       }
     )(that)(join)
 
-  def join[T: TypeTag](that: Series[Row, T], columnKey: Col)(join: Join): Frame[Row, Col] =
+  def join[T: ClassTag](that: Series[Row, T], columnKey: Col)(join: Join): Frame[Row, Col] =
     genericJoin[Series[Row, T]](
       { series: Series[Row, T] => series.index },
       { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => series: Series[Row, T] =>
@@ -160,18 +151,19 @@ trait Frame[Row, Col] {
              tf1: LeftFolder.Aux[TSeries, (List[Col], Frame[Row, Col]), joinSeries.type, (List[Col], Frame[Row, Col])],
              tpe: Typeable[Index[Col]]
           ): Frame[Row, Col] = {
-    val columnIndices: Seq[Col] =
-      if (columnKeys.isEmpty)
-        (colIndex.cast[Index[Int]] match {
-           case Some(_) if colIndex.isEmpty => 0 to (them.runtimeLength - 1)
-           case Some(index) =>
-             val colMax = index.max._1
-             (colMax + 1) to (colMax + them.runtimeLength)
-           case _ => throw new Exception("Cannot create default column index values if column type is not numeric.")
-         }).toSeq.asInstanceOf[Seq[Col]]
-      else columnKeys
+    val columnIndices = (columnKeys.isEmpty, colIndex.cast[Index[Int]]) match {
+      case (false, _) =>
+        columnKeys
+      case (_, Some(_)) if colIndex.isEmpty =>
+        0 to (them.runtimeLength - 1)
+      case (_, Some(index)) =>
+        val colMax = index.max._1
+        (colMax + 1) to (colMax + them.runtimeLength)
+      case _ =>
+        throw new Exception("Cannot create default column index values if column type is not numeric.")
+    }
 
-    them.foldLeft(columnIndices.toList, this)(joinSeries)._2
+    them.foldLeft(columnIndices.toList.asInstanceOf[List[Col]], this)(joinSeries)._2
   }
 }
 
@@ -214,7 +206,7 @@ case class ColOrientedFrame[Row, Col](
 object Frame {
 
   object joinSeries extends Poly2 {
-    implicit def caseT[T: TypeTag, Row: Order: ClassTag, Col: Order: ClassTag] =
+    implicit def caseT[T: ClassTag, Row: Order: ClassTag, Col: Order: ClassTag] =
       at[(List[Col], Frame[Row, Col]), Series[Row, T]] {
         case ((columnIndex :: columnIndices, frame), series) =>
           (columnIndices, frame.join(series, columnIndex)(Join.Outer))
@@ -237,6 +229,7 @@ object Frame {
       cols: Column[UntypedColumn]): Frame[Row, Col] =
     ColOrientedFrame(rowIdx, colIdx, cols)
 
+
   def apply[Row,Col: Order: ClassTag](rowIndex: Index[Row], colPairs: (Col,UntypedColumn)*): Frame[Row,Col] = {
     val (colKeys, cols) = colPairs.unzip
     ColOrientedFrame(rowIndex, Index(colKeys.toArray), Column.fromArray(cols.toArray))
@@ -248,7 +241,7 @@ object Frame {
            (implicit
               tf: LeftFolder.Aux[TSeries,(List[Col], Frame[Row,Col]), joinSeries.type, (List[Col], Frame[Row,Col])]
            ): Frame[Row,Col] = {
-    val frame: Frame[Row, Col] = ColOrientedFrame[Row, Col](Index[Row](), Index[Col](), Array())
+    val frame: Frame[Row, Col] = ColOrientedFrame[Row, Col](Index[Row](), Index[Col](), Column.empty)
     frame.join(colSeries, colIndex.keys.toSeq)(Join.Outer)
   }
 
@@ -258,4 +251,5 @@ object Frame {
               tf: LeftFolder.Aux[TSeries,(List[Col], Frame[Row,Col]), joinSeries.type, (List[Col], Frame[Row,Col])]
            ): Frame[Row,Col] =
     apply(Index[Col](), colSeries)
+
 }

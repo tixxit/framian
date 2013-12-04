@@ -9,10 +9,10 @@ import scala.reflect.ClassTag
 
 import spire.algebra._
 import spire.math._
-import spire.std.any._
 // import spire.std.option._
 import spire.syntax.additiveMonoid._
 import spire.syntax.monoid._
+import spire.compat._
 import spire.syntax.cfor._
 
 import pellucid.pframe.reduce.Reducer
@@ -104,8 +104,6 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
     Series(Index.ordered(keys), Column.fromArray(values))
   }
 
-  def reindex(newIndex: Index[K]) = this.copy(newIndex, column)
-
   override def toString: String =
     (keys zip values).map { case (key, value) =>
       s"$key -> $value"
@@ -126,6 +124,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
 }
 
 object Series {
+  import spire.std.int._
   def empty[K: Order: ClassTag, V] = Series(Index.empty[K], Column.empty[V])
 
   def apply[K, V](index: Index[K], column: Column[V]): Series[K, V] =
