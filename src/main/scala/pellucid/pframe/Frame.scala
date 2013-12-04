@@ -206,7 +206,7 @@ case class ColOrientedFrame[Row, Col](
 object Frame {
 
   object joinSeries extends Poly2 {
-    implicit def caseT[T: ClassTag, Row: Order: ClassTag, Col: Order: ClassTag] =
+    implicit def caseT[T: Order: ClassTag, Row: Order: ClassTag, Col: Order: ClassTag] =
       at[(List[Col], Frame[Row, Col]), Series[Row, T]] {
         case ((columnIndex :: columnIndices, frame), series) =>
           (columnIndices, frame.join(series, columnIndex)(Join.Outer))
@@ -230,7 +230,7 @@ object Frame {
     ColOrientedFrame(rowIdx, colIdx, cols)
 
 
-  def apply[Row,Col: Order: ClassTag](rowIndex: Index[Row], colPairs: (Col,UntypedColumn)*): Frame[Row,Col] = {
+  def apply[Row: Order: ClassTag, Col: Order: ClassTag](rowIndex: Index[Row], colPairs: (Col,UntypedColumn)*): Frame[Row,Col] = {
     val (colKeys, cols) = colPairs.unzip
     ColOrientedFrame(rowIndex, Index(colKeys.toArray), Column.fromArray(cols.toArray))
   }
@@ -250,6 +250,6 @@ object Frame {
            (implicit
               tf: LeftFolder.Aux[TSeries,(List[Col], Frame[Row,Col]), joinSeries.type, (List[Col], Frame[Row,Col])]
            ): Frame[Row,Col] =
-    apply(Index[Col](), colSeries)
+    apply(Index.empty[Col], colSeries)
 
 }
