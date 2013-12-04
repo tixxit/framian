@@ -151,4 +151,6 @@ object Frame {
               tf: LeftFolder.Aux[TSeries,(List[Col], Frame[Row,Col]), joinSeries.type, (List[Col], Frame[Row,Col])]
            ): Frame[Row,Col] =
     apply(Index[Col](), colSeries)
+
+  def apply()
 }
