@@ -177,11 +177,6 @@ trait ColumnField[@spec(Int,Long,Float,Double) A]
     extends ColumnEuclideanRing[A] with Field[Column[A]] { self =>
   override implicit def algebra: Field[A]
 
-  override def reciprocal(x: Column[A]): Column[A] = new UnOpColumn[A] {
-    val arg = x
-    def value(row: Int): A = algebra.reciprocal(arg.value(row))
-  }
-
   def div(x: Column[A], y: Column[A]): Column[A] = new DivOpColumn[A] {
     implicit val algebra = self.algebra
     val order = self.order
