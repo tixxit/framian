@@ -1,10 +1,11 @@
 package pellucid
 package pframe
 
-import scala.reflect.runtime.universe.TypeTag
+import scala.reflect.ClassTag
 
 import spire.algebra._
 import spire.syntax.additiveMonoid._
+
 import shapeless._
 import shapeless.ops.function._
 
@@ -38,11 +39,13 @@ trait RowExtractorLow1 {
 }
 
 trait RowExtractorLow2 extends RowExtractorLow1 {
-  implicit def simpleRowExtractor[A: Typeable: TypeTag, Col] =
+  implicit def simpleRowExtractor[A: Typeable: ClassTag, Col] =
     new RowExtractor[A, Col, Fixed[Nat._1]] {
       type P = Column[A]
       def prepare[Row](frame: Frame[Row, Col], cols: List[Col]): Option[Column[A]] =
-        cols.headOption map { idx => frame.column[A](idx).column }
+        cols.headOption flatMap { idx =>
+          frame.columnsAsSeries(idx).map(_.cast[A]).value
+        }
       def extract[Row](frame: Frame[Row, Col], key: Row, row: Int, col: Column[A]): Cell[A] =
         col(row)
     }
@@ -59,7 +62,7 @@ trait RowExtractorLow3 extends RowExtractorLow2 {
 }
 
 object RowExtractor extends RowExtractorLow3 {
-  implicit def hlistRowExtractor[H: Typeable: TypeTag, T <: HList, Col, N <: Nat](implicit
+  implicit def hlistRowExtractor[H: Typeable: ClassTag, T <: HList, Col, N <: Nat](implicit
       te: RowExtractor[T, Col, Fixed[N]]) =
     new RowExtractor[H :: T, Col, Fixed[Succ[N]]] {
       type P = (Column[H], te.P)
@@ -67,8 +70,8 @@ object RowExtractor extends RowExtractorLow3 {
       def prepare[Row](frame: Frame[Row, Col], cols: List[Col]): Option[P] = for {
         idx <- cols.headOption
         tail <- te.prepare(frame, cols.tail)
-        col = frame.column[H](idx).column
-      } yield (col -> tail)
+        col <- frame.columnsAsSeries(idx).value
+      } yield (col.cast[H] -> tail)
 
       def extract[Row](frame: Frame[Row, Col], key: Row, row: Int, p: P): Cell[H :: T] = {
         val (col, tp) = p

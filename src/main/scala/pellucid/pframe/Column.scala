@@ -1,7 +1,14 @@
 package pellucid
 package pframe
 
+import language.experimental.macros
+import scala.reflect.macros.Context
+
 import scala.collection.immutable.BitSet
+import scala.{ specialized => spec }
+import scala.annotation.{ unspecialized => unspec }
+
+import spire.algebra._
 
 import shapeless._
 import shapeless.syntax.typeable._
@@ -14,7 +21,7 @@ import shapeless.syntax.typeable._
  * instance, ties a `Column` together with an [[Index]] to restrict the set of
  * rows being used.
  */
-trait Column[A] extends ColumnLike[Column[A]] {
+trait Column[@spec(Int,Long,Float,Double) +A] extends ColumnLike[Column[A]] {
 
   /**
    * Returns `true` if the value exists; that is, it is available and
@@ -105,7 +112,41 @@ object Column {
   def fromArray[A](values: Array[A]): Column[A] = new DenseColumn(BitSet.empty, BitSet.empty, values)
 
   def fromMap[A](values: Map[Int, A]): Column[A] = new MapColumn(values)
+
+  def wrap[A](f: Int => Cell[A]): Column[A] = new WrappedColumn(f)
+
+  implicit def monoid[A] = new Monoid[Column[A]] {
+    def id: Column[A] = empty[A]
+    def op(lhs: Column[A], rhs: Column[A]): Column[A] = new MergedColumn(lhs, rhs)
+  }
+
+  // implicit def columnOps[A](lhs: Column[A]) = new ColumnOps[A](lhs)
 }
+
+// // This class is required to get around some spec/macro bugs.
+// final class ColumnOps[A](lhs: Column[A]) {
+//   def map0[B](f: A => B): Column[B] = macro ColumnOps.mapImpl[A, B]
+// }
+
+// object ColumnOps {
+//   def mapImpl[A, B: c.WeakTypeTag](c: Context)(f: c.Expr[A => B]): c.Expr[Column[B]] = {
+//     import c.universe._
+//     val lhs = c.prefix.tree match {
+//       case Apply(TypeApply(_, _), List(lhs)) => lhs
+//       case t => c.abort(c.enclosingPosition,
+//         "Cannot extract subject of op (tree = %s)" format t)
+//     }
+// 
+//     c.Expr[Column[B]](c.resetLocalAttrs(q"""{
+//       new Column[${weakTypeTag[B]}] {
+//         val col = ${lhs}
+//         def exists(row: Int): Boolean = col.exists(row)
+//         def missing(row: Int): Missing = col.missing(row)
+//         def value(row: Int): ${weakTypeTag[B]} = $f.apply(col.value(row))
+//       }
+//     }"""))
+//   }
+// }
 
 final class EmptyColumn[A] extends Column[A] {
   def exists(row: Int): Boolean = false
@@ -146,7 +187,7 @@ final class FilteredColumn[A](f: A => Boolean, underlying: Column[A]) extends Co
 
 final class MaskedColumn[A](bits: Int => Boolean, underlying: Column[A]) extends Column[A] {
   def exists(row: Int): Boolean = underlying.exists(row) && bits(row)
-  def missing(row: Int): Missing = if (!bits(row)) NA else underlying.missing(row) // TODO: Should swap order.
+  def missing(row: Int): Missing = if (bits(row)) underlying.missing(row) else NA
   def value(row: Int): A = underlying.value(row)
 }
 
@@ -188,4 +229,23 @@ final class MapColumn[A](values: Map[Int,A]) extends Column[A] {
   def exists(row: Int): Boolean = values contains row
   def missing(row: Int): Missing = NA
   def value(row: Int): A = values(row)
+}
+
+final class MergedColumn[A](left: Column[A], right: Column[A]) extends Column[A] {
+  def exists(row: Int): Boolean = left.exists(row) || right.exists(row)
+  def missing(row: Int): Missing = 
+    if (!right.exists(row) && right.missing(row) == NM) NM else left.missing(row)
+  def value(row: Int): A = if (right.exists(row)) right.value(row) else left.value(row)
+}
+
+final class WrappedColumn[A](f: Int => Cell[A]) extends Column[A] {
+  def exists(row: Int): Boolean = !f(row).isMissing
+  def missing(row: Int): Missing = f(row) match {
+    case Value(_) => throw new IllegalArgumentException(s"row:$row is not missing")
+    case (m: Missing) => m
+  }
+  def value(row: Int): A = f(row) match {
+    case Value(a) => a
+    case _ => throw new IllegalArgumentException(s"row:$row is missing (${missing(row)})")
+  }
 }

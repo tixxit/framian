@@ -26,7 +26,23 @@ sealed trait Index[K] extends Iterable[(K, Int)] with IterableLike[(K, Int), Ind
 
   def iterator: Iterator[(K, Int)]
 
-  def search(k: K): Int
+  def search(k: K): Int = {
+    val i = Searching.search(keys, k)
+    if (i < 0) {
+      val j = -i - 1
+      if (j < indices.length) {
+        -indices(-i - 1) - 1
+      } else {
+        -j - 1
+      }
+    } else {
+      indices(i)
+    }
+  }
+
+  def apply(i: Int): (K, Int) = (keyAt(i), indexAt(i))
+  def keyAt(i: Int): K
+  def indexAt(i: Int): Int
 
   def foreach[U](f: (K, Int) => U): Unit
 
@@ -44,6 +60,7 @@ sealed trait Index[K] extends Iterable[(K, Int)] with IterableLike[(K, Int), Ind
 
   def sorted: Index[K] = Index.ordered(keys, indices)
 
+  // These must contain both the keys and the indices, in sorted order.
   private[pframe] def keys: Array[K]
   private[pframe] def indices: Array[Int]
 }
@@ -116,8 +133,6 @@ object Index {
       }
       ys
     }
-
-    // TODO: We can probably do better here. Especially once qsearchBy lands in Spire.
 
     val order0 = Array.range(0, keys.length).qsortedBy(keys(_))
     val indices0 = shuffle(indices, order0)
@@ -198,10 +213,6 @@ object Index {
     val rKeys = rhs.keys
     val rIndices = rhs.indices
 
-    @tailrec def spanEnd(keys: Array[K], key: K, i: Int): Int =
-      if (i < keys.length && keys(i) === key) spanEnd(keys, key, i + 1)
-      else i
-
     @tailrec def loop(s0: cogrouper.State, lStart: Int, rStart: Int): cogrouper.State =
       if (lStart < lKeys.length && rStart < rKeys.length) {
         val lKey = lKeys(lStart)
@@ -236,19 +247,8 @@ final case class UnorderedIndex[K: Order: ClassTag](
 
   override def size: Int = keys.size
 
-  def search(k: K): Int = {
-    val i = Searching.search(keys, k)
-    if (i < 0) {
-      val j = -i - 1
-      if (j < indices.length) {
-        -indices(-i - 1) - 1
-      } else {
-        -j - 1
-      }
-    } else {
-      indices(i)
-    }
-  }
+  def keyAt(i: Int): K = keys(ord(i))
+  def indexAt(i: Int): Int = indices(ord(i))
 
   def iterator: Iterator[(K, Int)] = ord.iterator map { i =>
     (keys(i), indices(i))
@@ -264,11 +264,11 @@ final case class UnorderedIndex[K: Order: ClassTag](
 
 final case class OrderedIndex[K: Order: ClassTag](keys: Array[K], indices: Array[Int]) extends BaseIndex[K] {
   override def size: Int = keys.size
-  def search(k: K): Int = Searching.search(keys, k)
+  def keyAt(i: Int): K = keys(i)
+  def indexAt(i: Int): Int = indices(i)
   def iterator: Iterator[(K, Int)] = Iterator.tabulate(keys.length) { i =>
     (keys(i), indices(i))
   }
-
   def foreach[U](f: (K, Int) => U): Unit = {
     cfor(0)(_ < keys.length, _ + 1) { i =>
       f(keys(i), indices(i))
