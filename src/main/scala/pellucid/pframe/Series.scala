@@ -6,6 +6,8 @@ import scala.collection.mutable.{ ArrayBuilder, Builder }
 import scala.reflect.ClassTag
 
 import spire.algebra._
+import spire.math._
+import spire.std.any._
 // import spire.std.option._
 import spire.syntax.additiveMonoid._
 import spire.syntax.monoid._
@@ -47,6 +49,8 @@ case class Series[K,V](index: Index[K], column: Column[V]) {
   def sumByKey(implicit V: AdditiveMonoid[V], ct: ClassTag[V]): Series[K, V] =
     reduceByKey(V.additive, ct)
 
+  def reindex(newIndex: Index[K]) = this.copy(newIndex, column)
+
   override def toString: String =
     (keys zip values).map { case (key, value) =>
       s"$key -> $value"
@@ -59,6 +63,11 @@ object Series {
   def apply[K: Order: ClassTag, V: ClassTag](kvs: (K, V)*): Series[K,V] = {
     val (keys, values) = kvs.unzip
     Series(Index(keys.toArray), Column.fromArray(values.toArray))
+  }
+
+  def apply[V: ClassTag](values: V*): Series[Int,V] = {
+    val keys = Array(0 to (values.length - 1): _*)
+    Series(Index(keys), Column.fromArray(values.toArray))
   }
 }
 

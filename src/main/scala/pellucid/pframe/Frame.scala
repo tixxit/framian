@@ -6,8 +6,11 @@ import scala.reflect.runtime.universe.TypeTag
 
 import spire.algebra._
 import spire.implicits._
-import shapeless._
-import shapeless.ops.hlist._
+import spire.compat._
+import shapeless.{HList, Typeable, Poly2, LUBConstraint}
+import shapeless.ops.hlist.{LeftFolder, Length}
+import shapeless.syntax.typeable._
+import shapeless.syntax._
 
 trait Frame[Row, Col] {
   def rowIndex: Index[Row]
@@ -30,7 +33,7 @@ trait Frame[Row, Col] {
 
   private def genericJoin[T](
     getIndex: T => Index[Row],
-    reindexColumns: Array[Int] => T => Seq[(Col, UntypedColumn)]
+    reindexColumns: (Array[Row], Array[Int], Array[Int]) => T => Seq[(Col, UntypedColumn)]
   )(that: T)(join: Join): Frame[Row, Col] = {
     // TODO: This should use simpler things, like:
     //   this.reindex(lIndex).withRowIndex(newRowIndex) ++
@@ -41,7 +44,7 @@ trait Frame[Row, Col] {
     val cols0 = this.getColumns map { case (key, col) =>
       (key, col.setNA(Joiner.Skip).reindex(lIndex))
     }
-    val cols1 = reindexColumns(rIndex)(that)
+    val cols1 = reindexColumns(keys, lIndex, rIndex)(that)
 
     val (newColIndex, cols) = (cols0 ++ cols1).unzip
     ColOrientedFrame(newRowIndex, Index(newColIndex.toArray), cols.toArray)
@@ -50,65 +53,47 @@ trait Frame[Row, Col] {
   def join(that: Frame[Row, Col])(join: Join): Frame[Row, Col] =
     genericJoin[Frame[Row, Col]](
       { frame: Frame[Row, Col] => frame.rowIndex },
-      { rIndex: Array[Int] => frame: Frame[Row, Col] =>
+      { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => frame: Frame[Row, Col] =>
         frame.getColumns map { case (key, col) =>
           (key, col.setNA(Joiner.Skip).reindex(rIndex))
         }
       }
     )(that)(join)
 
-  //def f[FooList <: HList : <<:[Foo[_]]#λ](foos: FooList)(implicit map: shapeless.ops.hlist.Mapper[fooFunc.type, FooList]) =
-  //         foo map fooFunc
+  def join[T: TypeTag](that: Series[Row, T], columnKey: Col)(join: Join): Frame[Row, Col] =
+    genericJoin[Series[Row, T]](
+      { series: Series[Row, T] => series.index },
+      { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => series: Series[Row, T] =>
+        Seq((columnKey, TypedColumn(series.column.setNA(Joiner.Skip).reindex(rIndex))))
+      })(that)(join)
+
+  object joinSeries extends Poly2 {
+    implicit def caseT[T: TypeTag] = at[(List[Col], Frame[Row, Col]), Series[Row, T]] {
+      case ((columnIndex :: columnIndices, frame), series) =>
+        (columnIndices, frame.join(series, columnIndex)(Join.Outer))
+    }
+  }
 
   import LUBConstraint.<<:
   def join[TSeries <: HList : <<:[Series[Row, _]]#λ]
           (them: TSeries, columnKeys: Seq[Col] = Seq())
-          (join: Join): Frame[Row, Col] = {
-    import Zipper._
-    import Nat._
+          (join: Join)
+          (implicit tf1: LeftFolder[TSeries, (List[Col], Frame[Row, Col]), joinSeries.type],
+                    tpe: Typeable[Index[Col]]
+          ): Frame[Row, Col] = {
+    val columnIndices: Seq[Col] =
+      if (columnKeys.isEmpty)
+        (colIndex.cast[Index[Int]] match {
+           case Some(_) if colIndex.isEmpty => 0 to (them.runtimeLength - 1)
+           case Some(index) =>
+             val colMax = index.max._1
+             (colMax + 1) to (colMax + them.runtimeLength)
+           case _ => throw new Exception("Cannot create default column index values if column type is not numeric.")
+         }).toSeq.asInstanceOf[Seq[Col]]
+      else columnKeys
 
-    val joiner = Joiner[Row](join)(rowIndex.classTag)
-    object getIndex extends Poly2 {
-      implicit def caseT[T] = at[Index[Row], Series[Row, T]] {
-        (acc, series) => Index.cogroup(acc, series.index)(joiner).result()
-      }
-    }
-
-    //implicit val map: Mapper[getIndex.type, TSeries] = implicitly[Mapper[getIndex.type, TSeries]]
-    implicit lazy val folder: LeftFolder[TSeries, Index[Row], getIndex.type] =
-      implicitly[LeftFolder[TSeries, Index[Row], getIndex.type]]
-
-    genericJoin[TSeries](
-      { series: TSeries => series.foldLeft(Index[Row]())(getIndex).asInstanceOf[Index[Row]] },
-      { rIndex: Array[Int] => series: TSeries =>
-
-        object makeColumns extends Poly2 {
-          val columnIndex =
-            if (columnKeys.isEmpty) 0 to columnKeys.length toArray else columnKeys.toArray
-
-          implicit def caseT[T: TypeTag] = at[(Int, List[(Col, UntypedColumn)]), Series[Row, T]] {
-            case ((i, columns), currentSeries) =>
-              (i + 1,
-               (columnIndex(i),
-                TypedColumn(
-                  currentSeries.column.setNA(Joiner.Skip).reindex(rIndex))
-               ) :: columns)
-          }
-        }
-        implicit lazy val folder: LeftFolder[TSeries, (Int, List[(Col, UntypedColumn)]), makeColumns.type] =
-          implicitly[LeftFolder[TSeries, (Int, List[(Col, UntypedColumn)]), makeColumns.type]]
-
-        series.foldLeft((0, List[(Col, UntypedColumn)]()))(makeColumns).asInstanceOf[(Int, List[(Col, UntypedColumn)])]._2
-      })(them)(join)
+    them.foldLeft(columnIndices.toList, this)(joinSeries).asInstanceOf[(List[Col], Frame[Row, Col])]._2
   }
-
-  def join[T: TypeTag](that: Series[Row, T], columnKey: Col)(join: Join): Frame[Row, Col] =
-    genericJoin[Series[Row, T]](
-      { series: Series[Row, T] => series.index },
-      { rIndex: Array[Int] => series: Series[Row, T] =>
-        Seq((columnKey, TypedColumn(series.column.setNA(Joiner.Skip).reindex(rIndex))))
-      })(that)(join)
-
 }
 
 case class ColOrientedFrame[Row, Col](
@@ -146,15 +131,12 @@ object Frame {
     ColOrientedFrame(rowIndex, Index(colKeys.toArray), cols.toArray)
   }
 
-  /*def apply[Row,Col: Order: ClassTag](colIndex: Index[Col], colSeries: Series[Row, ]*): Frame[Row,Col] = {
-    val (colKeys, cols) = colPairs.unzip
-    ColOrientedFrame(rowIndex, Index(colKeys.toArray), cols.toArray)
-  }*/
-
-
-
-  def apply[Col: Order: ClassTag](colPairs: (Col,UntypedColumn)*): Frame[Int,Col] = {
-    val (colKeys, cols) = colPairs.unzip
-    ColOrientedFrame(Index(0 to (colKeys.length - 1) toArray), Index(colKeys.toArray), cols.toArray)
+  import LUBConstraint.<<:
+  def apply[Row: Order: ClassTag, Col: Order: ClassTag, TSeries <: HList : <<:[Series[Row, _]]#λ](
+    colIndex: Index[Col], colSeries: TSeries
+  ): Frame[Row,Col] = {
+    val frame = ColOrientedFrame[Row, Col](Index[Row](), Index[Col](), Array())
+    //implicit val fldr = implicitly[LeftFolder[TSeries,(List[Col], pellucid.pframe.Frame[Row,Col]), frame.joinSeries.type]]
+    frame.join(colSeries, colIndex.keys)(Join.Outer)
   }
 }
