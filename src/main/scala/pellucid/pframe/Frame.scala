@@ -67,19 +67,14 @@ trait Frame[Row, Col] {
         Seq((columnKey, TypedColumn(series.column.setNA(Joiner.Skip).reindex(rIndex))))
       })(that)(join)
 
-  object joinSeries extends Poly2 {
-    implicit def caseT[T: TypeTag] = at[(List[Col], Frame[Row, Col]), Series[Row, T]] {
-      case ((columnIndex :: columnIndices, frame), series) =>
-        (columnIndices, frame.join(series, columnIndex)(Join.Outer))
-    }
-  }
-
   import LUBConstraint.<<:
+  import Frame.joinSeries
   def join[TSeries <: HList : <<:[Series[Row, _]]#λ]
           (them: TSeries, columnKeys: Seq[Col] = Seq())
           (join: Join)
-          (implicit tf1: LeftFolder[TSeries, (List[Col], Frame[Row, Col]), joinSeries.type],
-                    tpe: Typeable[Index[Col]]
+          (implicit
+             tf1: LeftFolder.Aux[TSeries, (List[Col], Frame[Row, Col]), joinSeries.type, (List[Col], Frame[Row, Col])],
+             tpe: Typeable[Index[Col]]
           ): Frame[Row, Col] = {
     val columnIndices: Seq[Col] =
       if (columnKeys.isEmpty)
@@ -92,7 +87,7 @@ trait Frame[Row, Col] {
          }).toSeq.asInstanceOf[Seq[Col]]
       else columnKeys
 
-    them.foldLeft(columnIndices.toList, this)(joinSeries).asInstanceOf[(List[Col], Frame[Row, Col])]._2
+    them.foldLeft(columnIndices.toList, this)(joinSeries)._2
   }
 }
 
@@ -126,17 +121,34 @@ case class ColOrientedFrame[Row, Col](
 }
 
 object Frame {
+
+  object joinSeries extends Poly2 {
+    implicit def caseT[T: TypeTag, Row: Order: ClassTag, Col: Order: ClassTag] =
+      at[(List[Col], Frame[Row, Col]), Series[Row, T]] {
+        case ((columnIndex :: columnIndices, frame), series) =>
+          (columnIndices, frame.join(series, columnIndex)(Join.Outer))
+      }
+  }
+
   def apply[Row,Col: Order: ClassTag](rowIndex: Index[Row], colPairs: (Col,UntypedColumn)*): Frame[Row,Col] = {
     val (colKeys, cols) = colPairs.unzip
     ColOrientedFrame(rowIndex, Index(colKeys.toArray), cols.toArray)
   }
 
   import LUBConstraint.<<:
-  def apply[Row: Order: ClassTag, Col: Order: ClassTag, TSeries <: HList : <<:[Series[Row, _]]#λ](
-    colIndex: Index[Col], colSeries: TSeries
-  ): Frame[Row,Col] = {
-    val frame = ColOrientedFrame[Row, Col](Index[Row](), Index[Col](), Array())
-    //implicit val fldr = implicitly[LeftFolder[TSeries,(List[Col], pellucid.pframe.Frame[Row,Col]), frame.joinSeries.type]]
-    frame.join(colSeries, colIndex.keys)(Join.Outer)
+  def apply[Row: Order: ClassTag, Col: Order: ClassTag, TSeries <: HList : <<:[Series[Row, _]]#λ]
+           (colIndex: Index[Col], colSeries: TSeries)
+           (implicit
+              tf: LeftFolder.Aux[TSeries,(List[Col], Frame[Row,Col]), joinSeries.type, (List[Col], Frame[Row,Col])]
+           ): Frame[Row,Col] = {
+    val frame: Frame[Row, Col] = ColOrientedFrame[Row, Col](Index[Row](), Index[Col](), Array())
+    frame.join(colSeries, colIndex.keys.toSeq)(Join.Outer)
   }
+
+  def apply[Row: Order: ClassTag, Col: Order: ClassTag, TSeries <: HList : <<:[Series[Row, _]]#λ]
+           (colSeries: TSeries)
+           (implicit
+              tf: LeftFolder.Aux[TSeries,(List[Col], Frame[Row,Col]), joinSeries.type, (List[Col], Frame[Row,Col])]
+           ): Frame[Row,Col] =
+    apply(Index[Col](), colSeries)
 }
