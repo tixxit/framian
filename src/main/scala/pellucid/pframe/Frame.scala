@@ -6,7 +6,7 @@ import scala.reflect.ClassTag
 import spire.algebra._
 import spire.implicits._
 import spire.compat._
-import shapeless.{HList, Typeable, Poly2, LUBConstraint}
+import shapeless.{HList, Typeable, Poly2, LUBConstraint, UnaryTCConstraint}
 import shapeless.ops.hlist.{LeftFolder, Length}
 import shapeless.syntax.typeable._
 import shapeless.syntax._
@@ -144,7 +144,7 @@ trait Frame[Row, Col] {
 
   import LUBConstraint.<<:
   import Frame.joinSeries
-  def join[TSeries <: HList : <<:[Series[Row, _]]#λ]
+  def join[TSeries <: HList: <<:[Series[Row, _]]#λ]
           (them: TSeries, columnKeys: Seq[Col] = Seq())
           (join: Join)
           (implicit
@@ -220,6 +220,11 @@ object Frame {
   def empty[Row: Order: ClassTag, Col: Order: ClassTag]: Frame[Row, Col] =
     ColOrientedFrame[Row, Col](Index.empty, Index.empty, Column.empty)
 
+  def apply[Row: Order: ClassTag, Col: Order: ClassTag](rowIndex: Index[Row], colPairs: (Col,UntypedColumn)*): Frame[Row,Col] = {
+    val (colKeys, cols) = colPairs.unzip
+    ColOrientedFrame(rowIndex, Index(colKeys.toArray), Column.fromArray(cols.toArray))
+  }
+
   def fromRows[A, Col](rows: A*)(implicit pop: RowPopulator[A, Int, Col]): Frame[Int, Col] =
     pop.frame(rows.zipWithIndex.foldLeft(pop.init) { case (state, (data, row)) =>
       pop.populate(state, row, data)
@@ -229,27 +234,26 @@ object Frame {
       cols: Column[UntypedColumn]): Frame[Row, Col] =
     ColOrientedFrame(rowIdx, colIdx, cols)
 
-
-  def apply[Row: Order: ClassTag, Col: Order: ClassTag](rowIndex: Index[Row], colPairs: (Col,UntypedColumn)*): Frame[Row,Col] = {
-    val (colKeys, cols) = colPairs.unzip
-    ColOrientedFrame(rowIndex, Index(colKeys.toArray), Column.fromArray(cols.toArray))
-  }
+  // ColOrientedFrame[Row, Col](Index[Row](), Index[Col](), Column.empty)
+  def fromSeries[Row: Order: ClassTag, Col: Order: ClassTag, Value: ClassTag](
+    cols: (Col, Series[Row, Value])*
+  ): Frame[Row,Col] =
+    cols.foldLeft[Frame[Row, Col]](Frame.empty[Row, Col]) {
+      case (accum, (id, series)) =>  accum.join(series, id)(Join.Outer)
+    }
 
   import LUBConstraint.<<:
-  def apply[Row: Order: ClassTag, Col: Order: ClassTag, TSeries <: HList : <<:[Series[Row, _]]#λ]
-           (colIndex: Index[Col], colSeries: TSeries)
-           (implicit
-              tf: LeftFolder.Aux[TSeries,(List[Col], Frame[Row,Col]), joinSeries.type, (List[Col], Frame[Row,Col])]
-           ): Frame[Row,Col] = {
-    val frame: Frame[Row, Col] = ColOrientedFrame[Row, Col](Index[Row](), Index[Col](), Column.empty)
-    frame.join(colSeries, colIndex.keys.toSeq)(Join.Outer)
-  }
+  def fromHList[Row: Order: ClassTag, Col: Order: ClassTag, TSeries <: HList: <<:[Series[Row, _]]#λ]
+               (colIndex: Index[Col], colSeries: TSeries)
+               (implicit
+                  tf: LeftFolder.Aux[TSeries,(List[Col], Frame[Row,Col]), joinSeries.type, (List[Col], Frame[Row,Col])]
+               ): Frame[Row,Col] =
+    Frame.empty[Row, Col].join(colSeries, colIndex.keys.toSeq)(Join.Outer)
 
-  def apply[Row: Order: ClassTag, Col: Order: ClassTag, TSeries <: HList : <<:[Series[Row, _]]#λ]
-           (colSeries: TSeries)
-           (implicit
-              tf: LeftFolder.Aux[TSeries,(List[Col], Frame[Row,Col]), joinSeries.type, (List[Col], Frame[Row,Col])]
-           ): Frame[Row,Col] =
-    apply(Index.empty[Col], colSeries)
-
+  /*def fromHList[Row: Order: ClassTag, TSeries <: HList: <<:[Series[Row, _]]#λ]
+               (colSeries: TSeries)
+               (implicit
+                  tf: LeftFolder.Aux[TSeries,(List[Int], Frame[Row,Int]), joinSeries.type, (List[Int], Frame[Row,Int])]
+               ): Frame[Row,Int] =
+    fromHList(Index[Int](), colSeries)*/
 }

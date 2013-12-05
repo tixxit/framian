@@ -130,15 +130,18 @@ object Series {
   def apply[K, V](index: Index[K], column: Column[V]): Series[K, V] =
     new Series(index, column)
 
-  def apply[K: Order: ClassTag, V: ClassTag](kvs: (K, V)*): Series[K,V] = {
+  def apply[K: Order: ClassTag, V: ClassTag](kvs: (K, V)*): Series[K, V] = {
     val (keys, values) = kvs.unzip
     Series(Index(keys.toArray), Column.fromArray(values.toArray))
   }
 
-  def apply[V: ClassTag](values: V*): Series[Int,V] = {
+  def apply[V: ClassTag](values: V*): Series[Int, V] = {
     val keys = Array(0 to (values.length - 1): _*)
     Series(Index(keys), Column.fromArray(values.toArray))
   }
+
+  def fromMap[K: Order: ClassTag, V: ClassTag](kvMap: Map[K, V]): Series[K, V] =
+    Series(Index(kvMap.keys.toArray), Column.fromArray(kvMap.values.toArray))
 
   implicit def cbf[K: Order: ClassTag, V]: CanBuildFrom[Series[_, _], (K, Cell[V]), Series[K, V]] =
     new CanBuildFrom[Series[_, _], (K, Cell[V]), Series[K, V]] {
@@ -147,7 +150,7 @@ object Series {
     }
 }
 
-private final class SeriesBuilder[K: Order: ClassTag, V] extends Builder[(K, Cell[V]), Series[K, V]] {
+private final class SeriesBuilder[K: Order: ClassTag, V] extends Builder[(K, Cell[V]), Series[K,V]] {
   val keys = ArrayBuilder.make[K]()
   val values = ArrayBuilder.make[Cell[V]]()
 
