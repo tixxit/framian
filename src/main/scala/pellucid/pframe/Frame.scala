@@ -206,7 +206,7 @@ case class ColOrientedFrame[Row, Col](
 object Frame {
 
   object joinSeries extends Poly2 {
-    implicit def caseT[T: Order: ClassTag, Row: Order: ClassTag, Col: Order: ClassTag] =
+    implicit def caseT[T: ClassTag, Row: Order: ClassTag, Col: Order: ClassTag] =
       at[(List[Col], Frame[Row, Col]), Series[Row, T]] {
         case ((columnIndex :: columnIndices, frame), series) =>
           (columnIndices, frame.join(series, columnIndex)(Join.Outer))
@@ -246,14 +246,14 @@ object Frame {
   def fromHList[Row: Order: ClassTag, Col: Order: ClassTag, TSeries <: HList: <<:[Series[Row, _]]#λ]
                (colIndex: Index[Col], colSeries: TSeries)
                (implicit
-                  tf: LeftFolder.Aux[TSeries,(List[Col], Frame[Row,Col]), joinSeries.type, (List[Col], Frame[Row,Col])]
+                  tf: LeftFolder.Aux[TSeries, (List[Col], Frame[Row,Col]), joinSeries.type, (List[Col], Frame[Row,Col])]
                ): Frame[Row,Col] =
     Frame.empty[Row, Col].join(colSeries, colIndex.keys.toSeq)(Join.Outer)
 
-  /*def fromHList[Row: Order: ClassTag, TSeries <: HList: <<:[Series[Row, _]]#λ]
+  def fromHList[Row: Order: ClassTag, TSeries <: HList: <<:[Series[Row, _]]#λ]
                (colSeries: TSeries)
                (implicit
                   tf: LeftFolder.Aux[TSeries,(List[Int], Frame[Row,Int]), joinSeries.type, (List[Int], Frame[Row,Int])]
                ): Frame[Row,Int] =
-    fromHList(Index[Int](), colSeries)*/
+    fromHList(Index.empty[Int], colSeries)
 }
