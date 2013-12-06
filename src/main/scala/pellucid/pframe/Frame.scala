@@ -46,8 +46,7 @@ trait Frame[Row, Col] {
 
   override def hashCode: Int = {
     val values = columnsAsSeries.iterator flatMap { case (colKey, cell) =>
-      val col = cell.getOrElse(UntypedColumn.empty)
-          .cast[Any](Frame.anyTypeable, implicitly)
+      val col = cell.getOrElse(UntypedColumn.empty).cast[Any]
       Series(rowIndex, col).iterator map { case (rowKey, value) =>
         (rowKey, colKey, value)
       }
@@ -65,8 +64,8 @@ trait Frame[Row, Col] {
       val keys1 = rowIndex1 map (_._1)
       (cols0.size == cols1.size) && (keys0 == keys1) && (cols0 zip cols1).forall {
         case ((k0, v0), (k1, v1)) if k0 == k1 =>
-          def col0 = v0.getOrElse(UntypedColumn.empty).cast[Any](Frame.anyTypeable, implicitly)
-          def col1 = v1.getOrElse(UntypedColumn.empty).cast[Any](Frame.anyTypeable, implicitly)
+          def col0 = v0.getOrElse(UntypedColumn.empty).cast[Any]
+          def col1 = v1.getOrElse(UntypedColumn.empty).cast[Any]
           (v0 == v1) || (Series(rowIndex0, col0) == Series(rowIndex1, col1))
 
         case _ => false
@@ -106,8 +105,7 @@ trait Frame[Row, Col] {
     val keys = justify("" :: rowIndex.map(_._1.toString).toList)
     val cols = columnsAsSeries.map { case (key, cell) =>
       val header = key.toString
-      val col = cell.getOrElse(UntypedColumn.empty)
-          .cast[Any](Frame.anyTypeable, implicitly)
+      val col = cell.getOrElse(UntypedColumn.empty).cast[Any]
       val values = Series(rowIndex, col).map {
         case (_, Value(value)) => value.toString
         case (_, missing) => missing.toString
@@ -141,7 +139,7 @@ case class ColOrientedFrame[Row, Col](
   } yield cols.value(i).cast[A]
 
   private final class RowView(trans: UntypedColumn => UntypedColumn, row: Int) extends UntypedColumn {
-    def cast[B: Typeable: ClassTag]: Column[B] = Column.wrap[B] { colIdx =>
+    def cast[B: ColumnTyper]: Column[B] = Column.wrap[B] { colIdx =>
       for {
         col <- cols(colIndex.indexAt(colIdx))
         value <- trans(col).cast[B].apply(row)

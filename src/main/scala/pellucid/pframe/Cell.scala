@@ -54,9 +54,9 @@ object Cell extends CellInstances {
   def notAvailable[A]: Cell[A] = NA
   def notMeaningful[A]: Cell[A] = NM
 
-  def fromOption[A](opt: Option[A]): Cell[A] = opt match {
+  def fromOption[A](opt: Option[A], missing: Missing = NA): Cell[A] = opt match {
     case Some(a) => Value(a)
-    case None => NA
+    case None => missing
   }
 }
 
