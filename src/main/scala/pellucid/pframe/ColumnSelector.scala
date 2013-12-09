@@ -131,7 +131,7 @@ trait ColumnSelection[Row, Col, Sz <: Size] {
     }
 
     val (keys, rows) = (for {
-      (group, rows) <- groups
+      (group, rows) <- groups.toList
       row <- rows
     } yield (group -> row)).unzip
     val groupedIndex = Index.ordered(keys.toArray, rows.toArray)
