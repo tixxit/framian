@@ -10,7 +10,7 @@ import scala.io.Source
 import spire.math.Number
 import spire.implicits._
 
-object Utilities {
+package object utilities {
 
   /** Load a frame from CSV.
     *
@@ -18,7 +18,7 @@ object Utilities {
     * @param columnIndex whether or not the first row is expected to indicate the column index of the frame
     * @param rowIndex whether or not the first column is expected to express the row index of the frame
     */
-  def csv(
+  def loadFrameFromCSV(
     location: String,
     delimiter: String = ",",
     quote: String = "\"",

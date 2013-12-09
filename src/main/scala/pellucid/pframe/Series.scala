@@ -65,6 +65,11 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
   def toFrame[C: Order: ClassTag](col: C)(implicit tt: ClassTag[V]): Frame[K, C] =
     Frame(index, col -> TypedColumn(column))
 
+  def toFrame(implicit tt: ClassTag[V]): Frame[K, Int] = {
+    import spire.std.int._
+    Frame[K, Int](index, 0 -> TypedColumn(column))
+  }
+
   /**
    * Map the values of this series only. Note that the function `f` will be
    * called every time a value is accessed. To prevent this, you must `compact`
@@ -72,6 +77,11 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
    */
   def mapValues[W](f: V => W): Series[K, W] =
     Series(index, new MappedColumn(f, column)) // TODO: Use a macro here?
+
+  /**
+   * Filter the values of this series only.
+   */
+  def filterValues(f: Cell[V] => Boolean): Series[K, V] = this.filter { case (index, value) => f(value) }
 
   /**
    * Returns a compacted version of this `Series`. The new series will be equal
