@@ -234,7 +234,6 @@ object Frame {
       cols: Column[UntypedColumn]): Frame[Row, Col] =
     ColOrientedFrame(rowIdx, colIdx, cols)
 
-  // ColOrientedFrame[Row, Col](Index[Row](), Index[Col](), Column.empty)
   def fromSeries[Row: Order: ClassTag, Col: Order: ClassTag, Value: ClassTag](
     cols: (Col, Series[Row, Value])*
   ): Frame[Row,Col] =
