@@ -87,7 +87,6 @@ object NumericColumnTyper {
           else bigInt(x.toBigInt)
         } else {
           if (x.isExact) rational(x.toRational)
-          else if (x.withinDouble) primFloat(x.toDouble)
           else bigFloat(x.toBigDecimal)
         }
       case _ => z
@@ -161,7 +160,13 @@ final class LongColumnTyper extends NumericColumnTyper[Long] {
       safeToLong(_),
       safeToLong(_),
       safeToLong(_),
-      safeToLong(_),
+      { n =>
+        if (n.isWhole) {
+          val n0 = n.numerator
+          val m = n0.toLong
+          if (m == n0) Some(m) else None
+        } else None
+      },
       None
     )
 

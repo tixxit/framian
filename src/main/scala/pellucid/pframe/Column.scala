@@ -92,6 +92,8 @@ trait Column[@spec(Int,Long,Float,Double) +A] extends ColumnLike[Column[A]] {
    */
   def optimize(index: Index[_]): Column[A] = ???
 
+  final def cells(rng: Range): Vector[Cell[A]] = rng.map(this(_))(collection.breakOut)
+
   override def toString: String =
     ((0 until Column.ToStringLength).map(apply(_)).map(_.toString) :+ "...").mkString("Column(", ", ", ")")
 }
