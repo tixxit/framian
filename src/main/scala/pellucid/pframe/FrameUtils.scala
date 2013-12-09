@@ -22,14 +22,17 @@ object Utilities {
     location: String,
     delimiter: String = ",",
     quote: String = "\"",
-    rowIndex: Option[Int] = None,
+    rowIndex: Int = -1,
     columnIndex: Boolean = false,
     contentColumnsToParse: List[Int] = List()
   ) = {
     // sometimes you just want the bulk of the state-machine compiled for you...
     val stripWhitespaceCheckQuoteState =
-      s"(?:[\\s]*($quote[^$quote]*$quote|[^\\s$quote]*)[\\s]*)|[\\s]*($quote[^$quote]*)".r
+      s"(?:[\\s]*($quote[^$quote]*$quote|[^\\s$quote]*(?:[\\s]*[^\\s$quote]*)*)[\\s]*)|[\\s]*($quote[^$quote]*)".r
     val checkQuoteFinished = s"([^$quote]*)|([^$quote]*$quote)[\\s]*".r
+
+    val file = new BufferedReader(new FileReader(location))
+    var nextLine = file.readLine()
 
     // assuming sorted list of desired values...
     def parseLine(line: String, columns: List[Int] = List()): ArrayBuffer[String] = {
@@ -62,24 +65,25 @@ object Utilities {
         }
       }
 
+      nextLine = file.readLine()
       results
     }
 
-    val file = new BufferedReader(new FileReader(location))
-    var nextLine = file.readLine()
-    var index = 0
-
     // if you want a row index, you don't have to explicitly specify the first column in columnsToParse
-    val columnsToParse = rowIndex.fold(contentColumnsToParse) {
-      indexPosition =>
-      if (!contentColumnsToParse.isEmpty && !contentColumnsToParse.contains(indexPosition))
-        indexPosition :: contentColumnsToParse
-      else
+    val columnsToParse =
+      if (rowIndex < 0)
         contentColumnsToParse
-    }
+      else {
+        if (!contentColumnsToParse.isEmpty && !contentColumnsToParse.contains(rowIndex))
+          rowIndex :: contentColumnsToParse
+        else
+          contentColumnsToParse
+      }
     // first line might be the column index and not real values, also want to instantiate column cache
     val firstParsedLine = parseLine(nextLine, columnsToParse)
     val numberOfColumns = firstParsedLine.length
+
+    // we either want to pull out that first row as the column index or produce a default integer index
     val columnsSeq = 0 to numberOfColumns map (_.toString)
     val (colIndexArray, columns) =
       if (columnIndex)
@@ -87,6 +91,7 @@ object Utilities {
       else
         (ArrayBuffer(columnsSeq: _*), ArrayBuffer[ArrayBuffer[String]]())
 
+    var index = 0
     while (nextLine != null) {
       val parsed = parseLine(nextLine, columnsToParse)
       while (index < numberOfColumns) {
@@ -94,15 +99,22 @@ object Utilities {
         index += 1
       }
 
-      nextLine = file.readLine()
       index = 0
     }
     file.close()
 
+    // either make a row index now that we know how many rows or grab the user specified row index column
+    // also, if there's a row index we need to drop first value in column index as un-needed.
+    val (rowIndexValues, valueColumns, valueColumnIndex) =
+      if (rowIndex < 0)
+        ((0 to columns(0).length - 1) map (_.toString), columns, colIndexArray)
+      else
+        (columns(0), columns.slice(1, columns.length), colIndexArray.drop(1))
+
     Frame(
-      Index(columns(0).toArray),
-      colIndexArray.zip(
-        columns.slice(1, columns.length) map {
+      Index(rowIndexValues.toArray),
+      valueColumnIndex.zip(
+        valueColumns map {
           colArr => TypedColumn(Column.fromArray(colArr.toArray))
         }): _*)
   }

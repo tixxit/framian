@@ -131,16 +131,15 @@ trait Frame[Row, Col] {
       { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => frame: Frame[Row, Col] =>
         frame.columnsAsSeries collect { case (key, Value(col)) =>
           (key, col.setNA(Joiner.Skip).reindex(rIndex))
-        } toSeq
-      }
+        } toSeq }
     )(that)(join)
 
   def join[T: ClassTag](that: Series[Row, T], columnKey: Col)(join: Join): Frame[Row, Col] =
     genericJoin[Series[Row, T]](
       { series: Series[Row, T] => series.index },
       { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => series: Series[Row, T] =>
-        Seq((columnKey, TypedColumn(series.column.setNA(Joiner.Skip).reindex(rIndex))))
-      })(that)(join)
+        Seq((columnKey, TypedColumn(series.column.setNA(Joiner.Skip).reindex(rIndex)))) }
+    )(that)(join)
 
   import LUBConstraint.<<:
   import Frame.joinSeries
@@ -220,7 +219,10 @@ object Frame {
   def empty[Row: Order: ClassTag, Col: Order: ClassTag]: Frame[Row, Col] =
     ColOrientedFrame[Row, Col](Index.empty, Index.empty, Column.empty)
 
-  def apply[Row: Order: ClassTag, Col: Order: ClassTag](rowIndex: Index[Row], colPairs: (Col,UntypedColumn)*): Frame[Row,Col] = {
+  def apply[Row: Order: ClassTag, Col: Order: ClassTag](
+    rowIndex: Index[Row],
+    colPairs: (Col,UntypedColumn)*
+  ): Frame[Row,Col] = {
     val (colKeys, cols) = colPairs.unzip
     ColOrientedFrame(rowIndex, Index(colKeys.toArray), Column.fromArray(cols.toArray))
   }
@@ -230,15 +232,18 @@ object Frame {
       pop.populate(state, row, data)
     })
 
-  def fromColumns[Row, Col](rowIdx: Index[Row], colIdx: Index[Col],
-      cols: Column[UntypedColumn]): Frame[Row, Col] =
+  def fromColumns[Row, Col](
+    rowIdx: Index[Row],
+    colIdx: Index[Col],
+    cols: Column[UntypedColumn]
+  ): Frame[Row, Col] =
     ColOrientedFrame(rowIdx, colIdx, cols)
 
   def fromSeries[Row: Order: ClassTag, Col: Order: ClassTag, Value: ClassTag](
     cols: (Col, Series[Row, Value])*
   ): Frame[Row,Col] =
     cols.foldLeft[Frame[Row, Col]](Frame.empty[Row, Col]) {
-      case (accum, (id, series)) =>  accum.join(series, id)(Join.Outer)
+      case (accum, (id, series)) => accum.join(series, id)(Join.Outer)
     }
 
   import LUBConstraint.<<:
