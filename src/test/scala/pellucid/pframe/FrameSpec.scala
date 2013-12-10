@@ -19,6 +19,10 @@ class FrameSpec extends Specification {
     "a" :: 3 :: HNil,
     "b" :: 2 :: HNil,
     "c" :: 1 :: HNil)
+  val f2 = Frame.fromRows(
+    "a" :: 1 :: HNil,
+    "b" :: 2 :: HNil,
+    "b" :: 3 :: HNil)
   val homogeneous = Frame.fromRows(
     1.0  :: 2.0 :: 3.0  :: HNil,
     0.5  :: 1.0 :: 1.5  :: HNil,
@@ -266,6 +270,7 @@ class FrameSpec extends Specification {
     "group by column values" in {
       f0.columns(0).groupAs[String] must_== f0.withRowIndex(Index.fromKeys("a", "b", "c"))
       f0.columns(1).groupBy { (x: Int) => -x } must_== f0.withRowIndex(Index(-3 -> 2, -2 -> 1, -1 -> 0))
+      f2.columns(0).groupBy { (x: String) => x } must_== f2.withRowIndex(Index(("a",0), ("b",2), ("b",1)))
     }
   }
 }
