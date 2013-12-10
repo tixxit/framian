@@ -274,3 +274,4 @@ class FrameSpec extends Specification {
     }
   }
 }
+
