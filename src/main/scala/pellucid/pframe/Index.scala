@@ -167,7 +167,7 @@ object Index {
     type State
 
     def init: State
-    
+
     def group(state: State)(keys: Array[K], indices: Array[Int], start: Int, end: Int): State
   }
 

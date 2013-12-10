@@ -8,9 +8,11 @@ import scala.collection.{ IterableLike, Iterable }
 import scala.reflect.ClassTag
 
 import spire.algebra._
+import spire.math._
 // import spire.std.option._
 import spire.syntax.additiveMonoid._
 import spire.syntax.monoid._
+import spire.compat._
 import spire.syntax.cfor._
 
 import pellucid.pframe.reduce.Reducer
@@ -63,6 +65,11 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
   def toFrame[C: Order: ClassTag](col: C)(implicit tt: ClassTag[V]): Frame[K, C] =
     Frame(index, col -> TypedColumn(column))
 
+  def toFrame(implicit tt: ClassTag[V]): Frame[K, Int] = {
+    import spire.std.int._
+    Frame[K, Int](index, 0 -> TypedColumn(column))
+  }
+
   /**
    * Map the values of this series only. Note that the function `f` will be
    * called every time a value is accessed. To prevent this, you must `compact`
@@ -70,6 +77,11 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
    */
   def mapValues[W](f: V => W): Series[K, W] =
     Series(index, new MappedColumn(f, column)) // TODO: Use a macro here?
+
+  /**
+   * Filter the values of this series only.
+   */
+  def filterValues(f: Cell[V] => Boolean): Series[K, V] = this.filter { case (index, value) => f(value) }
 
   /**
    * Returns a compacted version of this `Series`. The new series will be equal
@@ -122,15 +134,24 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
 }
 
 object Series {
+  import spire.std.int._
   def empty[K: Order: ClassTag, V] = Series(Index.empty[K], Column.empty[V])
 
   def apply[K, V](index: Index[K], column: Column[V]): Series[K, V] =
     new Series(index, column)
 
-  def apply[K: Order: ClassTag, V: ClassTag](kvs: (K, V)*): Series[K,V] = {
+  def apply[K: Order: ClassTag, V: ClassTag](kvs: (K, V)*): Series[K, V] = {
     val (keys, values) = kvs.unzip
     Series(Index(keys.toArray), Column.fromArray(values.toArray))
   }
+
+  def apply[V: ClassTag](values: V*): Series[Int, V] = {
+    val keys = Array(0 to (values.length - 1): _*)
+    Series(Index(keys), Column.fromArray(values.toArray))
+  }
+
+  def fromMap[K: Order: ClassTag, V: ClassTag](kvMap: Map[K, V]): Series[K, V] =
+    Series(Index(kvMap.keys.toArray), Column.fromArray(kvMap.values.toArray))
 
   implicit def cbf[K: Order: ClassTag, V]: CanBuildFrom[Series[_, _], (K, Cell[V]), Series[K, V]] =
     new CanBuildFrom[Series[_, _], (K, Cell[V]), Series[K, V]] {
@@ -139,7 +160,7 @@ object Series {
     }
 }
 
-private final class SeriesBuilder[K: Order: ClassTag, V] extends Builder[(K, Cell[V]), Series[K, V]] {
+private final class SeriesBuilder[K: Order: ClassTag, V] extends Builder[(K, Cell[V]), Series[K,V]] {
   val keys = ArrayBuilder.make[K]()
   val values = ArrayBuilder.make[Cell[V]]()
 

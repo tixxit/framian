@@ -116,7 +116,6 @@ trait ColumnSelection[Row, Col, Sz <: Size] {
   }
 
   // TODO: Grouping should take a strategy so that we can deal with missing values.
-
   private def groupBy0[A: RowExtractorAux, B: Order: ClassTag](f: A => B): Frame[B, Col] = {
     import spire.compat._
 
@@ -132,7 +131,7 @@ trait ColumnSelection[Row, Col, Sz <: Size] {
     }
 
     val (keys, rows) = (for {
-      (group, rows) <- groups
+      (group, rows) <- groups.toList
       row <- rows
     } yield (group -> row)).unzip
     val groupedIndex = Index.ordered(keys.toArray, rows.toArray)
