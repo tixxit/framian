@@ -34,8 +34,23 @@ trait Frame[Row, Col] {
   def withColIndex[C1](ci: Index[C1]): Frame[Row, C1]
   def withRowIndex[R1](ri: Index[R1]): Frame[R1, Col]
 
+  def mapColumnIndex[Col2: Order: ClassTag](f: Col => Col2): Frame[Row, Col2] =
+    withColIndex(Index(colIndex map { case (col, index) => (f(col), index) } toSeq: _*))
+  def mapRowIndex[Row2: Order: ClassTag](f: Row => Row2): Frame[Row2, Col] =
+    withRowIndex(Index(rowIndex map { case (row, index) => (f(row), index) } toSeq: _*))
+
   def orderColumns: Frame[Row, Col] = withColIndex(colIndex.sorted)
   def orderRows: Frame[Row, Col] = withRowIndex(rowIndex.sorted)
+
+  /** These methods remove a row or column from a frame. Note that the default
+    * implementation is naive and just drops the indicated row or column from the
+    * respective index---it is up to specific types of frames to provide or not
+    * a proper drop method.
+    */
+  def dropColumns(cols: Col*): Frame[Row, Col] =
+    withColIndex(Index(colIndex filter { case (col, _) => !cols.contains(col) } toSeq: _*))
+  def dropRows(rows: Row*): Frame[Row, Col] =
+    withRowIndex(Index(rowIndex filter { case (row, _) => !rows.contains(row) } toSeq: _*))
 
   override def hashCode: Int = {
     val values = columnsAsSeries.iterator flatMap { case (colKey, cell) =>
