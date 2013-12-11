@@ -20,6 +20,12 @@ trait Frame[Row, Col] {
   private implicit def colClassTag = colIndex.classTag
   private implicit def colOrder = colIndex.order
 
+  def apply[T: Typeable: ClassTag](r: Row, c: Col): Cell[T] = columns(c).get[T](r)
+  def column[T: Typeable: ClassTag](c: Col): Option[Series[Row, T]] =
+    columnsAsSeries(c).value map {
+      column => Series(rowIndex, column.cast[T])
+    }
+
   def columnsAsSeries: Series[Col, UntypedColumn]
   def rowsAsSeries: Series[Row, UntypedColumn]
 
