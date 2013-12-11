@@ -87,7 +87,7 @@ trait ColumnSelection[Row, Col, Sz <: Size] {
     * the application of the input f.
     */
   import Nat._1
-  def map[F, L <: HList, A: ClassTag](columnName: Col, f: F)(implicit fntop: FnToProduct.Aux[F, L => A],
+  def map[F, L <: HList, A: ClassTag](columnName: Col = cols.head)(f: F)(implicit fntop: FnToProduct.Aux[F, L => A],
       extractor: RowExtractor[L, Col, Sz]): ColumnSelection[Row, Col, Fixed[_1]] = {
 
     val column = extractor.prepare(frame, cols).fold(Column.empty[A]) { p =>
