@@ -150,6 +150,16 @@ object Series {
     Series(Index(keys), Column.fromArray(values.toArray))
   }
 
+  def fromCells[K: Order: ClassTag, V: ClassTag](kvs: (K, Cell[V])*): Series[K, V] = {
+    val (keys, values) = kvs.unzip
+    Series(Index(keys.toArray), Column.fromCells(values.toIndexedSeq))
+  }
+
+  def fromCells[V: ClassTag](values: Cell[V]*): Series[Int, V] = {
+    val keys = Array(0 to (values.length - 1): _*)
+    Series(Index(keys), Column.fromCells(values.toIndexedSeq))
+  }
+
   def fromMap[K: Order: ClassTag, V: ClassTag](kvMap: Map[K, V]): Series[K, V] =
     Series(Index(kvMap.keys.toArray), Column.fromArray(kvMap.values.toArray))
 
