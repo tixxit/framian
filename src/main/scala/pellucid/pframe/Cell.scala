@@ -1,6 +1,9 @@
 package pellucid
 package pframe
 
+import spire.algebra.{ Eq, Order }
+import spire.syntax.order._
+
 /**
  * A `Cell` represents a single piece of data that may not be available or
  * meangingful in a given context. Essentially, a `Cell` is similar to
@@ -46,14 +49,14 @@ sealed trait Cell[+A] {
   }
 }
 
-object Cell {
+object Cell extends CellInstances {
   def value[A](x: A): Cell[A] = Value(x)
   def notAvailable[A]: Cell[A] = NA
   def notMeaningful[A]: Cell[A] = NM
 
-  def fromOption[A](opt: Option[A]): Cell[A] = opt match {
+  def fromOption[A](opt: Option[A], missing: Missing = NA): Cell[A] = opt match {
     case Some(a) => Value(a)
-    case None => NA
+    case None => missing
   }
 
   implicit def cell2Iterable[A](cell: Cell[A]): Iterable[A] = cell.value.toList
@@ -82,4 +85,35 @@ final case object NM extends Missing
 final case class Value[+A](get: A) extends Cell[A] {
   def value = Some(get)
   def isMissing = false
+}
+
+trait CellInstances0 {
+  implicit def cellEq[A: Eq]: Eq[Cell[A]] = new CellEq[A]
+}
+
+trait CellInstances extends CellInstances0 {
+  implicit def cellOrder[A: Order]: Order[Cell[A]] = new CellOrder[A]
+}
+
+@SerialVersionUID(0L)
+private final class CellEq[A: Eq] extends Eq[Cell[A]] {
+  import spire.syntax.eq._
+
+  def eqv(x: Cell[A], y: Cell[A]): Boolean = (x, y) match {
+    case (Value(x0), Value(y0)) => x0 === y0
+    case (NA, NA) | (NM, NM) => true
+    case _ => false
+  }
+}
+
+@SerialVersionUID(0L)
+private final class CellOrder[A: Order] extends Order[Cell[A]] {
+  def compare(x: Cell[A], y: Cell[A]): Int = (x, y) match {
+    case (Value(x0), Value(y0)) => x compare y
+    case (NA, NA) | (NM, NM) => 0
+    case (NA, _) => -1
+    case (_, NA) => 1
+    case (NM, _) => -1
+    case (_, NM) => 1
+  }
 }

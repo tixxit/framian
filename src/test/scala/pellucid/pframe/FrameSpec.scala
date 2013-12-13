@@ -107,7 +107,7 @@ class FrameSpec extends Specification {
 
     "be representable as columns" in {
       val series = f0.columnsAsSeries mapValues { col =>
-        Series(f0.rowIndex, col.cast[Any](Frame.anyTypeable, implicitly))
+        Series(f0.rowIndex, col.cast[Any])
       }
 
       series must_== Series(
@@ -118,7 +118,7 @@ class FrameSpec extends Specification {
 
     "be representable as rows" in {
       val series = f0.rowsAsSeries mapValues { col =>
-        Series(f0.colIndex, col.cast[Any](Frame.anyTypeable, implicitly))
+        Series(f0.colIndex, col.cast[Any])
       }
 
       series must_== Series(
