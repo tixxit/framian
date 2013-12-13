@@ -9,6 +9,8 @@ package object reduce {
 
   def Mean[A: Field]: Reducer[A, Option[A]] = new Mean[A]
 
+  //def Median[A: Order]: Reducer[A, Option[A]] = new Median[A]
+
   def Sum[A: AdditiveMonoid]: Reducer[A, A] = MonoidReducer(spire.algebra.Monoid.additive[A])
 
   def Max[A: Order]: Reducer[A, Option[A]] = new Max[A]

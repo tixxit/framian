@@ -55,6 +55,8 @@ object Cell {
     case Some(a) => Value(a)
     case None => NA
   }
+
+  implicit def cell2Iterable[A](cell: Cell[A]): Iterable[A] = cell.value.toList
 }
 
 sealed trait Missing extends Cell[Nothing] {
