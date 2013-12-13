@@ -14,6 +14,12 @@ class ReducerSpec extends Specification {
       Column.fromCells(Vector(NA, Value(2D), NM, NA, Value(4D), NM)))
   }
 
+  object odd {
+    val dense = Series("a" -> 1D, "b" -> 2D, "c" -> 3D)
+    val sparse = Series(Index.fromKeys("a", "b", "c", "d"),
+       Column.fromCells(Vector(NA, Value(2D), NM, NA, Value(4D), Value(5D))))
+  }
+
   object duplicate {
     val dense = Series("a" -> 1D, "a" -> 2D, "b" -> 3D, "b" -> 4D, "b" -> 5D, "c" -> 6D)
     val sparse = Series(
@@ -114,6 +120,32 @@ class ReducerSpec extends Specification {
 
     "find max in sparse series by key" in {
       duplicate.sparse.reduceByKey(Max[Double]) must_== Series("a" -> None, "b" -> Some(4D), "c" -> Some(5D), "d" -> Some(0D))
+    }
+  }
+
+  "Median" should {
+    "not find median of empty series" in {
+      empty.reduce(Median[Double]) must_== None
+    }
+
+    "find median in dense series" in {
+      unique.dense.reduce(Median[Double]) must_== Some(3D)
+      duplicate.dense.reduce(Median[Double]) must_== Some(3.5D)
+      odd.dense.reduce(Median[Double]) must_== Some(2D)
+    }
+
+    "find median in sparse series" in {
+      unique.sparse.reduce(Median[Double]) must_== Some(3D)
+      duplicate.spares.reduce(Median[Double]) must_== Some(2D)
+      odd.sparse.reduce(Median[Double]) must_== Some(4D)
+    }
+
+    "find median in dense series by key" in {
+      duplicate.dense.reduceByKey(Median[Double]) must_== Series("a" -> Some(1.5D), "b" -> Some(4D), "c" -> Some(6D))
+    }
+
+    "find median in sparse series by key" in {
+      duplicate.sparse.reduceByKey(Median[Double]) must_== Series("a" -> None, "b" -> Some(3D), "c" -> Some(3D), "d" -> Some(0D))
     }
   }
 }

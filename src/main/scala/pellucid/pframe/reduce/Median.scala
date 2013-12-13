@@ -12,10 +12,10 @@ import spire.syntax.order._
 
 private[reduce] final class Median[A: Field: Order: ClassTag] extends Reducer[A, Option[A]] {
 
-  implicit def chooseRandomPivot(arr: Array[Double]): Double = arr(scala.util.Random.nextInt(arr.size))
+  implicit def chooseRandomPivot(arr: Array[A]): A = arr(scala.util.Random.nextInt(arr.size))
 
-  @tailrec def findKMedian(arr: Array[Double], kOrValue: Either[Int, Double], k2OrValue: Either[Int, Double])
-                          (implicit choosePivot: Array[Double] => Double): (Double, Double) = {
+  @tailrec def findKMedian(arr: Array[A], kOrValue: Either[Int, A], k2OrValue: Either[Int, A])
+                          (implicit choosePivot: Array[A] => A): (A, A) = {
     val a = choosePivot(arr)
     (kOrValue, k2OrValue) match {
       case (Right(v1), Right(v2)) =>
@@ -57,7 +57,7 @@ private[reduce] final class Median[A: Field: Order: ClassTag] extends Reducer[A,
     }
   }
 
-  def findMedian(arr: Array[Double])(implicit choosePivot: Array[Double] => Double) = {
+  def findMedian(arr: Array[A])(implicit choosePivot: Array[A] => A) = {
     if (arr.size % 2 == 0) {
       val (left, right) = findKMedian(arr, Left(arr.size / 2), Left((arr.size / 2) - 1))
       (left / 2) + (right / 2)
