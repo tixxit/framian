@@ -58,6 +58,9 @@ trait Column[@spec(Int,Long,Float,Double) +A] extends ColumnLike[Column[A]] {
    */
   def filter(f: A => Boolean): Column[A] = new FilteredColumn(f, this)
 
+  def zipMap[B, C](rhs: Column[B])(f: (A, B) => C): Column[C] =
+    new ZipMapColumn[A, B, C](f, this, rhs)
+
   /**
    * Masks this column with a given `BitSet`. That is, a value only exists at
    * a row if it exists in both the source `Column` and if `bitset(row)` is
@@ -126,9 +129,14 @@ object Column extends ColumnAlgebras {
 // // This class is required to get around some spec/macro bugs.
 // final class ColumnOps[A](lhs: Column[A]) {
 //   def map0[B](f: A => B): Column[B] = macro ColumnOps.mapImpl[A, B]
+// 
+//   def zipMap
 // }
-
+// 
 // object ColumnOps {
+//   def zipMapImpl[A, B, C](c: Context)(rhs: c.Expr[B])(f: c.Expr[(A, B) => C]): c.Expr[Column[C]] = {
+//   }
+// 
 //   def mapImpl[A, B: c.WeakTypeTag](c: Context)(f: c.Expr[A => B]): c.Expr[Column[B]] = {
 //     import c.universe._
 //     val lhs = c.prefix.tree match {

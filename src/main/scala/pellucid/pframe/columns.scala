@@ -119,3 +119,13 @@ final class WrappedColumn[A](f: Int => Cell[A]) extends Column[A] {
   }
 }
 
+final class ZipMapColumn[A, B, C](f: (A, B) => C, lhs: Column[A], rhs: Column[B])
+    extends Column[C] {
+  def exists(row: Int): Boolean = lhs.exists(row) && rhs.exists(row)
+  def missing(row: Int): Missing =
+    if (lhs.exists(row)) rhs.missing(row)
+    else if (rhs.exists(row)) lhs.missing(row)
+    else if (lhs.missing(row) == NM) NM
+    else rhs.missing(row)
+  def value(row: Int): C = f(lhs.value(row), rhs.value(row))
+}
