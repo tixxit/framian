@@ -11,6 +11,8 @@ import shapeless.ops.hlist.{LeftFolder, Length}
 import shapeless.syntax.typeable._
 import shapeless.syntax._
 
+import pellucid.pframe.reduce.Reducer
+
 trait Frame[Row, Col] {
   def rowIndex: Index[Row]
   def colIndex: Index[Col]
@@ -31,7 +33,36 @@ trait Frame[Row, Col] {
 
   def columns: ColumnSelector[Row, Col] = ColumnSelector(this)
 
-  def summary[T: Field: Order: ClassTag]: Frame[Col, String] =
+  /** The following methods allow a user to apply reducers directly across a frame. In
+    * particular, this API demands that we specify the type that the reducer accepts and
+    * it will only apply it in the case that there exists a type conversion for a given
+    * column.
+    */
+  def reduceFrame[V: ClassTag, R: ClassTag](reducer: Reducer[V, R]): Series[Col, R] = {
+    Series[Col, R](
+      colIndex flatMap {  case (col, _) =>
+        column[V](col) map { typedColumn =>
+          (col, typedColumn.reduce(reducer))
+        }
+      } toSeq: _*)
+  }
+
+  def reduceFrameByKey[V: ClassTag, R: ClassTag](reducer: Reducer[V, R]): Frame[Row, Col] = {
+    Frame.fromSeries(
+      colIndex flatMap {  case (col, _) =>
+        column[V](col) map { typedColumn =>
+          (col, typedColumn.reduceByKey(reducer))
+        }
+      } toSeq: _*)
+  }
+
+  def summary[T: Field: Order: ClassTag]: Frame[Col, String] = {
+    /*Frame.fromSeries(
+      ("Mean", reduceFrame(reduce.Mean[T])),
+      ("Median", reduceFrame(reduce.Median[T])),
+      ("Max", reduceFrame(reduce.Max[T])),
+      ("Min", reduceFrame(reduce.Min[T])),
+      ("Sum", reduceFrame(reduce.Sum[T])))*/
     Frame.fromRows(
       colIndex flatMap { case (col, _) =>
         column[T](col) map { numericCol: Series[Row, T] =>
@@ -42,6 +73,7 @@ trait Frame[Row, Col] {
       } toSeq: _*)
       .withColIndex(Index.fromKeys("Mean", "Median", "Max", "Min", "Sum"))
       .withRowIndex(Index.fromKeys(colIndex.map(_._1).toSeq: _*))
+  }
 
   def withColIndex[C1](ci: Index[C1]): Frame[Row, C1]
   def withRowIndex[R1](ri: Index[R1]): Frame[R1, Col]

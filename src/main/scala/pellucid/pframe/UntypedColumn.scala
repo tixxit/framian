@@ -12,8 +12,7 @@ import shapeless.syntax.typeable._
  * An abstraction for heterogeneously typed columns. We work with them by
  * casting to a real, typed column. Values that cannot be cast are treated as
  * `NM` (not meaningful) values.
- */
-trait UntypedColumn extends ColumnLike[UntypedColumn] {
+ */trait UntypedColumn extends ColumnLike[UntypedColumn] {
   def cast[A: ColumnTyper]: Column[A]
 }
 
