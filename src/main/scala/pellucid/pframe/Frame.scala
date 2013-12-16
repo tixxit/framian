@@ -31,16 +31,17 @@ trait Frame[Row, Col] {
 
   def columns: ColumnSelector[Row, Col] = ColumnSelector(this)
 
-  def summary[T: Field: Order: ClassTag] =
+  def summary[T: Field: Order: ClassTag]: Frame[Col, String] =
     Frame.fromRows(
-      rowIdx = Index.fromKeys(colIndex.map(_._1).toSeq: _*),
-      colIdx = Index.fromKeys("Mean", "Median", "Max", "Min", "Sum"),
       colIndex flatMap { case (col, _) =>
         column[T](col) map { numericCol: Series[Row, T] =>
-          numericCol.reduce(reduce.Mean[T]) :: numericCol.reduce(reduce.Median[T]) :: numericCol.reduce(reduce.Max[T]) ::
-            numericCol.reduce(reduce.Min[T]) :: numericCol.reduce(reduce.Sum[T]) :: HNil
+          numericCol.reduce(reduce.Mean[T]) :: numericCol.reduce(reduce.Median[T]) ::
+            numericCol.reduce(reduce.Max[T]) :: numericCol.reduce(reduce.Min[T]) ::
+            numericCol.reduce(reduce.Sum[T]) :: HNil
         }
       } toSeq: _*)
+      .withColIndex(Index.fromKeys("Mean", "Median", "Max", "Min", "Sum"))
+      .withRowIndex(Index.fromKeys(colIndex.map(_._1).toSeq: _*))
 
   def withColIndex[C1](ci: Index[C1]): Frame[Row, C1]
   def withRowIndex[R1](ri: Index[R1]): Frame[R1, Col]
@@ -253,12 +254,6 @@ object Frame {
     pop.frame(rows.zipWithIndex.foldLeft(pop.init) { case (state, (data, row)) =>
       pop.populate(state, row, data)
     })
-
-  def fromRows[A, Row, Col](rowIdx: Index[Row], colIdx: Index[Col], rows: A*)
-              (implicit pop: RowPopulator[A, Int, Col]): Frame[Row, Col] =
-    pop.frame(rows.zipWithIndex.foldLeft(pop.init) { case (state, (data, row)) =>
-      pop.populate(state, row, data)
-    }).withRowIndex(rowIdx).withColIndex(colIdx)
 
   def fromColumns[Row, Col](
     rowIdx: Index[Row],
