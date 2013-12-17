@@ -78,6 +78,8 @@ private trait BinOpColumn[@spec(Int,Long,Float,Double) A] extends Column[A] {
 trait ColumnSemiring[@spec(Int,Long,Float,Double) A] extends Semiring[Column[A]] {
   implicit def algebra: Semiring[A]
 
+  def zero: Column[A] = Column.const(algebra.zero)
+
   def plus(x: Column[A], y: Column[A]): Column[A] = new BinOpColumn[A] {
     val lhs = x
     val rhs = y
@@ -94,14 +96,11 @@ trait ColumnSemiring[@spec(Int,Long,Float,Double) A] extends Semiring[Column[A]]
 trait ColumnRig[@spec(Int,Long,Float,Double) A] extends ColumnSemiring[A] with Rig[Column[A]] {
   implicit def algebra: Rig[A]
 
-  def zero: Column[A] = Column.const(algebra.zero)
   def one: Column[A] = Column.const(algebra.one)
 }
 
 trait ColumnRng[@spec(Int,Long,Float,Double) A] extends ColumnSemiring[A] with Rng[Column[A]] {
   implicit def algebra: Rng[A]
-
-  def zero: Column[A] = Column.const(algebra.zero)
 
   def negate(x: Column[A]): Column[A] = new UnOpColumn[A] {
     val arg = x
