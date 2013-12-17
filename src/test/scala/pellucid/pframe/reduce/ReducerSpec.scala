@@ -17,7 +17,7 @@ class ReducerSpec extends Specification {
   object odd {
     val dense = Series("a" -> 1D, "b" -> 2D, "c" -> 3D)
     val sparse = Series(Index.fromKeys("a", "b", "c", "d"),
-       Column.fromCells(Vector(NA, Value(2D), NM, NA, Value(4D), Value(5D))))
+               Column.fromCells(Vector(NA, Value(2D), Value(4D), Value(5D))))
   }
 
   object duplicate {
@@ -136,7 +136,7 @@ class ReducerSpec extends Specification {
 
     "find median in sparse series" in {
       unique.sparse.reduce(Median[Double]) must_== Some(3D)
-      duplicate.spares.reduce(Median[Double]) must_== Some(2D)
+      duplicate.sparse.reduce(Median[Double]) must_== Some(2D)
       odd.sparse.reduce(Median[Double]) must_== Some(4D)
     }
 

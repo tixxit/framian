@@ -23,10 +23,15 @@ trait Frame[Row, Col] {
   private implicit def colOrder = colIndex.order
 
   def apply[T: Typeable: ClassTag](r: Row, c: Col): Cell[T] = columns(c).get[T](r)
-  def column[T: Typeable: ClassTag](c: Col): Option[Series[Row, T]] =
+  def column[T: Typeable: ClassTag](c: Col): Option[Series[Row, T]] = {
+    val colSeries = columnsAsSeries
+
     columnsAsSeries(c).value map {
-      column => Series(rowIndex, column.cast[T])
+      column =>
+        val typedColumn = column.cast[T]
+        Series(rowIndex, typedColumn)
     }
+  }
 
   def columnsAsSeries: Series[Col, UntypedColumn]
   def rowsAsSeries: Series[Row, UntypedColumn]
@@ -57,13 +62,12 @@ trait Frame[Row, Col] {
   }
 
   def summary[T: Field: Order: ClassTag]: Frame[Col, String] = {
-    /*Frame.fromSeries(
+    Frame.fromSeries(
       ("Mean", reduceFrame(reduce.Mean[T])),
       ("Median", reduceFrame(reduce.Median[T])),
       ("Max", reduceFrame(reduce.Max[T])),
-      ("Min", reduceFrame(reduce.Min[T])),
-      ("Sum", reduceFrame(reduce.Sum[T])))*/
-    Frame.fromRows(
+      ("Min", reduceFrame(reduce.Min[T])))
+    /*Frame.fromRows(
       colIndex flatMap { case (col, _) =>
         column[T](col) map { numericCol: Series[Row, T] =>
           numericCol.reduce(reduce.Mean[T]) :: numericCol.reduce(reduce.Median[T]) ::
@@ -72,7 +76,7 @@ trait Frame[Row, Col] {
         }
       } toSeq: _*)
       .withColIndex(Index.fromKeys("Mean", "Median", "Max", "Min", "Sum"))
-      .withRowIndex(Index.fromKeys(colIndex.map(_._1).toSeq: _*))
+      .withRowIndex(Index.fromKeys(colIndex.map(_._1).toSeq: _*))*/
   }
 
   def withColIndex[C1](ci: Index[C1]): Frame[Row, C1]
