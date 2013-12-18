@@ -15,4 +15,3 @@ package object reduce {
 
   def Min[A: Order]: Reducer[A, Option[A]] = Max(Order[A].reverse)
 }
-
