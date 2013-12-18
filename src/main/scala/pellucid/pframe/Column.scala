@@ -104,7 +104,9 @@ trait Column[@spec(Int,Long,Float,Double) +A] extends ColumnLike[Column[A]] {
 object Column extends ColumnAlgebras {
   private val ToStringLength = 5
 
-  def empty[A]: Column[A] = new EmptyColumn[A]
+  def empty[A]: Column[A] = new EmptyColumn[A](NA)
+
+  def missing[A](missing: Missing): Column[A] = new EmptyColumn[A](missing)
 
   def const[@spec(Int,Long,Float,Double) A](value: A): Column[A] = new ConstColumn(value)
 

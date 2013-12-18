@@ -11,9 +11,9 @@ import spire.algebra._
 import shapeless._
 import shapeless.syntax.typeable._
 
-final class EmptyColumn[A] extends Column[A] {
+final class EmptyColumn[A](missing: Missing) extends Column[A] {
   def exists(row: Int): Boolean = false
-  def missing(row: Int): Missing = NA
+  def missing(row: Int): Missing = missing
   def value(row: Int): A = throw new UnsupportedOperationException()
 }
 
