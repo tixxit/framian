@@ -14,6 +14,9 @@ package object reduce {
 
   def Median[A: Field: Order: ClassTag]: Reducer[A, Option[A]] = new Median
 
+  def Quantile[A: Field: Order: ClassTag](probabilities: Seq[Double] = Seq(0, .25, .5, .75, 1)): Reducer[A, Seq[(Double, A)]] =
+    new Quantile(probabilities)
+
   def Max[A: Order]: Reducer[A, Option[A]] = new Max[A]
 
   def Min[A: Order]: Reducer[A, Option[A]] = Max(Order[A].reverse)
