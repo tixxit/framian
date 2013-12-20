@@ -17,6 +17,8 @@ package object reduce {
   def Quantile[A: Field: Order: ClassTag](probabilities: Seq[Double] = Seq(0, .25, .5, .75, 1)): Reducer[A, Seq[(Double, A)]] =
     new Quantile(probabilities)
 
+  def Outliers[A: Field: Order: ClassTag]: Reducer[A, (Option[A], Option[A])] = new Outliers
+
   def Max[A: Order]: Reducer[A, Option[A]] = new Max[A]
 
   def Min[A: Order]: Reducer[A, Option[A]] = Max(Order[A].reverse)
