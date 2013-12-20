@@ -59,6 +59,7 @@ sealed trait Index[K] extends Iterable[(K, Int)] with IterableLike[(K, Int), Ind
   }
 
   def sorted: Index[K] = Index.ordered(keys, indices)
+  def resetIndices: Index[K]
 
   // These must contain both the keys and the indices, in sorted order.
   private[pframe] def keys: Array[K]
@@ -260,6 +261,8 @@ final case class UnorderedIndex[K: Order: ClassTag](
       f(keys(j), indices(j))
     }
   }
+
+  def resetIndices: Index[K] = UnorderedIndex(keys, Array.range(0, keys.size), ord)
 }
 
 final case class OrderedIndex[K: Order: ClassTag](keys: Array[K], indices: Array[Int]) extends BaseIndex[K] {
@@ -274,4 +277,5 @@ final case class OrderedIndex[K: Order: ClassTag](keys: Array[K], indices: Array
       f(keys(i), indices(i))
     }
   }
+  def resetIndices: Index[K] = OrderedIndex(keys, Array.range(0, keys.size))
 }

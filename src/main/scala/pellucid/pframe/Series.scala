@@ -34,6 +34,9 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
   def keys: Vector[K] = index.map(_._1)(collection.breakOut)
   def values: Vector[Cell[V]] = index.map({ case (_, i) => column(i) })(collection.breakOut)
 
+  def keyAt(i: Int): K = index.keyAt(i)
+  def valueAt(i: Int): Cell[V] = column(index.indexAt(i))
+
   def apply(key: K): Cell[V] = index.get(key) map (column(_)) getOrElse NA
 
   /**
