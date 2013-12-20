@@ -14,7 +14,7 @@ private[reduce] final class Outliers[A: Field: Order: ClassTag] extends Reducer[
 
   val quantiler = new Quantile[A](Seq(.25, .75))
 
-  def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Seq[(Double, A)] = {
+  def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): (Option[A], Option[A]) = {
     val existingColumnValues = indices.slice(start, end) flatMap { i => column(i) }
     val Seq((_, q1), (_, q3)) = quantiler.reduce(column, indices, start, end)
 
@@ -25,7 +25,7 @@ private[reduce] final class Outliers[A: Field: Order: ClassTag] extends Reducer[
     val lowerOutliers = existingColumnValues.filter(_ <= lowerFence)
     val upperOutliers = existingColumnValues.filter(_ >= upperFence)
 
-    (if (lowerOutliers.length > 0) Some(lowerFence, lowerOutliers) else None,
-     if (upperOutliers.length > 0) Some(upperFence, upperOutliers) else None)
+    (if (lowerOutliers.length > 0) Some(lowerFence) else None,
+     if (upperOutliers.length > 0) Some(upperFence) else None)
   }
 }
