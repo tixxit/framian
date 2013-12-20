@@ -42,7 +42,7 @@ private[reduce] final class Quantile[A: Field: Order: ClassTag](probabilities: S
             interpolate(newProbability, remainingPoints(rangeStart), remainingPoints(rangeEnd))) :: accum)
       }
 
-    probabilityRanges
+    probabilityRanges.sortBy(_._1)
   }
 
   def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Seq[(Double, A)] = {
