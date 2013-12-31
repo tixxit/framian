@@ -33,6 +33,7 @@ trait Frame[Row, Col] {
     }
   }
 
+
   def columnsAsSeries: Series[Col, UntypedColumn]
   def rowsAsSeries: Series[Row, UntypedColumn]
 
@@ -176,11 +177,11 @@ trait Frame[Row, Col] {
   private def genericJoin[T](
     getIndex: T => Index[Row],
     reindexColumns: (Array[Row], Array[Int], Array[Int]) => T => Seq[(Col, UntypedColumn)]
-  )(that: T)(join: Join): Frame[Row, Col] = {
+  )(that: T)(joinStrategy: Join): Frame[Row, Col] = {
     // TODO: This should use simpler things, like:
     //   this.reindex(lIndex).withRowIndex(newRowIndex) ++
     //   that.reindex(rIndex).withRowIndex(newRowIndex)
-    val joiner = Joiner[Row](join)(rowIndex.classTag)
+    val joiner = Joiner[Row](joinStrategy)(rowIndex.classTag)
     val (keys, lIndex, rIndex) = Index.cogroup(this.rowIndex, getIndex(that))(joiner).result()
     val newRowIndex = Index.ordered(keys)
     val cols0 = this.columnsAsSeries collect { case (key, Value(col)) =>
@@ -192,21 +193,23 @@ trait Frame[Row, Col] {
     ColOrientedFrame(newRowIndex, Index(newColIndex.toArray), Column.fromArray(cols.toArray))
   }
 
-  def join(that: Frame[Row, Col])(join: Join): Frame[Row, Col] =
+  def join(that: Frame[Row, Col])(joinStrategy: Join): Frame[Row, Col] =
     genericJoin[Frame[Row, Col]](
       { frame: Frame[Row, Col] => frame.rowIndex },
       { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => frame: Frame[Row, Col] =>
         frame.columnsAsSeries collect { case (key, Value(col)) =>
           (key, col.setNA(Joiner.Skip).reindex(rIndex))
         } toSeq }
-    )(that)(join)
+    )(that)(joinStrategy)
 
-  def join[T: ClassTag](that: Series[Row, T], columnKey: Col)(join: Join): Frame[Row, Col] =
+  def join[T: ClassTag](that: Series[Row, T], columnKey: Col)(joinStrategy: Join): Frame[Row, Col] =
     genericJoin[Series[Row, T]](
       { series: Series[Row, T] => series.index },
       { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => series: Series[Row, T] =>
+        println(lIndex.mkString(" "))
+        println(rIndex.mkString(" "))
         Seq((columnKey, TypedColumn(series.column.setNA(Joiner.Skip).reindex(rIndex)))) }
-    )(that)(join)
+    )(that)(joinStrategy)
 
   import LUBConstraint.<<:
   import Frame.joinSeries

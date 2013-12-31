@@ -23,6 +23,18 @@ class FrameSpec extends Specification {
     "a" :: 1 :: HNil,
     "b" :: 2 :: HNil,
     "b" :: 3 :: HNil)
+  val f3 = Frame.fromSeries((0, Series(1 -> 3, 2 -> 2, 2 -> 1)))
+
+  val s0 = Series(
+    0 -> "s3",
+    1 -> "s2",
+    2 -> "s1")
+  val s1 = Series(
+    1 -> "s3",
+    2 -> "s2",
+    2 -> "s1")
+
+
   val homogeneous = Frame.fromRows(
     1.0  :: 2.0 :: 3.0  :: HNil,
     0.5  :: 1.0 :: 1.5  :: HNil,
@@ -135,6 +147,13 @@ class FrameSpec extends Specification {
       f0.join(e)(Join.Inner) must_== f0.withRowIndex(Index.empty[Int])
       e.join(f0)(Join.Inner) must_== f0.withRowIndex(Index.empty[Int])
       e.join(e)(Join.Inner) must_== e
+    }
+
+    "inner join with series" in {
+      f0.join(s0, 2)(Join.Inner) must_== Frame.fromRows(
+        "a" :: 1 :: "s3" :: HNil,
+        "b" :: 2 :: "s2" :: HNil,
+        "c" :: 3 :: "s1" :: HNil)
     }
 
     "inner join with self" in {

@@ -1,20 +1,25 @@
 package pellucid.pframe
 
 import org.specs2.mutable._
-import org.specs2.specification.{ Fragments, Fragment, Example} 
+import org.specs2.specification.{ Fragments, Fragment, Example}
 import org.specs2.matcher.Parameters
-import org.specs2.ScalaCheck
+import org.specs2.{ScalaCheck, SpecificationLike}
 
 import org.scalacheck._
 import org.scalacheck.Arbitrary.arbitrary
+import org.scalacheck.Prop._
 
 import spire.algebra._
 import spire.math.Rational
 import spire.laws._
 import spire.std.int._
 import spire.syntax.eq._
+import spire.implicits.IntAlgebra
 
-class ColumnAlgebrasSpec extends Specification with ScalaCheck /* extends Properties("ColumnAlgebras")*/ {
+import org.typelevel.discipline.specs2.Discipline
+
+/* extends Properties("ColumnAlgebras")*/
+class ColumnAlgebrasSpec extends Specification with ScalaCheck with Discipline  {
   import ColumnGenerators._
 
   // We use a pretty sketchy notion of equality here. Basically, pretending that
@@ -45,7 +50,7 @@ class ColumnAlgebrasSpec extends Specification with ScalaCheck /* extends Proper
 
   implicit def arbRational = Arbitrary(genRational)
 
-  def checkAll(props: Properties): Fragments = {
+  /*def checkAll(props: Properties): Fragments = {
     val examples: Seq[Example] = for {
       (name, prop) <- props.properties
     } yield {
@@ -53,10 +58,15 @@ class ColumnAlgebrasSpec extends Specification with ScalaCheck /* extends Proper
     }
 
     Fragments.createList(examples: _*)
-  }
+  }*/
+
+  //implicit val intColumnEq = ColumnEq[Int]
+  //implicit val rationalColumnEq = ColumnEq[Rational]
+
+  //val ringLaws: RuleSet = RingLaws[Column[Int]].ring
 
   "ColumnAlgebras" should {
-    checkAll(RingLaws[Column[Int]].ring)
-    checkAll(RingLaws[Column[Rational]].field)
+    checkAll("Int column ring", RingLaws[Column[Int]].ring)
+    checkAll("Rational column field", RingLaws[Column[Rational]].field)
   }
 }
