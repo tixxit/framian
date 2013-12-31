@@ -197,7 +197,7 @@ object Index {
    * efficiently.
    */
   trait Cogrouper[K] {
-    type State
+    type State <: { def result(): (Array[K], Array[Int], Array[Int]) }
 
     def init: State
 

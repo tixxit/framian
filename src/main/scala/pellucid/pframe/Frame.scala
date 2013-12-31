@@ -173,16 +173,15 @@ trait Frame[Row, Col] {
     collapse(keys, cols).mkString("\n")
   }
 
-
   private def genericJoin[T](
     getIndex: T => Index[Row],
     reindexColumns: (Array[Row], Array[Int], Array[Int]) => T => Seq[(Col, UntypedColumn)]
-  )(that: T)(joinStrategy: Join): Frame[Row, Col] = {
+  )(that: T)(cogrouper: Index.Cogrouper[Row]): Frame[Row, Col] = {
     // TODO: This should use simpler things, like:
     //   this.reindex(lIndex).withRowIndex(newRowIndex) ++
     //   that.reindex(rIndex).withRowIndex(newRowIndex)
-    val joiner = Joiner[Row](joinStrategy)(rowIndex.classTag)
-    val (keys, lIndex, rIndex) = Index.cogroup(this.rowIndex, getIndex(that))(joiner).result()
+    val res: cogrouper.State = Index.cogroup(this.rowIndex, getIndex(that))(cogrouper)
+    val (keys, lIndex, rIndex) = res.result()
     val newRowIndex = Index.ordered(keys)
     val cols0 = this.columnsAsSeries collect { case (key, Value(col)) =>
       (key, col.setNA(Joiner.Skip).reindex(lIndex))
@@ -193,6 +192,15 @@ trait Frame[Row, Col] {
     ColOrientedFrame(newRowIndex, Index(newColIndex.toArray), Column.fromArray(cols.toArray))
   }
 
+  def merge(that: Frame[Row, Col])(mergeStrategy: Merge): Frame[Row, Col] =
+    genericJoin[Frame[Row, Col]](
+      { frame: Frame[Row, Col] => frame.rowIndex },
+      { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => frame: Frame[Row, Col] =>
+        frame.columnsAsSeries collect { case (key, Value(col)) =>
+          (key, col.setNA(Joiner.Skip).reindex(rIndex))
+        } toSeq }
+    )(that)(Merger[Row](mergeStrategy)(rowIndex.classTag))
+
   def join(that: Frame[Row, Col])(joinStrategy: Join): Frame[Row, Col] =
     genericJoin[Frame[Row, Col]](
       { frame: Frame[Row, Col] => frame.rowIndex },
@@ -200,7 +208,7 @@ trait Frame[Row, Col] {
         frame.columnsAsSeries collect { case (key, Value(col)) =>
           (key, col.setNA(Joiner.Skip).reindex(rIndex))
         } toSeq }
-    )(that)(joinStrategy)
+    )(that)(Joiner[Row](joinStrategy)(rowIndex.classTag))
 
   def join[T: ClassTag](that: Series[Row, T], columnKey: Col)(joinStrategy: Join): Frame[Row, Col] =
     genericJoin[Series[Row, T]](
@@ -209,7 +217,7 @@ trait Frame[Row, Col] {
         println(lIndex.mkString(" "))
         println(rIndex.mkString(" "))
         Seq((columnKey, TypedColumn(series.column.setNA(Joiner.Skip).reindex(rIndex)))) }
-    )(that)(joinStrategy)
+    )(that)(Joiner[Row](joinStrategy)(rowIndex.classTag))
 
   import LUBConstraint.<<:
   import Frame.joinSeries
