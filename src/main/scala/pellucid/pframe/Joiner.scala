@@ -41,7 +41,7 @@ final case class Joiner[K: ClassTag](join: Join) extends Index.Cogrouper[K] {
       lKeys: Array[K], lIdx: Array[Int], lStart: Int, lEnd: Int,
       rKeys: Array[K], rIdx: Array[Int], rStart: Int, rEnd: Int): State = {
 
-    println("-----")
+    /*println("-----")
     println("lKeys: "+ lKeys.mkString(" "))
     println("rKeys: "+ rKeys.mkString(" "))
     println("lIdx: "+ lIdx.mkString(" "))
@@ -50,7 +50,7 @@ final case class Joiner[K: ClassTag](join: Join) extends Index.Cogrouper[K] {
     println("rStart: "+ rStart)
     println("lEnd: "+ lEnd)
     println("rEnd: "+ rEnd)
-    println("-----")
+    println("-----")*/
 
     if (lEnd > lStart && rEnd > rStart) {
       val key = lKeys(lStart)
@@ -72,10 +72,10 @@ final case class Joiner[K: ClassTag](join: Join) extends Index.Cogrouper[K] {
       }
     }
 
-    val tempResults = state.result()
+    /*val tempResults = state.result()
     println(tempResults._1.mkString(" "))
     println(tempResults._2.mkString(" "))
-    println(tempResults._3.mkString(" "))
+    println(tempResults._3.mkString(" "))*/
     state
   }
 }

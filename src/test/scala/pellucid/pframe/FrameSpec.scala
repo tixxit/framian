@@ -23,7 +23,11 @@ class FrameSpec extends Specification {
     "a" :: 1 :: HNil,
     "b" :: 2 :: HNil,
     "b" :: 3 :: HNil)
+
   val f3 = Frame.fromSeries((0, Series(1 -> 3, 2 -> 2, 2 -> 1)))
+  val f4 = Frame.fromSeries((1, Series(1 -> 3, 2 -> 2, 2 -> 1)))
+  val f5 = Frame.fromSeries((1, Series(2 -> 3, 2 -> 2, 3 -> 1)))
+  val f6 = Frame.fromSeries((1, Series(2 -> 2, 2 -> 1)))
 
   val s0 = Series(
     0 -> "s3",
@@ -33,7 +37,6 @@ class FrameSpec extends Specification {
     1 -> "s3",
     2 -> "s2",
     2 -> "s1")
-
 
   val homogeneous = Frame.fromRows(
     1.0  :: 2.0 :: 3.0  :: HNil,
@@ -138,6 +141,62 @@ class FrameSpec extends Specification {
         1 -> Series(0 -> "b", 1 -> 2),
         2 -> Series(0 -> "c", 1 -> 3)
       )
+    }
+  }
+
+  "Frame merges" should {
+    // these cases work as expected... tacking on a new column...
+    "inner merge with frame of same row index" in {
+      f3.merge(f4)(Merge.Inner) must_==
+        Frame.fromRows(
+          3 :: 3 :: HNil,
+          2 :: 2 :: HNil,
+          1 :: 1 :: HNil).withRowIndex(Index(Array(1,2,2)))
+    }
+
+    "outer merge with frame of same row index" in {
+      f3.merge(f4)(Merge.Outer) must_==
+        Frame.fromRows(
+          3 :: 3 :: HNil,
+          2 :: 2 :: HNil,
+          1 :: 1 :: HNil
+        ).withRowIndex(Index(Array(1,2,2)))
+    }
+
+    // but I'm still a bit undecided as to what the semantics should be below...
+    "inner merge with an offset index with duplicates" in {
+      f3.merge(f5)(Merge.Inner) must_==
+        Frame.fromRows(
+          2 :: 2 :: HNil
+        ).withRowIndex(Index(Array(2)))
+    }
+
+    "outer merge with an offset index with duplicates" in {
+      f3.merge(f5)(Merge.Outer) must_==
+        Frame.fromRows(
+          3  :: NA :: HNil,
+          NA :: 3 :: HNil,
+          2  :: 2 :: HNil,
+          1  :: NA :: HNil,
+          NA ::  1 :: HNil
+        ).withRowIndex(Index(Array(1,2,2,2,3)))
+    }
+
+    "inner merge with a smaller index with duplicates" in {
+      f3.merge(f6)(Merge.Inner) must_==
+        Frame.fromRows(
+          2 :: 1 :: HNil
+        ).withRowIndex(Index(Array(2)))
+    }
+
+    "outer merge with a smaller index with duplicates" in {
+      f3.merge(f6)(Merge.Outer) must_==
+        Frame.fromRows(
+          3  :: NA :: HNil,
+          NA :: 2 :: HNil,
+          2  :: 1 :: HNil,
+          1  :: NA :: HNil
+        ).withRowIndex(Index(Array(1,2,2,2)))
     }
   }
 

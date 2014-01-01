@@ -201,6 +201,13 @@ trait Frame[Row, Col] {
         } toSeq }
     )(that)(Merger[Row](mergeStrategy)(rowIndex.classTag))
 
+  def merge[T: ClassTag](that: Series[Row, T], columnKey: Col)(mergeStrategy: Merge): Frame[Row, Col] =
+    genericJoin[Series[Row, T]](
+      { series: Series[Row, T] => series.index },
+      { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => series: Series[Row, T] =>
+        Seq((columnKey, TypedColumn(series.column.setNA(Joiner.Skip).reindex(rIndex)))) }
+    )(that)(Merger[Row](mergeStrategy)(rowIndex.classTag))
+
   def join(that: Frame[Row, Col])(joinStrategy: Join): Frame[Row, Col] =
     genericJoin[Frame[Row, Col]](
       { frame: Frame[Row, Col] => frame.rowIndex },
@@ -214,8 +221,8 @@ trait Frame[Row, Col] {
     genericJoin[Series[Row, T]](
       { series: Series[Row, T] => series.index },
       { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => series: Series[Row, T] =>
-        println(lIndex.mkString(" "))
-        println(rIndex.mkString(" "))
+        //println(lIndex.mkString(" "))
+        //println(rIndex.mkString(" "))
         Seq((columnKey, TypedColumn(series.column.setNA(Joiner.Skip).reindex(rIndex)))) }
     )(that)(Joiner[Row](joinStrategy)(rowIndex.classTag))
 
