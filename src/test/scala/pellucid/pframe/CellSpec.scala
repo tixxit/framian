@@ -11,7 +11,11 @@ class CellSpec extends Specification {
 
     "have sane equality" in {
       NA must_== NA
+      NA must_== Value(NA)
+      Value(NA) must_== NA
       NM must_== NM
+      NM must_== Value(NM)
+      Value(NM) must_== NM
       Value(2) must_== Value(2)
     }
 
