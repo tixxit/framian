@@ -49,6 +49,9 @@ sealed trait Cell[+A] {
   }
 }
 
+// TODO: there are currently issues where we get comparison between Value(NA) and NA and this should be true
+// the current tweaks to equality are just holdovers until we figure out some more details on the implementation
+// of missing values.
 object Cell extends CellInstances {
   def value[A](x: A): Cell[A] = Value(x)
   def notAvailable[A]: Cell[A] = NA
@@ -65,6 +68,11 @@ object Cell extends CellInstances {
 sealed trait Missing extends Cell[Nothing] {
   def isMissing = true
   def value = None
+
+  override def equals(that: Any): Boolean = that match {
+    case Value(thatValue) => this == thatValue
+    case _ => super.equals(that)
+  }
 }
 
 /**
@@ -84,7 +92,24 @@ final case object NM extends Missing
  */
 final case class Value[+A](get: A) extends Cell[A] {
   def value = Some(get)
-  def isMissing = false
+  val isMissing = if (get == NA || get == NM) true else false
+
+  override def equals(that: Any): Boolean = {
+    println("that: "+ that)
+    println("this: "+ this)
+    println("get: "+ get)
+
+    that match {
+      case Value(Value(NA)) => get == NA
+      case Value(Value(NM)) => get == NM
+      case Value(thatValue) => thatValue == get
+      case v @ NA => get == NA
+      case v @ NM => get == NM
+      case _ => false
+    }
+  }
+
+  //override def hashCode: Int = if (isMissing) get.hashCode else super.hashCode
 }
 
 trait CellInstances0 {
@@ -104,6 +129,11 @@ private final class CellEq[A: Eq] extends Eq[Cell[A]] {
     case (NA, NA) | (NM, NM) => true
     case _ => false
   }
+
+  /*def eqv[X >: A: Eq, Y >: A: Eq](x: Cell[X], y: Cell[Y]): Boolean = (x, y) match {
+    case (Value(NA), NA) | (Value(NM), NM) | (NA, Value(NA)) | (NM, Value(NM)) => true
+    case _ => false
+  }*/
 }
 
 @SerialVersionUID(0L)

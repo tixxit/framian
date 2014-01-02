@@ -33,7 +33,6 @@ trait Frame[Row, Col] {
     }
   }
 
-
   def columnsAsSeries: Series[Col, UntypedColumn]
   def rowsAsSeries: Series[Row, UntypedColumn]
 
@@ -123,7 +122,11 @@ trait Frame[Row, Col] {
         case ((k0, v0), (k1, v1)) if k0 == k1 =>
           def col0 = v0.getOrElse(UntypedColumn.empty).cast[Any]
           def col1 = v1.getOrElse(UntypedColumn.empty).cast[Any]
-          (v0 == v1) || (Series(rowIndex0, col0) == Series(rowIndex1, col1))
+          val result = (v0 == v1) || (Series(rowIndex0, col0) == Series(rowIndex1, col1))
+          println(Series(rowIndex0, col0).toString)
+          println(Series(rowIndex1, col1).toString)
+          println(result)
+          result
 
         case _ => false
       }
@@ -304,7 +307,7 @@ object Frame {
     ColOrientedFrame(rowIndex, Index(colKeys.toArray), Column.fromArray(cols.toArray))
   }
 
-  def fromRows[A, Col](rows: A*)(implicit pop: RowPopulator[A, Int, Col]): Frame[Int, Col] =
+  def fromRows[A: ClassTag, Col: ClassTag](rows: A*)(implicit pop: RowPopulator[A, Int, Col]): Frame[Int, Col] =
     pop.frame(rows.zipWithIndex.foldLeft(pop.init) { case (state, (data, row)) =>
       pop.populate(state, row, data)
     })

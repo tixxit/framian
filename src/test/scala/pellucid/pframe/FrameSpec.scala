@@ -190,17 +190,17 @@ class FrameSpec extends Specification {
       f3.merge(f5)(Merge.Outer) must_==
         Frame.fromRows(
           3  :: NA :: HNil,
-          2  :: 3 :: HNil,
-          1  :: 5 :: HNil,
-          NA ::  1 :: HNil
+          2  :: 3  :: HNil,
+          1  :: 2  :: HNil,
+          NA :: 1  :: HNil
         ).withRowIndex(Index(Array(1,2,2,3)))
     }
 
     "inner merge with a smaller index with duplicates" in {
       f3.merge(f6)(Merge.Inner) must_==
         Frame.fromRows(
-          2 :: 1 :: HNil,
-          2 :: 1 :: HNil
+          2 :: 2 :: HNil,
+          1 :: 1 :: HNil
         ).withRowIndex(Index(Array(2, 2)))
     }
 
@@ -208,8 +208,8 @@ class FrameSpec extends Specification {
       f3.merge(f6)(Merge.Outer) must_==
         Frame.fromRows(
           3 :: NA :: HNil,
-          2 :: 1  :: HNil,
-          2 :: 1  :: HNil
+          2 :: 2  :: HNil,
+          1 :: 1  :: HNil
         ).withRowIndex(Index(Array(1,2,2)))
     }
   }

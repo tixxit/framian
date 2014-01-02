@@ -53,35 +53,20 @@ final case class Merger[K: ClassTag](merge: Merge) extends Index.Cogrouper[K] {
 
     if (lEnd > lStart && rEnd > rStart) {
       val key = lKeys(lStart)
-      if (merge.outer) {
-        val lSize = lIdx.length
-        val rSize = rIdx.length
 
-        var rPosition = rStart
-        var lPosition = lStart
-        while (lPosition < lEnd || rPosition < rEnd) {
-          val li = if (lPosition >= lEnd) Skip else lIdx(lPosition)
-          val ri = if (rPosition >= rEnd) Skip else rIdx(rPosition)
-          if (li == ri || li == Skip || ri == Skip) {
-            lPosition += 1
-            rPosition += 1
-            state.add(key, li, ri)
-          } else if (li < ri) {
-            lPosition += 1
-            state.add(key, li, Skip)
-          } else if (ri < li) {
-            rPosition += 1
-            state.add(key, Skip, ri)
-          }
-        }
-      } else {
-        cfor(lStart)(_ < lEnd, _ + 1) { i =>
-          val li = lIdx(i)
-          cfor(rStart)(_ < rEnd, _ + 1) { j =>
-            val ri = rIdx(j)
-            if (li == ri) state.add(key, li, ri)
-          }
-        }
+      var rPosition = rStart
+      var lPosition = lStart
+
+      if (merge.outer) while (lPosition < lEnd || rPosition < rEnd) {
+        val li = if (lPosition >= lEnd) Skip else lIdx(lPosition)
+        val ri = if (rPosition >= rEnd) Skip else rIdx(rPosition)
+        lPosition += 1
+        rPosition += 1
+        state.add(key, li, ri)
+      } else while (lPosition < lEnd && rPosition < rEnd) {
+        state.add(key, lIdx(lPosition), rIdx(rPosition))
+        lPosition += 1
+        rPosition += 1
       }
     } else if (merge.outer) {
       if (lEnd > lStart) {
