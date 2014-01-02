@@ -83,16 +83,14 @@ final case class Merger[K: ClassTag](merge: Merge) extends Index.Cogrouper[K] {
           }
         }
       }
-    } else if (lEnd > lStart) {
-      val key = lKeys(lStart)
-      if (merge.outer) {
+    } else if (merge.outer) {
+      if (lEnd > lStart) {
+        val key = lKeys(lStart)
         cfor(lStart)(_ < lEnd, _ + 1) { i =>
           state.add(key, lIdx(i), Skip)
         }
-      }
-    } else if (rEnd > rStart) {
-      val key = rKeys(rStart)
-      if (merge.outer) {
+      } else if (rEnd > rStart) {
+        val key = rKeys(rStart)
         cfor(rStart)(_ < rEnd, _ + 1) { i =>
           state.add(key, Skip, rIdx(i))
         }

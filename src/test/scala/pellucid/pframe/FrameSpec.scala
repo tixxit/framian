@@ -24,10 +24,25 @@ class FrameSpec extends Specification {
     "b" :: 2 :: HNil,
     "b" :: 3 :: HNil)
 
-  val f3 = Frame.fromSeries((0, Series(1 -> 3, 2 -> 2, 2 -> 1)))
-  val f4 = Frame.fromSeries((1, Series(1 -> 3, 2 -> 2, 2 -> 1)))
-  val f5 = Frame.fromSeries((1, Series(2 -> 3, 2 -> 2, 3 -> 1)))
-  val f6 = Frame.fromSeries((1, Series(2 -> 2, 2 -> 1)))
+  val f3 = Frame.fromSeries(
+    (0,
+     Series(1 -> 3,
+            2 -> 2,
+            2 -> 1)))
+  val f4 = Frame.fromSeries(
+    (1,
+     Series(1 -> 3,
+            2 -> 2,
+            2 -> 1)))
+  val f5 = Frame.fromSeries(
+    (1,
+     Series(2 -> 3,
+            2 -> 2,
+            3 -> 1)))
+  val f6 = Frame.fromSeries(
+    (1,
+     Series(2 -> 2,
+            2 -> 1)))
 
   val s0 = Series(
     0 -> "s3",
@@ -163,40 +178,39 @@ class FrameSpec extends Specification {
         ).withRowIndex(Index(Array(1,2,2)))
     }
 
-    // but I'm still a bit undecided as to what the semantics should be below...
     "inner merge with an offset index with duplicates" in {
       f3.merge(f5)(Merge.Inner) must_==
         Frame.fromRows(
-          2 :: 2 :: HNil
-        ).withRowIndex(Index(Array(2)))
+          2 :: 3 :: HNil,
+          1 :: 2 :: HNil
+        ).withRowIndex(Index(Array(2, 2)))
     }
 
     "outer merge with an offset index with duplicates" in {
       f3.merge(f5)(Merge.Outer) must_==
         Frame.fromRows(
           3  :: NA :: HNil,
-          NA :: 3 :: HNil,
-          2  :: 2 :: HNil,
-          1  :: NA :: HNil,
+          2  :: 3 :: HNil,
+          1  :: 5 :: HNil,
           NA ::  1 :: HNil
-        ).withRowIndex(Index(Array(1,2,2,2,3)))
+        ).withRowIndex(Index(Array(1,2,2,3)))
     }
 
     "inner merge with a smaller index with duplicates" in {
       f3.merge(f6)(Merge.Inner) must_==
         Frame.fromRows(
+          2 :: 1 :: HNil,
           2 :: 1 :: HNil
-        ).withRowIndex(Index(Array(2)))
+        ).withRowIndex(Index(Array(2, 2)))
     }
 
     "outer merge with a smaller index with duplicates" in {
       f3.merge(f6)(Merge.Outer) must_==
         Frame.fromRows(
-          3  :: NA :: HNil,
-          NA :: 2 :: HNil,
-          2  :: 1 :: HNil,
-          1  :: NA :: HNil
-        ).withRowIndex(Index(Array(1,2,2,2)))
+          3 :: NA :: HNil,
+          2 :: 1  :: HNil,
+          2 :: 1  :: HNil
+        ).withRowIndex(Index(Array(1,2,2)))
     }
   }
 
