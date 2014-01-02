@@ -122,11 +122,7 @@ trait Frame[Row, Col] {
         case ((k0, v0), (k1, v1)) if k0 == k1 =>
           def col0 = v0.getOrElse(UntypedColumn.empty).cast[Any]
           def col1 = v1.getOrElse(UntypedColumn.empty).cast[Any]
-          val result = (v0 == v1) || (Series(rowIndex0, col0) == Series(rowIndex1, col1))
-          println(Series(rowIndex0, col0).toString)
-          println(Series(rowIndex1, col1).toString)
-          println(result)
-          result
+          (v0 == v1) || (Series(rowIndex0, col0) == Series(rowIndex1, col1))
 
         case _ => false
       }
@@ -224,8 +220,6 @@ trait Frame[Row, Col] {
     genericJoin[Series[Row, T]](
       { series: Series[Row, T] => series.index },
       { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => series: Series[Row, T] =>
-        //println(lIndex.mkString(" "))
-        //println(rIndex.mkString(" "))
         Seq((columnKey, TypedColumn(series.column.setNA(Joiner.Skip).reindex(rIndex)))) }
     )(that)(Joiner[Row](joinStrategy)(rowIndex.classTag))
 

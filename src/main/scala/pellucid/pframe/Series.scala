@@ -121,12 +121,8 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
 
   override def equals(that0: Any): Boolean = that0 match {
     case (that: Series[_, _]) if this.index.size == that.index.size =>
-      println("SERIES: "+ that)
-      println("SERIES: "+ that0)
       (this.index.iterator zip that.index.iterator) forall {
         case ((key0, idx0), (key1, idx1)) if key0 == key1 =>
-          println("KEY: "+ key0)
-          println("THIS KEY: "+ this.column(idx0))
           this.column(idx0) == that.column(idx1)
         case _ => false
       }

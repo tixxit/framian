@@ -94,22 +94,14 @@ final case class Value[+A](get: A) extends Cell[A] {
   def value = Some(get)
   val isMissing = if (get == NA || get == NM) true else false
 
-  override def equals(that: Any): Boolean = {
-    println("that: "+ that)
-    println("this: "+ this)
-    println("get: "+ get)
-
-    that match {
-      case Value(Value(NA)) => get == NA
-      case Value(Value(NM)) => get == NM
-      case Value(thatValue) => thatValue == get
-      case v @ NA => get == NA
-      case v @ NM => get == NM
-      case _ => false
-    }
+  override def equals(that: Any): Boolean = that match {
+    case Value(Value(NA)) => get == NA
+    case Value(Value(NM)) => get == NM
+    case Value(thatValue) => thatValue == get
+    case v @ NA => get == NA
+    case v @ NM => get == NM
+    case _ => false
   }
-
-  //override def hashCode: Int = if (isMissing) get.hashCode else super.hashCode
 }
 
 trait CellInstances0 {
