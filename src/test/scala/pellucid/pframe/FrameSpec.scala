@@ -212,6 +212,15 @@ class FrameSpec extends Specification {
           1 :: 1  :: HNil
         ).withRowIndex(Index(Array(1,2,2)))
     }
+
+    "merge with a series" in {
+      f3.merge(s1, 2)(Merge.Inner) must_==
+        Frame.fromRows(
+          3 :: s3 :: HNil,
+          2 :: s2 :: HNil,
+          1 :: s1 :: HNil
+        ).withRowIndex(Index(Array()))
+    }
   }
 
   "Frame joins" should {
