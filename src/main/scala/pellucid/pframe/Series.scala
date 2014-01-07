@@ -9,13 +9,15 @@ import scala.reflect.ClassTag
 
 import spire.algebra._
 import spire.math._
-// import spire.std.option._
+import spire.std.int._
 import spire.syntax.additiveMonoid._
 import spire.syntax.monoid._
+import spire.syntax.order._
 import spire.compat._
 import spire.syntax.cfor._
 
 import pellucid.pframe.reduce.Reducer
+import pellucid.pframe.util.TrivialMetricSpace
 
 final class Series[K,V](val index: Index[K], val column: Column[V])
     extends Iterable[(K, Cell[V])] with IterableLike[(K, Cell[V]), Series[K, V]] {
@@ -23,7 +25,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
   private implicit def classTag = index.classTag
   private implicit def order = index.order
 
-  def empty: Series[K, V] = Series(Index.empty, Column.empty)
+  def empty: Series[K, V] = Series(Index.empty[K], Column.empty[V])
   override def size: Int = index.size
   def iterator: Iterator[(K, Cell[V])] = index.iterator map { case (k, row) =>
     k -> column(row)
@@ -115,6 +117,50 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
     val reduction = new Reduction[K, V, W](column, reducer)
     val (keys, values) = Index.group(index)(reduction).result()
     Series(Index.ordered(keys), Column.fromArray(values))
+  }
+
+  /**
+   * Rolls values and `NM`s forward, over `NA`s. This is similar to
+   * [[rollForwardUpTo]], but has no bounds checks. In fact, this is exactly
+   * equivalent to
+   * `series.rollForwardUpTo(1)(TrivialMetricSpace[K], Order[Int])`.
+   */
+  def rollForward: Series[K, V] =
+    rollForwardUpTo[Int](1)(TrivialMetricSpace[K], Order[Int])
+
+  /**
+   * Roll-forward values and `NM`s over `NA`s. It will rolls values in sequence
+   * order (not sorted order). It will only roll over `NA`s whose key is within
+   * `delta` of the last valid value or `NM`. This bounds check is inclusive.
+   *
+   * An example of this behaviour is as follows:
+   * {{{
+   * Series(1 -> "a", 2 -> NA, 3 -> NA, 4 -> NM, 5 -> NA, 6 -> NA).rollForwardUpTo(1D) ===
+   *     Series(1 -> "a", 2 -> "a", 3 -> NA, 4 -> NM, 5 -> NM, 6 -> NA)
+   * }}}
+   */
+  def rollForwardUpTo[R](delta: R)(implicit K: MetricSpace[K, R], R: Order[R]): Series[K, V] = {
+    val indices: Array[Int] = new Array[Int](index.size)
+
+    @tailrec
+    def loop(i: Int, lastValue: Int): Unit = if (i < index.size) {
+      val row = index.indexAt(i)
+      if (!column.exists(row) && column.missing(row) == NA) {
+        if (K.distance(index.keyAt(i), index.keyAt(lastValue)) <= delta) {
+          indices(i) = index.indexAt(lastValue)
+        } else {
+          indices(i) = row
+        }
+        loop(i + 1, lastValue)
+      } else {
+        indices(i) = row
+        loop(i + 1, i)
+      }
+    }
+
+    loop(0, 0)
+
+    Series(index.withIndices(indices), column)
   }
 
   override def toString: String =
