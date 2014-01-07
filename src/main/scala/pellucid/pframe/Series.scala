@@ -48,14 +48,27 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
   def zipMap[W, X: ClassTag](that: Series[K, W])(f: (V, W) => X): Series[K, X] = {
     val joiner = Joiner[K](Join.Inner)
     val (keys, lIndices, rIndices) = Index.cogroup(this.index, that.index)(joiner).result()
-    val values = new Array[X](keys.length)
+    val bldr = Column.builder[X]
+
     val lCol = this.column
     val rCol = that.column
     cfor(0)(_ < keys.length, _ + 1) { i =>
       val key = keys(i)
-      values(i) = f(lCol.value(lIndices(i)), rCol.value(rIndices(i)))
+      val l = lIndices(i)
+      val r = rIndices(i)
+      val lExists = lCol.exists(l)
+      val rExists = rCol.exists(r)
+      if (lExists && rExists) {
+        bldr.addValue(f(lCol.value(l), rCol.value(r)))
+      } else if (lExists) {
+        bldr.addMissing(rCol.missing(r))
+      } else if (rExists) {
+        bldr.addMissing(lCol.missing(l))
+      } else {
+        bldr.addMissing(if (lCol.missing(l) == NM) NM else rCol.missing(r))
+      }
     }
-    Series(Index.ordered(keys), Column.fromArray(values))
+    Series(Index.ordered(keys), bldr.result())
   }
 
   /**

@@ -3,6 +3,7 @@ package pellucid.pframe
 import scala.math.ScalaNumericAnyConversions
 import scala.reflect.{ ClassTag, classTag }
 import scala.{ specialized => spec }
+import scala.util.Try
 
 import spire.math.{ Rational, Number }
 
@@ -238,7 +239,7 @@ final class BigDecimalTyper extends NumericColumnTyper[BigDecimal] {
       n => Some(BigDecimal(n)),
       n => Some(BigDecimal(n)),
       n => Some(n),
-      n => util.Try(n.toBigDecimal).toOption,
+      n => Try(n.toBigDecimal).toOption,
       None
     )
 

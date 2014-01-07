@@ -1,6 +1,8 @@
 package pellucid.pframe
 
 import language.experimental.macros
+
+import scala.reflect.ClassTag
 import scala.reflect.macros.Context
 
 import scala.collection.immutable.BitSet
@@ -124,6 +126,8 @@ object Column extends ColumnAlgebras {
     def id: Column[A] = empty[A]
     def op(lhs: Column[A], rhs: Column[A]): Column[A] = new MergedColumn(lhs, rhs)
   }
+
+  def builder[A: ClassTag]: ColumnBuilder[A] = new ColumnBuilder[A]
 
   // implicit def columnOps[A](lhs: Column[A]) = new ColumnOps[A](lhs)
 }

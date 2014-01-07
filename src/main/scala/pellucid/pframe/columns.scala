@@ -1,8 +1,9 @@
 package pellucid.pframe
 
 import language.experimental.macros
-import scala.reflect.macros.Context
 
+import scala.reflect.ClassTag
+import scala.collection.mutable
 import scala.collection.immutable.BitSet
 import scala.{ specialized => spec }
 
@@ -128,4 +129,39 @@ final class ZipMapColumn[A, B, C](f: (A, B) => C, lhs: Column[A], rhs: Column[B]
     else if (lhs.missing(row) == NM) NM
     else rhs.missing(row)
   def value(row: Int): C = f(lhs.value(row), rhs.value(row))
+}
+
+final class ColumnBuilder[@spec(Int,Long,Float,Double) V: ClassTag] extends mutable.Builder[Cell[V], Column[V]] {
+  private var empty: V = _
+  private var size: Int = 0
+  private final val bldr = mutable.ArrayBuilder.make[V]()
+  private final val naValues = new mutable.BitSet
+  private final val nmValues = new mutable.BitSet
+
+  def addValue(v: V): Unit = { bldr += v; size += 1 }
+  def addNA(): Unit = { naValues.add(size); addValue(empty) }
+  def addNM(): Unit = { nmValues.add(size); addValue(empty) }
+
+  def addMissing(m: Missing): Unit = m match {
+    case NA => addNA()
+    case NM => addNM()
+  }
+
+  def +=(elem: Cell[V]): this.type = {
+    elem match {
+      case Value(v) => addValue(v)
+      case NA => addNA()
+      case NM => addNM()
+    }
+    this
+  }
+
+  def clear(): Unit = {
+    size = 0
+    bldr.clear()
+    naValues.clear()
+    nmValues.clear()
+  }
+
+  def result(): Column[V] = new DenseColumn(naValues.toImmutable, nmValues.toImmutable, bldr.result())
 }
