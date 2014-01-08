@@ -2,6 +2,8 @@ package pellucid.pframe
 
 import org.specs2.mutable._
 
+import scala.reflect.ClassTag
+
 import spire.algebra._
 import spire.std.string._
 import spire.std.double._
@@ -83,6 +85,44 @@ class SeriesSpec extends Specification {
         "c" -> List(1, 6, 5)
       )
       a.mapValues(_ :: Nil).reduceByKey(reduce.MonoidReducer) must_== expected
+    }
+
+    def series[K: Order: ClassTag, V](kvs: (K, Cell[V])*): Series[K, V] = {
+      val (keys, values) = kvs.unzip
+      Series(Index.fromKeys(keys: _*), Column.fromCells(values.toVector))
+    }
+
+    "rollForward rolls over NAs" in {
+      val s = series(1 -> Value("a"), 2 -> NA, 3 -> Value("b"), 4 -> NA, 5 -> NA)
+      s.rollForward must_== series(1 -> Value("a"), 2 -> Value("a"), 3 -> Value("b"), 4 -> Value("b"), 5 -> Value("b"))
+    }
+
+    "rollForward skips initial NAs" in {
+      val s = series(1 -> NA, 2 -> NA, 3 -> Value("b"), 4 -> NA, 5 -> NA)
+      s.rollForward must_== series(1 -> NA, 2 -> NA, 3 -> Value("b"), 4 -> Value("b"), 5 -> Value("b"))
+    }
+
+    "rollForward rolls NMs forward" in {
+      val s0 = series(1 -> NA, 2 -> NM, 3 -> NA)
+      val s1 = series(1 -> Value("a"), 2 -> NM, 3 -> NA, 4 -> Value("b"))
+
+      s0.rollForward must_== series(1 -> NA, 2 -> NM, 3 -> NM)
+      s1.rollForward must_== series(1 -> Value("a"), 2 -> NM, 3 -> NM, 4 -> Value("b"))
+    }
+
+    "rollForwardUpTo only rolls up to limit" in {
+      val s0 = series(1 -> Value("a"), 2 -> NA, 3 -> NA, 4 -> NA)
+      val s1 = series(0 -> NA, 1 -> Value("a"), 2 -> NA, 3 -> NA, 4 -> NM, 5 -> Value("b"))
+
+      s0.rollForwardUpTo(1) must_== series(1 -> Value("a"), 2 -> Value("a"), 3 -> NA, 4 -> NA)
+      s0.rollForwardUpTo(2) must_== series(1 -> Value("a"), 2 -> Value("a"), 3 -> Value("a"), 4 -> NA)
+      s1.rollForwardUpTo(1) must_== series(0 -> NA, 1 -> Value("a"), 2 -> Value("a"), 3 -> NA, 4 -> NM, 5 -> Value("b"))
+    }
+
+    "rollForwardUpTo rolls NMs" in {
+      val s0 = series(1 -> NM, 2 -> NA, 3 -> NA, 4 -> NA)
+      s0.rollForwardUpTo(1) must_== series(1 -> NM, 2 -> NM, 3 -> NA, 4 -> NA)
+      s0.rollForwardUpTo(2) must_== series(1 -> NM, 2 -> NM, 3 -> NM, 4 -> NA)
     }
   }
 }
