@@ -10,6 +10,7 @@ import scala.{ specialized => spec }
 import scala.annotation.{ unspecialized => unspec }
 
 import spire.algebra._
+import spire.syntax.cfor._
 
 /**
  * A `Column` represents an `Int`-indexed set of values. The defining
@@ -89,13 +90,18 @@ trait Column[@spec(Int,Long,Float,Double) +A] extends ColumnLike[Column[A]] {
    */
   def setNA(row: Int): Column[A] = new SetNAColumn(row, this)
 
-  /**
-   * This method should be used to return a column specialized on a particular
-   * index. That means it can drop all values that aren't being accessed by
-   * the index and remove some of the indirection built-up via things like
-   * `map`, `filter`, etc.
-   */
-  def optimize(index: Index[_]): Column[A] = ???
+  def compact[AA >: A](rows: Array[Int])(implicit ct: ClassTag[AA]): Column[AA] = {
+    val bldr = new ColumnBuilder[AA]
+    cfor(0)(_ < rows.length, _ + 1) { i =>
+      val row = rows(i)
+      if (exists(row)) {
+        bldr.addValue(value(row))
+      } else {
+        bldr.addMissing(missing(row))
+      }
+    }
+    bldr.result()
+  }
 
   final def cells(rng: Range): Vector[Cell[A]] = rng.map(this(_))(collection.breakOut)
 

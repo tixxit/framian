@@ -250,4 +250,6 @@ object Frame {
                   tf: LeftFolder.Aux[TSeries,(List[Int], Frame[Row,Int]), joinSeries.type, (List[Int], Frame[Row,Int])]
                ): Frame[Row,Int] =
     fromHList(Index.empty[Int], colSeries)
+
+  // def concat[Row, Col](frames: Frame[Row, Col]): Frame[Row, Col]
 }

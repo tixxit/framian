@@ -212,6 +212,12 @@ object Series {
     Series(Index(keys), Column.fromArray(values.toArray))
   }
 
+  def fromCells[K: Order: ClassTag, V: ClassTag](kvs: (K, Cell[V])*): Series[K, V] = {
+    val bldr = new SeriesBuilder[K ,V]
+    bldr ++= kvs
+    bldr.result()
+  }
+
   def fromMap[K: Order: ClassTag, V: ClassTag](kvMap: Map[K, V]): Series[K, V] =
     Series(Index(kvMap.keys.toArray), Column.fromArray(kvMap.values.toArray))
 

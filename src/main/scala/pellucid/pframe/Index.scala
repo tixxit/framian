@@ -58,12 +58,12 @@ sealed trait Index[K] extends Iterable[(K, Int)] with IterableLike[(K, Int), Ind
     if (i >= 0) Some(i) else None
   }
 
-  def sorted: Index[K] = Index.ordered(keys, indices)
+  def sorted: OrderedIndex[K] = Index.ordered(keys, indices)
   def resetIndices: Index[K]
 
   // These must contain both the keys and the indices, in sorted order.
-  private[pframe] def keys: Array[K]
-  private[pframe] def indices: Array[Int]
+  private[pellucid] def keys: Array[K]
+  private[pellucid] def indices: Array[Int]
   private[pframe] def withIndices(is: Array[Int]): Index[K]
 }
 
@@ -106,10 +106,10 @@ object Index {
     }
   }
 
-  def ordered[K: Order: ClassTag](keys: Array[K]): Index[K] =
+  def ordered[K: Order: ClassTag](keys: Array[K]): OrderedIndex[K] =
     ordered(keys, Array.range(0, keys.length))
 
-  def ordered[K: Order: ClassTag](keys: Array[K], indices: Array[Int]): Index[K] =
+  def ordered[K: Order: ClassTag](keys: Array[K], indices: Array[Int]): OrderedIndex[K] =
     new OrderedIndex(keys, indices)
 
   def unordered[K: Order: ClassTag](keys: Array[K]): Index[K] =
@@ -281,4 +281,13 @@ final case class OrderedIndex[K: Order: ClassTag](keys: Array[K], indices: Array
   }
   def resetIndices: Index[K] = OrderedIndex(keys, Array.range(0, keys.size))
   private[pframe] def withIndices(is: Array[Int]): Index[K] = OrderedIndex(keys, is)
+  lazy val isSequential: Boolean = {
+    var isSeq = true
+    var i = 0
+    while (i < indices.length && isSeq) {
+      isSeq = isSeq && indices(i) == i
+      i += 1
+    }
+    isSeq
+  }
 }
