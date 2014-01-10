@@ -97,6 +97,11 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
     Series(index, new MappedColumn(f, column)) // TODO: Use a macro here?
 
   /**
+   * Filter the this series by its keys.
+   */
+  def filterKeys(f: K => Boolean): Series[K, V] = this.filter { case (index, value) => f(index) }
+
+  /**
    * Filter the values of this series only.
    */
   def filterValues(f: Cell[V] => Boolean): Series[K, V] = this.filter { case (index, value) => f(value) }
