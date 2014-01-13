@@ -207,7 +207,11 @@ object Index {
   }
 
   trait GenericJoin[K] extends Cogrouper[K] {
-    type State <: { def result(): (Array[K], Array[Int], Array[Int]) }
+    type State <: GenericJoinState
+
+    trait GenericJoinState {
+      def result(): (Array[K], Array[Int], Array[Int])
+    }
   }
 
   def cogroup[K: Order](lhs: Index[K], rhs: Index[K])

@@ -23,8 +23,7 @@ final case class Joiner[K: ClassTag](join: Join) extends Index.GenericJoin[K] {
 
   // We cheat here and use a mutable state because an immutable one would just
   // be too slow.
-
-  final class State {
+  final class State extends GenericJoinState {
     val keys: ArrayBuilder[K] = ArrayBuilder.make[K]
     val lIndices: ArrayBuilder[Int] = ArrayBuilder.make[Int]
     val rIndices: ArrayBuilder[Int] = ArrayBuilder.make[Int]
