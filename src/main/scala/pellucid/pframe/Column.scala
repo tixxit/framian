@@ -90,6 +90,8 @@ trait Column[@spec(Int,Long,Float,Double) +A] extends ColumnLike[Column[A]] {
    */
   def setNA(row: Int): Column[A] = new SetNAColumn(row, this)
 
+  // TODO: This should really just take an Index[_] and compact it for
+  //       fast access.
   def compact[AA >: A](len: Int)(implicit ct: ClassTag[AA]): Column[AA] = {
     val bldr = new ColumnBuilder[AA]
     cfor(0)(_ < len, _ + 1) { row =>
