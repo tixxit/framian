@@ -31,6 +31,12 @@ trait Frame[Row, Col] {
   def orderColumns: Frame[Row, Col] = withColIndex(colIndex.sorted)
   def orderRows: Frame[Row, Col] = withRowIndex(rowIndex.sorted)
 
+  def mapRowIndex[R: Order: ClassTag](f: Row => R): Frame[R, Col] =
+    this.withRowIndex(rowIndex.map { case (k, v) => (f(k), v) })
+
+  def mapColIndex[C: Order: ClassTag](f: Col => C): Frame[Row, C] =
+    this.withColIndex(colIndex.map { case (k, v) => (f(k), v) })
+
   override def hashCode: Int = {
     val values = columnsAsSeries.iterator flatMap { case (colKey, cell) =>
       val col = cell.getOrElse(UntypedColumn.empty).cast[Any]
