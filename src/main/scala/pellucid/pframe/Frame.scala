@@ -22,8 +22,8 @@ trait Frame[Row, Col] {
   private implicit def colClassTag = colIndex.classTag
   private implicit def colOrder = colIndex.order
 
-  def apply[T: Typeable: ClassTag](r: Row, c: Col): Cell[T] = columns(c).get[T](r)
-  def column[T: Typeable: ClassTag](c: Col): Option[Series[Row, T]] = {
+  def apply[T: ColumnTyper](r: Row, c: Col): Cell[T] = columns(c).get[T](r)
+  def column[T: ColumnTyper](c: Col): Option[Series[Row, T]] = {
     val colSeries = columnsAsSeries
 
     columnsAsSeries(c).value map {
@@ -43,7 +43,7 @@ trait Frame[Row, Col] {
     * it will only apply it in the case that there exists a type conversion for a given
     * column.
     */
-  def reduceFrame[V: ClassTag, R: ClassTag](reducer: Reducer[V, R]): Series[Col, R] = {
+  def reduceFrame[V: ClassTag: ColumnTyper, R: ClassTag: ColumnTyper](reducer: Reducer[V, R]): Series[Col, R] = {
     Series[Col, R](
       colIndex flatMap {  case (col, _) =>
         column[V](col) map { typedColumn =>
@@ -52,7 +52,7 @@ trait Frame[Row, Col] {
       } toSeq: _*)
   }
 
-  def reduceFrameByKey[V: ClassTag, R: ClassTag](reducer: Reducer[V, R]): Frame[Row, Col] = {
+  def reduceFrameByKey[V: ClassTag: ColumnTyper, R: ClassTag: ColumnTyper](reducer: Reducer[V, R]): Frame[Row, Col] = {
     Frame.fromSeries(
       colIndex flatMap {  case (col, _) =>
         column[V](col) map { typedColumn =>
@@ -61,7 +61,7 @@ trait Frame[Row, Col] {
       } toSeq: _*)
   }
 
-  def summary[T: Field: Order: ClassTag]: Frame[Col, String] = {
+  def summary[T: ClassTag: Field: Order: ColumnTyper]: Frame[Col, String] = {
     Frame.fromSeries(
       ("Mean", reduceFrame(reduce.Mean[T])),
       ("Median", reduceFrame(reduce.Median[T])),
@@ -82,9 +82,9 @@ trait Frame[Row, Col] {
   def withColIndex[C1](ci: Index[C1]): Frame[Row, C1]
   def withRowIndex[R1](ri: Index[R1]): Frame[R1, Col]
 
-  def mapColumnIndex[Col2: Order: ClassTag](f: Col => Col2): Frame[Row, Col2] =
+  def mapColumnIndex[Col2: ClassTag: Order: ColumnTyper](f: Col => Col2): Frame[Row, Col2] =
     withColIndex(Index(colIndex map { case (col, index) => (f(col), index) } toSeq: _*))
-  def mapRowIndex[Row2: Order: ClassTag](f: Row => Row2): Frame[Row2, Col] =
+  def mapRowIndex[Row2: ClassTag: Order: ColumnTyper](f: Row => Row2): Frame[Row2, Col] =
     withRowIndex(Index(rowIndex map { case (row, index) => (f(row), index) } toSeq: _*))
 
   def orderColumns: Frame[Row, Col] = withColIndex(colIndex.sorted)
@@ -200,7 +200,7 @@ trait Frame[Row, Col] {
         } toSeq }
     )(that)(Merger[Row](mergeStrategy)(rowIndex.classTag))
 
-  def merge[T: ClassTag](that: Series[Row, T], columnKey: Col)(mergeStrategy: Merge): Frame[Row, Col] =
+  def merge[T: ClassTag: ColumnTyper](that: Series[Row, T], columnKey: Col)(mergeStrategy: Merge): Frame[Row, Col] =
     genericJoin[Series[Row, T]](
       { series: Series[Row, T] => series.index },
       { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => series: Series[Row, T] =>
@@ -216,7 +216,7 @@ trait Frame[Row, Col] {
         } toSeq }
     )(that)(Joiner[Row](joinStrategy)(rowIndex.classTag))
 
-  def join[T: ClassTag](that: Series[Row, T], columnKey: Col)(joinStrategy: Join): Frame[Row, Col] =
+  def join[T: ClassTag: ColumnTyper](that: Series[Row, T], columnKey: Col)(joinStrategy: Join): Frame[Row, Col] =
     genericJoin[Series[Row, T]](
       { series: Series[Row, T] => series.index },
       { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => series: Series[Row, T] =>
@@ -283,17 +283,17 @@ case class ColOrientedFrame[Row, Col](
 object Frame {
 
   object joinSeries extends Poly2 {
-    implicit def caseT[T: ClassTag, Row: Order: ClassTag, Col: Order: ClassTag] =
+    implicit def caseT[T: ClassTag: ColumnTyper, Row: ClassTag: Order: ColumnTyper, Col: ClassTag: Order: ColumnTyper] =
       at[(List[Col], Frame[Row, Col]), Series[Row, T]] {
         case ((columnIndex :: columnIndices, frame), series) =>
           (columnIndices, frame.join(series, columnIndex)(Join.Outer))
       }
   }
 
-  def empty[Row: Order: ClassTag, Col: Order: ClassTag]: Frame[Row, Col] =
+  def empty[Row: ClassTag: Order: ColumnTyper, Col: ClassTag: Order: ColumnTyper]: Frame[Row, Col] =
     ColOrientedFrame[Row, Col](Index.empty, Index.empty, Column.empty)
 
-  def apply[Row: Order: ClassTag, Col: Order: ClassTag](
+  def apply[Row: ClassTag: Order: ColumnTyper, Col: ClassTag: Order: ColumnTyper](
     rowIndex: Index[Row],
     colPairs: (Col,UntypedColumn)*
   ): Frame[Row,Col] = {
@@ -301,7 +301,7 @@ object Frame {
     ColOrientedFrame(rowIndex, Index(colKeys.toArray), Column.fromArray(cols.toArray))
   }
 
-  def fromRows[A: ClassTag, Col: ClassTag](rows: A*)(implicit pop: RowPopulator[A, Int, Col]): Frame[Int, Col] =
+  def fromRows[A, Col: ClassTag](rows: A*)(implicit pop: RowPopulator[A, Int, Col]): Frame[Int, Col] =
     pop.frame(rows.zipWithIndex.foldLeft(pop.init) { case (state, (data, row)) =>
       pop.populate(state, row, data)
     })
@@ -313,7 +313,7 @@ object Frame {
   ): Frame[Row, Col] =
     ColOrientedFrame(rowIdx, colIdx, cols)
 
-  def fromSeries[Row: Order: ClassTag, Col: Order: ClassTag, Value: ClassTag](
+  def fromSeries[Row: ClassTag: Order: ColumnTyper, Col: ClassTag: Order: ColumnTyper, Value: ClassTag: ColumnTyper](
     cols: (Col, Series[Row, Value])*
   ): Frame[Row,Col] =
     cols.foldLeft[Frame[Row, Col]](Frame.empty[Row, Col]) {
@@ -321,14 +321,14 @@ object Frame {
     }
 
   import LUBConstraint.<<:
-  def fromHList[Row: Order: ClassTag, Col: Order: ClassTag, TSeries <: HList: <<:[Series[Row, _]]#λ]
+  def fromHList[Row: ClassTag: Order: ColumnTyper, Col: ClassTag: Order: ColumnTyper, TSeries <: HList: <<:[Series[Row, _]]#λ]
                (colIndex: Index[Col], colSeries: TSeries)
                (implicit
                   tf: LeftFolder.Aux[TSeries, (List[Col], Frame[Row,Col]), joinSeries.type, (List[Col], Frame[Row,Col])]
                ): Frame[Row,Col] =
     Frame.empty[Row, Col].join(colSeries, colIndex.keys.toSeq)(Join.Outer)
 
-  def fromHList[Row: Order: ClassTag, TSeries <: HList: <<:[Series[Row, _]]#λ]
+  def fromHList[Row: ClassTag: Order: ColumnTyper, TSeries <: HList: <<:[Series[Row, _]]#λ]
                (colSeries: TSeries)
                (implicit
                   tf: LeftFolder.Aux[TSeries,(List[Int], Frame[Row,Int]), joinSeries.type, (List[Int], Frame[Row,Int])]
