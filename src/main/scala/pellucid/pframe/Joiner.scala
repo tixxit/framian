@@ -18,7 +18,7 @@ object Join {
  * This implements a [[Cogrouper]] that is suitable for generating the indices
  * necessary for joins on [[Series]] and [[Frame]].
  */
-final case class Joiner[K: ClassTag](join: Join) extends Index.Cogrouper[K] {
+final case class Joiner[K: ClassTag](join: Join) extends Index.GenericJoin[K] {
   import Joiner._
 
   // We cheat here and use a mutable state because an immutable one would just

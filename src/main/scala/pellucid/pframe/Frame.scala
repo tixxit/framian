@@ -175,11 +175,11 @@ trait Frame[Row, Col] {
   private def genericJoin[T](
     getIndex: T => Index[Row],
     reindexColumns: (Array[Row], Array[Int], Array[Int]) => T => Seq[(Col, UntypedColumn)]
-  )(that: T)(cogrouper: Index.Cogrouper[Row]): Frame[Row, Col] = {
+  )(that: T)(genericJoiner: Index.GenericJoin[Row]): Frame[Row, Col] = {
     // TODO: This should use simpler things, like:
     //   this.reindex(lIndex).withRowIndex(newRowIndex) ++
     //   that.reindex(rIndex).withRowIndex(newRowIndex)
-    val res: cogrouper.State = Index.cogroup(this.rowIndex, getIndex(that))(cogrouper)
+    val res: genericJoiner.State = Index.cogroup(this.rowIndex, getIndex(that))(genericJoiner)
     val (keys, lIndex, rIndex) = res.result()
     val newRowIndex = Index.ordered(keys)
     val cols0 = this.columnsAsSeries collect { case (key, Value(col)) =>

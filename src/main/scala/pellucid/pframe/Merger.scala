@@ -17,7 +17,7 @@ object Merge {
  * This implements a [[Cogrouper]] that is suitable for generating the indices
  * necessary for merges and appends on [[Series]] and [[Frame]].
  */
-final case class Merger[K: ClassTag](merge: Merge) extends Index.Cogrouper[K] {
+final case class Merger[K: ClassTag](merge: Merge) extends Index.GenericJoin[K] {
 
   import Merger._
 
