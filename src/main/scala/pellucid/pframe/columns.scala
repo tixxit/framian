@@ -31,7 +31,7 @@ final class SetNAColumn[A](na: Int, underlying: Column[A]) extends Column[A] {
 }
 
 final class ReindexColumn[A](index: Array[Int], underlying: Column[A]) extends Column[A] {
-  private final def valid(row: Int) = row >= 0 && row < index.length
+  @inline private final def valid(row: Int) = row >= 0 && row < index.length
   def exists(row: Int): Boolean = valid(row) && underlying.exists(index(row))
   def missing(row: Int): Missing = if (valid(row)) underlying.missing(index(row)) else NA
   def value(row: Int): A = underlying.value(index(row))

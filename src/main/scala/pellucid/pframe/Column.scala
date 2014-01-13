@@ -90,10 +90,9 @@ trait Column[@spec(Int,Long,Float,Double) +A] extends ColumnLike[Column[A]] {
    */
   def setNA(row: Int): Column[A] = new SetNAColumn(row, this)
 
-  def compact[AA >: A](rows: Array[Int])(implicit ct: ClassTag[AA]): Column[AA] = {
+  def compact[AA >: A](len: Int)(implicit ct: ClassTag[AA]): Column[AA] = {
     val bldr = new ColumnBuilder[AA]
-    cfor(0)(_ < rows.length, _ + 1) { i =>
-      val row = rows(i)
+    cfor(0)(_ < len, _ + 1) { row =>
       if (exists(row)) {
         bldr.addValue(value(row))
       } else {
