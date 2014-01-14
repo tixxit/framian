@@ -124,5 +124,18 @@ class SeriesSpec extends Specification {
       s0.rollForwardUpTo(1) must_== series(1 -> NM, 2 -> NM, 3 -> NA, 4 -> NA)
       s0.rollForwardUpTo(2) must_== series(1 -> NM, 2 -> NM, 3 -> NM, 4 -> NA)
     }
+
+    "merge simple series" in {
+      val s0 = Series.fromCells(1 -> Value("a"), 2 -> NA,         3 -> NM,         4 -> Value("b"), 5 -> Value("c"), 6 -> NA, 7 -> NA, 8 -> NM)
+      val s1 = Series.fromCells(1 -> Value("c"), 2 -> Value("d"), 3 -> Value("e"), 4 -> NA,         5 -> NM,         6 -> NA, 7 -> NM, 8 -> NA)
+      s0.merge(s1) must_== Series.fromCells(1 -> Value("ac"), 2 -> Value("d"), 3 -> NM, 4 -> Value("b"), 5 -> NM, 6 -> NA, 7 -> NM, 8 -> NM)
+      s1.merge(s0) must_== Series.fromCells(1 -> Value("ca"), 2 -> Value("d"), 3 -> NM, 4 -> Value("b"), 5 -> NM, 6 -> NA, 7 -> NM, 8 -> NM)
+    }
+
+    "merge series with different number of rows" in {
+      val s0 = Series.fromCells(1 -> Value("a"), 1 -> Value("b"), 2 -> Value("e"))
+      val s1 = Series.fromCells(0 -> Value("c"), 1 -> Value("d"))
+      (s0 merge s1) must_== Series.fromCells(0 -> Value("c"), 1 -> Value("ad"), 1 -> Value("b"), 2 -> Value("e"))
+    }
   }
 }

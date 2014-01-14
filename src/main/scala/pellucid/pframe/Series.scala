@@ -13,8 +13,9 @@ import spire.std.int._
 import spire.syntax.additiveMonoid._
 import spire.syntax.monoid._
 import spire.syntax.order._
-import spire.compat._
 import spire.syntax.cfor._
+
+import spire.compat._
 
 import pellucid.pframe.reduce.Reducer
 import pellucid.pframe.util.TrivialMetricSpace
@@ -42,6 +43,38 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
   def apply(key: K): Cell[V] = index.get(key) map (column(_)) getOrElse NA
 
   /**
+   * Merges 2 series together using a semigroup to append values.
+   */
+  def merge[VV >: V: Semigroup: ClassTag](that: Series[K, VV]): Series[K, VV] = {
+    val merger = Merger[K](Merge.Outer)
+    val (keys, lIndices, rIndices) = Index.cogroup(this.index, that.index)(merger).result()
+    val lCol = this.column
+    val rCol = that.column
+
+    // TODO: Remove duplication between this and zipMap.
+    val bldr = Column.builder[VV]
+    cfor(0)(_ < lIndices.length, _ + 1) { i =>
+      val l = lIndices(i)
+      val r = rIndices(i)
+      val lExists = lCol.exists(l)
+      val rExists = rCol.exists(r)
+      if (lExists && rExists) {
+        bldr.addValue((lCol.value(l): VV) |+| rCol.value(r))
+      } else if (lExists) {
+        if (rCol.missing(r) == NM) bldr.addNM()
+        else bldr.addValue(lCol.value(l))
+      } else if (rExists) {
+        if (lCol.missing(l) == NM) bldr.addNM()
+        else bldr.addValue(rCol.value(r))
+      } else {
+        bldr.addMissing(if (lCol.missing(l) == NM) NM else rCol.missing(r))
+      }
+    }
+
+    Series(Index.ordered(keys), bldr.result())
+  }
+
+  /**
    * Performs an inner join on this `Series` with `that`. Each pair of values
    * for a matching key is passed to `f`.
    */
@@ -52,8 +85,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
 
     val lCol = this.column
     val rCol = that.column
-    cfor(0)(_ < keys.length, _ + 1) { i =>
-      val key = keys(i)
+    cfor(0)(_ < lIndices.length, _ + 1) { i =>
       val l = lIndices(i)
       val r = rIndices(i)
       val lExists = lCol.exists(l)
