@@ -23,6 +23,36 @@ class FrameSpec extends Specification {
     "a" :: 1 :: HNil,
     "b" :: 2 :: HNil,
     "b" :: 3 :: HNil)
+
+  val f3 = Frame.fromSeries(
+    (0,
+     Series(1 -> 3,
+            2 -> 2,
+            2 -> 1)))
+  val f4 = Frame.fromSeries(
+    (1,
+     Series(1 -> 3,
+            2 -> 2,
+            2 -> 1)))
+  val f5 = Frame.fromSeries(
+    (1,
+     Series(2 -> 3,
+            2 -> 2,
+            3 -> 1)))
+  val f6 = Frame.fromSeries(
+    (1,
+     Series(2 -> 2,
+            2 -> 1)))
+
+  val s0 = Series(
+    0 -> "s3",
+    1 -> "s2",
+    2 -> "s1")
+  val s1 = Series(
+    1 -> "s3",
+    2 -> "s2",
+    2 -> "s1")
+
   val homogeneous = Frame.fromRows(
     1.0  :: 2.0 :: 3.0  :: HNil,
     0.5  :: 1.0 :: 1.5  :: HNil,
@@ -129,12 +159,83 @@ class FrameSpec extends Specification {
     }
   }
 
+  "Frame merges" should {
+    // these cases work as expected... tacking on a new column...
+    "inner merge with frame of same row index" in {
+      f3.merge(f4)(Merge.Inner) must_==
+        Frame.fromRows(
+          3 :: 3 :: HNil,
+          2 :: 2 :: HNil,
+          1 :: 1 :: HNil).withRowIndex(Index(Array(1,2,2)))
+    }
+
+    "outer merge with frame of same row index" in {
+      f3.merge(f4)(Merge.Outer) must_==
+        Frame.fromRows(
+          3 :: 3 :: HNil,
+          2 :: 2 :: HNil,
+          1 :: 1 :: HNil
+        ).withRowIndex(Index(Array(1,2,2)))
+    }
+
+    "inner merge with an offset index with duplicates" in {
+      f3.merge(f5)(Merge.Inner) must_==
+        Frame.fromRows(
+          2 :: 3 :: HNil,
+          1 :: 2 :: HNil
+        ).withRowIndex(Index(Array(2, 2)))
+    }
+
+    "outer merge with an offset index with duplicates" in {
+      f3.merge(f5)(Merge.Outer) must_==
+        Frame.fromRows(
+          3  :: NA :: HNil,
+          2  :: 3  :: HNil,
+          1  :: 2  :: HNil,
+          NA :: 1  :: HNil
+        ).withRowIndex(Index(Array(1,2,2,3)))
+    }
+
+    "inner merge with a smaller index with duplicates" in {
+      f3.merge(f6)(Merge.Inner) must_==
+        Frame.fromRows(
+          2 :: 2 :: HNil,
+          1 :: 1 :: HNil
+        ).withRowIndex(Index(Array(2, 2)))
+    }
+
+    "outer merge with a smaller index with duplicates" in {
+      f3.merge(f6)(Merge.Outer) must_==
+        Frame.fromRows(
+          3 :: NA :: HNil,
+          2 :: 2  :: HNil,
+          1 :: 1  :: HNil
+        ).withRowIndex(Index(Array(1,2,2)))
+    }
+
+    "merge with a series" in {
+      f3.merge(s1, 1)(Merge.Inner) must_==
+        Frame.fromRows(
+          3 :: "s3" :: HNil,
+          2 :: "s2" :: HNil,
+          1 :: "s1" :: HNil
+        ).withRowIndex(Index(Array(1,2,2)))
+    }
+  }
+
   "Frame joins" should {
     "inner join with empty frame" in {
       val e = Frame.empty[Int, Int]
       f0.join(e)(Join.Inner) must_== f0.withRowIndex(Index.empty[Int])
       e.join(f0)(Join.Inner) must_== f0.withRowIndex(Index.empty[Int])
       e.join(e)(Join.Inner) must_== e
+    }
+
+    "inner join with series" in {
+      f0.join(s0, 2)(Join.Inner) must_== Frame.fromRows(
+        "a" :: 1 :: "s3" :: HNil,
+        "b" :: 2 :: "s2" :: HNil,
+        "c" :: 3 :: "s1" :: HNil)
     }
 
     "inner join with self" in {
@@ -274,3 +375,4 @@ class FrameSpec extends Specification {
     }
   }
 }
+

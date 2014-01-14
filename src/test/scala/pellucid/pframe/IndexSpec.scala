@@ -2,6 +2,7 @@ package pellucid.pframe
 
 import org.specs2.mutable._
 
+import scala.reflect.ClassTag
 import scala.collection.mutable.ArrayBuilder
 
 import spire.algebra._
@@ -116,9 +117,13 @@ class IndexSpec extends Specification {
   "Index.Cogrouper" should {
     type Cogroup[K] = (List[(K, Int)], List[(K, Int)])
 
-    class TestCogrouper[K] extends Index.Cogrouper[K] {
-      case class State(groups: Vector[Cogroup[K]])
+    class TestCogrouper[K: ClassTag] extends Index.GenericJoin[K] {
+      case class State(groups: Vector[Cogroup[K]]) extends GenericJoinState {
+        // very temp. need to rethink the way join, merge are implemented in frame to be more generic.
+        def result(): (Array[K], Array[Int], Array[Int]) = (Array(), Array(), Array())
+      }
       def init = State(Vector.empty)
+
       def cogroup(state: State)(
           lKeys: Array[K], lIdx: Array[Int], lStart: Int, lEnd: Int,
           rKeys: Array[K], rIdx: Array[Int], rStart: Int, rEnd: Int): State = {

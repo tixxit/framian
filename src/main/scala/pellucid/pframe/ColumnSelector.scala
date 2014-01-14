@@ -10,6 +10,7 @@ import spire.syntax.additiveMonoid._
 
 import shapeless._
 import shapeless.ops.function._
+import shapeless.ops.nat._
 
 /**
  * Wraps a collection of columns and a source [[Frame]]. This let's us perform
@@ -77,6 +78,28 @@ trait ColumnSelection[Row, Col, Sz <: Size] {
       Column.fromCells(cells.toVector)
     }
     Series(frame.rowIndex, column)
+  }
+
+
+  /** Map each row using a function whose arity matches the size. This returns
+    * a new [[ColumnSelection]] where the originally selected [[Column]]s have
+    * been replaced with a column named ColumnName containing the results of
+    * the application of the input f.
+    */
+  import Nat._1
+  def map[F, L <: HList, A: ClassTag](columnName: Col = cols.head)(f: F)(implicit fntop: FnToProduct.Aux[F, L => A],
+      extractor: RowExtractor[L, Col, Sz]): ColumnSelection[Row, Col, Fixed[_1]] = {
+
+    val column = extractor.prepare(frame, cols).fold(Column.empty[A]) { p =>
+      val fn = fntop(f)
+      val cells = frame.rowIndex map { case (key, row) =>
+        extractor.extract(frame, key, row, p) map fn
+      }
+      Column.fromCells(cells.toVector)
+    }
+
+    val newFrame = frame.dropColumns(cols: _*).join(Series(frame.rowIndex, column), columnName)(Join.Outer)
+    ColumnSelector(newFrame)(columnName)
   }
 
   /**

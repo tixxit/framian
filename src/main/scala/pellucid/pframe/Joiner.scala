@@ -18,13 +18,12 @@ object Join {
  * This implements a [[Cogrouper]] that is suitable for generating the indices
  * necessary for joins on [[Series]] and [[Frame]].
  */
-final case class Joiner[K: ClassTag](join: Join) extends Index.Cogrouper[K] {
+final case class Joiner[K: ClassTag](join: Join) extends Index.GenericJoin[K] {
   import Joiner._
 
   // We cheat here and use a mutable state because an immutable one would just
   // be too slow.
-
-  final class State {
+  final class State extends GenericJoinState {
     val keys: ArrayBuilder[K] = ArrayBuilder.make[K]
     val lIndices: ArrayBuilder[Int] = ArrayBuilder.make[Int]
     val rIndices: ArrayBuilder[Int] = ArrayBuilder.make[Int]
@@ -40,6 +39,18 @@ final case class Joiner[K: ClassTag](join: Join) extends Index.Cogrouper[K] {
   def cogroup(state: State)(
       lKeys: Array[K], lIdx: Array[Int], lStart: Int, lEnd: Int,
       rKeys: Array[K], rIdx: Array[Int], rStart: Int, rEnd: Int): State = {
+
+    /*println("-----")
+    println("lKeys: "+ lKeys.mkString(" "))
+    println("rKeys: "+ rKeys.mkString(" "))
+    println("lIdx: "+ lIdx.mkString(" "))
+    println("rIdx: "+ rIdx.mkString(" "))
+    println("lStart: "+ lStart)
+    println("rStart: "+ rStart)
+    println("lEnd: "+ lEnd)
+    println("rEnd: "+ rEnd)
+    println("-----")*/
+
     if (lEnd > lStart && rEnd > rStart) {
       val key = lKeys(lStart)
       cfor(lStart)(_ < lEnd, _ + 1) { i =>
@@ -59,6 +70,11 @@ final case class Joiner[K: ClassTag](join: Join) extends Index.Cogrouper[K] {
         state.add(key, Skip, rIdx(i))
       }
     }
+
+    /*val tempResults = state.result()
+    println(tempResults._1.mkString(" "))
+    println(tempResults._2.mkString(" "))
+    println(tempResults._3.mkString(" "))*/
     state
   }
 }

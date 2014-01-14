@@ -208,35 +208,43 @@ object Index {
         rKeys: Array[K], rIdx: Array[Int], rStart: Int, rEnd: Int): State
   }
 
+  trait GenericJoin[K] extends Cogrouper[K] {
+    type State <: GenericJoinState
+
+    trait GenericJoinState {
+      def result(): (Array[K], Array[Int], Array[Int])
+    }
+  }
+
   def cogroup[K: Order](lhs: Index[K], rhs: Index[K])
-      (cogrouper: Cogrouper[K]): cogrouper.State = {
+      (genericJoiner: GenericJoin[K]): genericJoiner.State = {
     val lKeys = lhs.keys
     val lIndices = lhs.indices
     val rKeys = rhs.keys
     val rIndices = rhs.indices
 
-    @tailrec def loop(s0: cogrouper.State, lStart: Int, rStart: Int): cogrouper.State =
+    @tailrec def loop(s0: genericJoiner.State, lStart: Int, rStart: Int): genericJoiner.State =
       if (lStart < lKeys.length && rStart < rKeys.length) {
         val lKey = lKeys(lStart)
         val rKey = rKeys(rStart)
         val ord = lKey compare rKey
         val lEnd = if (ord <= 0) spanEnd(lKeys, lKey, lStart + 1) else lStart
         val rEnd = if (ord >= 0) spanEnd(rKeys, rKey, rStart + 1) else rStart
-        val s1 = cogrouper.cogroup(s0)(lKeys, lIndices, lStart, lEnd, rKeys, rIndices, rStart, rEnd)
+        val s1 = genericJoiner.cogroup(s0)(lKeys, lIndices, lStart, lEnd, rKeys, rIndices, rStart, rEnd)
         loop(s1, lEnd, rEnd)
       } else if (lStart < lKeys.length) {
         val lEnd = spanEnd(lKeys, lKeys(lStart), lStart + 1)
-        val s1 = cogrouper.cogroup(s0)(lKeys, lIndices, lStart, lEnd, rKeys, rIndices, rStart, rStart)
+        val s1 = genericJoiner.cogroup(s0)(lKeys, lIndices, lStart, lEnd, rKeys, rIndices, rStart, rStart)
         loop(s1, lEnd, rStart)
       } else if (rStart < rKeys.length) {
         val rEnd = spanEnd(rKeys, rKeys(rStart), rStart + 1)
-        val s1 = cogrouper.cogroup(s0)(lKeys, lIndices, lStart, lStart, rKeys, rIndices, rStart, rEnd)
+        val s1 = genericJoiner.cogroup(s0)(lKeys, lIndices, lStart, lStart, rKeys, rIndices, rStart, rEnd)
         loop(s1, lStart, rEnd)
       } else {
         s0
       }
 
-    loop(cogrouper.init, 0, 0)
+    loop(genericJoiner.init, 0, 0)
   }
 }
 
