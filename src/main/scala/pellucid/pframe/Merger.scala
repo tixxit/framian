@@ -5,7 +5,6 @@ import scala.collection.mutable.{ ArrayBuilder, Builder }
 
 import spire.syntax.cfor._
 
-//sealed abstract class Join(val leftOuter: Boolean, val rightOuter: Boolean)
 sealed abstract class Merge(val outer: Boolean)
 
 object Merge {
@@ -18,38 +17,11 @@ object Merge {
  * necessary for merges and appends on [[Series]] and [[Frame]].
  */
 final case class Merger[K: ClassTag](merge: Merge) extends Index.GenericJoin[K] {
-
-  import Merger._
-
-  // We cheat here and use a mutable state because an immutable one would just
-  // be too slow.
-  final class State extends GenericJoinState {
-    val keys: ArrayBuilder[K] = ArrayBuilder.make[K]
-    val lIndices: ArrayBuilder[Int] = ArrayBuilder.make[Int]
-    val rIndices: ArrayBuilder[Int] = ArrayBuilder.make[Int]
-
-    def add(k: K, l: Int, r: Int) { keys += k; lIndices += l; rIndices += r }
-
-    def result(): (Array[K], Array[Int], Array[Int]) =
-      (keys.result(), lIndices.result(), rIndices.result())
-  }
-
-  def init = new State
+  import Index.GenericJoin.Skip
 
   def cogroup(state: State)(
     lKeys: Array[K], lIdx: Array[Int], lStart: Int, lEnd: Int,
     rKeys: Array[K], rIdx: Array[Int], rStart: Int, rEnd: Int): State = {
-
-    /*println("-----")
-    println("lKeys: "+ lKeys.mkString(" "))
-    println("rKeys: "+ rKeys.mkString(" "))
-    println("lIdx: "+ lIdx.mkString(" "))
-    println("rIdx: "+ rIdx.mkString(" "))
-    println("lStart: "+ lStart)
-    println("rStart: "+ rStart)
-    println("lEnd: "+ lEnd)
-    println("rEnd: "+ rEnd)
-    println("-----")*/
 
     if (lEnd > lStart && rEnd > rStart) {
       val key = lKeys(lStart)
@@ -82,14 +54,6 @@ final case class Merger[K: ClassTag](merge: Merge) extends Index.GenericJoin[K] 
       }
     }
 
-    val tempResults = state.result()
-    /*println(tempResults._1.mkString(" "))
-    println(tempResults._2.mkString(" "))
-    println(tempResults._3.mkString(" "))*/
     state
   }
-}
-
-object Merger {
-  final val Skip = Int.MinValue
 }

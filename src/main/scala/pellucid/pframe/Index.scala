@@ -208,12 +208,25 @@ object Index {
         rKeys: Array[K], rIdx: Array[Int], rStart: Int, rEnd: Int): State
   }
 
-  trait GenericJoin[K] extends Cogrouper[K] {
-    type State <: GenericJoinState
+  abstract class GenericJoin[K: ClassTag] extends Cogrouper[K] {
+    // We cheat here and use a mutable state because an immutable one would just
+    // be too slow.
+    final class State {
+      val keys: ArrayBuilder[K] = ArrayBuilder.make[K]
+      val lIndices: ArrayBuilder[Int] = ArrayBuilder.make[Int]
+      val rIndices: ArrayBuilder[Int] = ArrayBuilder.make[Int]
 
-    trait GenericJoinState {
-      def result(): (Array[K], Array[Int], Array[Int])
+      def add(k: K, l: Int, r: Int) { keys += k; lIndices += l; rIndices += r }
+
+      def result(): (Array[K], Array[Int], Array[Int]) =
+        (keys.result(), lIndices.result(), rIndices.result())
     }
+
+    def init = new State
+  }
+
+  object GenericJoin {
+    final def Skip = Int.MinValue
   }
 
   def cogroup[K: Order](lhs: Index[K], rhs: Index[K])

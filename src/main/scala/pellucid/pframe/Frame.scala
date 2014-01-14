@@ -13,6 +13,8 @@ import shapeless.syntax._
 
 import pellucid.pframe.reduce.Reducer
 
+import Index.GenericJoin.Skip
+
 trait Frame[Row, Col] {
   def rowIndex: Index[Row]
   def colIndex: Index[Col]
@@ -200,7 +202,7 @@ trait Frame[Row, Col] {
     val (keys, lIndex, rIndex) = res.result()
     val newRowIndex = Index.ordered(keys)
     val cols0 = this.columnsAsSeries collect { case (key, Value(col)) =>
-      (key, col.setNA(Joiner.Skip).reindex(lIndex))
+      (key, col.setNA(Skip).reindex(lIndex))
     }
     val cols1 = reindexColumns(keys, lIndex, rIndex)(that)
     val (newColIndex, cols) = (cols0 ++ cols1).unzip
@@ -213,7 +215,7 @@ trait Frame[Row, Col] {
       { frame: Frame[Row, Col] => frame.rowIndex },
       { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => frame: Frame[Row, Col] =>
         frame.columnsAsSeries collect { case (key, Value(col)) =>
-          (key, col.setNA(Joiner.Skip).reindex(rIndex))
+          (key, col.setNA(Skip).reindex(rIndex))
         } toSeq }
     )(that)(Merger[Row](mergeStrategy)(rowIndex.classTag))
 
@@ -221,7 +223,7 @@ trait Frame[Row, Col] {
     genericJoin[Series[Row, T]](
       { series: Series[Row, T] => series.index },
       { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => series: Series[Row, T] =>
-        Seq((columnKey, TypedColumn(series.column.setNA(Joiner.Skip).reindex(rIndex)))) }
+        Seq((columnKey, TypedColumn(series.column.setNA(Skip).reindex(rIndex)))) }
     )(that)(Merger[Row](mergeStrategy)(rowIndex.classTag))
 
   def join(that: Frame[Row, Col])(joinStrategy: Join): Frame[Row, Col] =
@@ -229,7 +231,7 @@ trait Frame[Row, Col] {
       { frame: Frame[Row, Col] => frame.rowIndex },
       { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => frame: Frame[Row, Col] =>
         frame.columnsAsSeries collect { case (key, Value(col)) =>
-          (key, col.setNA(Joiner.Skip).reindex(rIndex))
+          (key, col.setNA(Skip).reindex(rIndex))
         } toSeq }
     )(that)(Joiner[Row](joinStrategy)(rowIndex.classTag))
 
@@ -237,7 +239,7 @@ trait Frame[Row, Col] {
     genericJoin[Series[Row, T]](
       { series: Series[Row, T] => series.index },
       { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => series: Series[Row, T] =>
-        Seq((columnKey, TypedColumn(series.column.setNA(Joiner.Skip).reindex(rIndex)))) }
+        Seq((columnKey, TypedColumn(series.column.setNA(Skip).reindex(rIndex)))) }
     )(that)(Joiner[Row](joinStrategy)(rowIndex.classTag))
 
   import LUBConstraint.<<:
