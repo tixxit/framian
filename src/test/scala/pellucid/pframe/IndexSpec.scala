@@ -117,11 +117,8 @@ class IndexSpec extends Specification {
   "Index.Cogrouper" should {
     type Cogroup[K] = (List[(K, Int)], List[(K, Int)])
 
-    class TestCogrouper[K: ClassTag] extends Index.GenericJoin[K] {
-      case class State(groups: Vector[Cogroup[K]]) extends GenericJoinState {
-        // very temp. need to rethink the way join, merge are implemented in frame to be more generic.
-        def result(): (Array[K], Array[Int], Array[Int]) = (Array(), Array(), Array())
-      }
+    class TestCogrouper[K: ClassTag] extends Index.Cogrouper[K] {
+      case class State(groups: Vector[Cogroup[K]])
       def init = State(Vector.empty)
 
       def cogroup(state: State)(
