@@ -87,6 +87,12 @@ trait Frame[Row, Col] {
   def mapRowIndex[Row2: ClassTag: Order: ColumnTyper](f: Row => Row2): Frame[Row2, Col] =
     withRowIndex(Index(rowIndex map { case (row, index) => (f(row), index) } toSeq: _*))
 
+  def filter(f: Row => Boolean) = filterRowIndex(f)
+  def filterRowIndex(f: Row => Boolean) = {
+    val filteredRowIndex = rowIndex.filter { case (row, _) => f(row) }
+    withRowIndex(filteredRowIndex)
+  }
+
   def orderColumns: Frame[Row, Col] = withColIndex(colIndex.sorted)
   def orderRows: Frame[Row, Col] = withRowIndex(rowIndex.sorted)
 
