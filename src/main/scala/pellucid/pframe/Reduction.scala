@@ -5,12 +5,12 @@ import scala.reflect.ClassTag
 
 import pellucid.pframe.reduce.Reducer
 
-final class Reduction[K: ClassTag, A, B: ClassTag](column: Column[A], reducer: Reducer[A, B]) extends Index.Grouper[K] {
+final class Reduction[K: ClassTag, A, B](column: Column[A], reducer: Reducer[A, B]) extends Index.Grouper[K] {
   final class State {
     val keys = ArrayBuilder.make[K]
-    val values = ArrayBuilder.make[B]
+    val values = ArrayBuilder.make[Cell[B]]
 
-    def add(key: K, value: B) {
+    def add(key: K, value: Cell[B]) {
       keys += key
       values += value
     }

@@ -25,15 +25,8 @@ trait Frame[Row, Col] {
   private implicit def colOrder = colIndex.order
 
   def apply[T: ColumnTyper](r: Row, c: Col): Cell[T] = columns(c).get[T](r)
-  def column[T: ColumnTyper](c: Col): Option[Series[Row, T]] = {
-    val colSeries = columnsAsSeries
-
-    columnsAsSeries(c).value map {
-      column =>
-        val typedColumn = column.cast[T]
-        Series(rowIndex, typedColumn)
-    }
-  }
+  def column[T: ColumnTyper](c: Col): Series[Row, T] =
+    Series(rowIndex, columnsAsSeries(c) map (_.cast[T]) getOrElse Column.empty[T])
 
   def columnsAsSeries: Series[Col, UntypedColumn]
   def rowsAsSeries: Series[Row, UntypedColumn]
@@ -45,23 +38,15 @@ trait Frame[Row, Col] {
     * it will only apply it in the case that there exists a type conversion for a given
     * column.
     */
-  def reduceFrame[V: ClassTag: ColumnTyper, R: ClassTag: ColumnTyper](reducer: Reducer[V, R]): Series[Col, R] = {
-    Series[Col, R](
-      colIndex flatMap {  case (col, _) =>
-        column[V](col) map { typedColumn =>
-          (col, typedColumn.reduce(reducer))
-        }
-      } toSeq: _*)
-  }
+  def reduceFrame[V: ClassTag: ColumnTyper, R: ClassTag: ColumnTyper](reducer: Reducer[V, R]): Series[Col, R] =
+    Series.fromCells(columnsAsSeries.collect { case (key, Value(col)) =>
+      (key, Series(rowIndex, col.cast[V]).reduce(reducer))
+    }.toSeq: _*)
 
-  def reduceFrameByKey[V: ClassTag: ColumnTyper, R: ClassTag: ColumnTyper](reducer: Reducer[V, R]): Frame[Row, Col] = {
-    Frame.fromSeries(
-      colIndex flatMap {  case (col, _) =>
-        column[V](col) map { typedColumn =>
-          (col, typedColumn.reduceByKey(reducer))
-        }
-      } toSeq: _*)
-  }
+  def reduceFrameByKey[V: ClassTag: ColumnTyper, R: ClassTag: ColumnTyper](reducer: Reducer[V, R]): Frame[Row, Col] =
+    Frame.fromSeries(columnsAsSeries.collect { case (key, Value(col)) =>
+      (key, Series(rowIndex, col.cast[V]).reduceByKey(reducer))
+    }.toSeq: _*)
 
   def summary[T: ClassTag: Field: Order: ColumnTyper]: Frame[Col, String] = {
     Frame.fromSeries(
@@ -69,16 +54,6 @@ trait Frame[Row, Col] {
       ("Median", reduceFrame(reduce.Median[T])),
       ("Max", reduceFrame(reduce.Max[T])),
       ("Min", reduceFrame(reduce.Min[T])))
-    /*Frame.fromRows(
-      colIndex flatMap { case (col, _) =>
-        column[T](col) map { numericCol: Series[Row, T] =>
-          numericCol.reduce(reduce.Mean[T]) :: numericCol.reduce(reduce.Median[T]) ::
-            numericCol.reduce(reduce.Max[T]) :: numericCol.reduce(reduce.Min[T]) ::
-            numericCol.reduce(reduce.Sum[T]) :: HNil
-        }
-      } toSeq: _*)
-      .withColIndex(Index.fromKeys("Mean", "Median", "Max", "Min", "Sum"))
-      .withRowIndex(Index.fromKeys(colIndex.map(_._1).toSeq: _*))*/
   }
 
   def withColIndex[C1](ci: Index[C1]): Frame[Row, C1]

@@ -10,8 +10,7 @@ import spire.algebra.{Field, Order}
 import spire.syntax.field._
 import spire.syntax.order._
 
-private[reduce] final class Median[A: Field: Order: ClassTag] extends Reducer[A, Option[A]] {
-
+final class Median[A: Field: Order: ClassTag] extends SimpleReducer[A, A] {
   implicit def chooseRandomPivot(arr: Array[A]): A = arr(scala.util.Random.nextInt(arr.size))
 
   @tailrec def findKMedian(arr: Array[A], kOrValue: Either[Int, A], k2OrValue: Either[Int, A])
@@ -64,10 +63,17 @@ private[reduce] final class Median[A: Field: Order: ClassTag] extends Reducer[A,
     } else findKMedian(arr, Left((arr.size - 1) / 2), Left((arr.size - 1) / 2))._1
   }
 
-  def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Option[A] = {
-    val existingColumnValues = indices.slice(start, end) flatMap { i => column(i) }
+  // TODO: Use Spire's qselect/qmin instead?
+  // def findMedianSpire(data: Array[A]): A = {
+  //   val lower = data.qselect(data.size / 2)
+  //   if (data.size % 2 == 0) {
+  //     val upper = data.qselect(data.size / 2 + 1)
+  //     (lower + upper) / 2
+  //   } else {
+  //     lower
+  //   }
+  // }
 
-    if (existingColumnValues.isEmpty) None
-    else Some(findMedian(existingColumnValues))
-  }
+  def reduce(data: Array[A]): Cell[A] =
+    if (data.isEmpty) NA else Value(findMedian(data))
 }

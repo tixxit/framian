@@ -30,6 +30,12 @@ final class SetNAColumn[A](na: Int, underlying: Column[A]) extends Column[A] {
   def value(row: Int): A = underlying.value(row)
 }
 
+final class ContramappedColumn[A](f: Int => Int, underlying: Column[A]) extends Column[A] {
+  def exists(row: Int): Boolean = underlying.exists(f(row))
+  def missing(row: Int): Missing = underlying.missing(f(row))
+  def value(row: Int): A = underlying.value(f(row))
+}
+
 final class ReindexColumn[A](index: Array[Int], underlying: Column[A]) extends Column[A] {
   @inline private final def valid(row: Int) = row >= 0 && row < index.length
   def exists(row: Int): Boolean = valid(row) && underlying.exists(index(row))

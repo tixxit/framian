@@ -10,13 +10,17 @@ import spire.algebra.{Field, Order}
 import spire.syntax.field._
 import spire.syntax.order._
 
-private[reduce] final class Quantile[A: Field: Order: ClassTag](probabilities: Seq[Double]) extends Reducer[A, Seq[(Double, A)]] {
+final class Quantile[A: Field: Order: ClassTag](probabilities: Seq[Double]) extends SimpleReducer[A, List[(Double, A)]] {
 
-  def quantiles(s: Seq[A]) = {
+  def reduce(data: Array[A]): Cell[List[(Double, A)]] =
+    if (data.length == 0 && probabilities.length > 0) NA
+    else Value(quantiles(data))
+
+  def quantiles(s: Array[A]): List[(Double, A)] = {
     def interpolate(x: Double, pos: (Double, A), pos1: (Double, A)) =
       pos._2 + (pos1._2 - pos._2) * (x - pos._1) / (pos1._1 - pos._1)
 
-    val points = s.toArray.sorted
+    val points = s.sorted
     val segments = points.length
     val segmentSize = (1d / segments)
     val segmentMedian = segmentSize / 2d
@@ -43,10 +47,5 @@ private[reduce] final class Quantile[A: Field: Order: ClassTag](probabilities: S
       }
 
     probabilityRanges.sortBy(_._1)
-  }
-
-  def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Seq[(Double, A)] = {
-    val existingColumnValues = indices.slice(start, end) flatMap { i => column(i) }
-    quantiles(existingColumnValues)
   }
 }

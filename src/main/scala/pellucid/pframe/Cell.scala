@@ -1,8 +1,9 @@
 package pellucid
 package pframe
 
-import spire.algebra.{ Eq, Order }
+import spire.algebra.{ Eq, Order, Semigroup, Monoid }
 import spire.syntax.order._
+import spire.syntax.semigroup._
 
 /**
  * A `Cell` represents a single piece of data that may not be available or
@@ -110,6 +111,7 @@ trait CellInstances0 {
 
 trait CellInstances extends CellInstances0 {
   implicit def cellOrder[A: Order]: Order[Cell[A]] = new CellOrder[A]
+  implicit def cellMonoid[A: Semigroup]: Monoid[Cell[A]] = new CellMonoid[A]
 }
 
 @SerialVersionUID(0L)
@@ -137,5 +139,18 @@ private final class CellOrder[A: Order] extends Order[Cell[A]] {
     case (_, NA) => 1
     case (NM, _) => -1
     case (_, NM) => 1
+  }
+}
+
+@SerialVersionUID(0L)
+private final class CellMonoid[A: Semigroup] extends Monoid[Cell[A]] {
+  def id: Cell[A] = NA
+  def op(x: Cell[A], y: Cell[A]): Cell[A] = (x, y) match {
+    case (NM, _) => NM
+    case (_, NM) => NM
+    case (Value(a), Value(b)) => Value(a |+| b)
+    case (Value(_), _) => x
+    case (_, Value(_)) => y
+    case (NA, NA) => NA
   }
 }

@@ -85,6 +85,8 @@ trait Column[@spec(Int,Long,Float,Double) +A] extends ColumnLike[Column[A]] {
    */
   def reindex(index: Array[Int]): Column[A] = new ReindexColumn(index, this)
 
+  def reindex(f: Int => Int): Column[A] = new ContramappedColumn(f, this)
+
   /**
    * Force a specific row to be not available (`NA`).
    */

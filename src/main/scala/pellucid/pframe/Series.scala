@@ -43,6 +43,21 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
   def apply(key: K): Cell[V] = index.get(key) map (column(_)) getOrElse NA
 
   /**
+   * Returns `true` if at least 1 value exists in this series. A series with
+   * only `NA`s and/or `NM`s will return `false`.
+   */
+  def hasValues: Boolean = {
+    var i = 0
+    var missing = true
+    while (i < index.size && missing) {
+      val row = index.indexAt(i)
+      missing = missing & !column.exists(row)
+      i += 1
+    }
+    !missing
+  }
+
+  /**
    * Merges 2 series together using a semigroup to append values.
    */
   def merge[VV >: V: Semigroup: ClassTag](that: Series[K, VV]): Series[K, VV] = {
@@ -150,7 +165,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
   /**
    * Reduce all the values in this `Series` using the given reducer.
    */
-  def reduce[W: ClassTag](reducer: Reducer[V, W]): W = {
+  def reduce[W: ClassTag](reducer: Reducer[V, W]): Cell[W] = {
     val indices = new Array[Int](index.size)
     cfor(0)(_ < indices.length, _ + 1) { i =>
       indices(i) = index.indexAt(i)
@@ -166,7 +181,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
   def reduceByKey[W: ClassTag](reducer: Reducer[V, W]): Series[K, W] = {
     val reduction = new Reduction[K, V, W](column, reducer)
     val (keys, values) = Index.group(index)(reduction).result()
-    Series(Index.ordered(keys), Column.fromArray(values))
+    Series(Index.ordered(keys), Column.fromCells(values))
   }
 
   /**
