@@ -22,9 +22,14 @@ class ReducerSpec extends Specification {
 
   object duplicate {
     val dense = Series("a" -> 1D, "a" -> 2D, "b" -> 3D, "b" -> 4D, "b" -> 5D, "c" -> 6D)
-    val sparse = Series(
-              Index.fromKeys("a",       "b", "b", "b",       "b", "b",       "c", "c",       "c",       "d"),
-      Column.fromCells(Vector(NA, Value(2D),  NM,  NA, Value(4D),  NM, Value(5D),  NA, Value(1D), Value(0D))))
+    val sparse = Series.fromCells(
+      "a" -> NA,
+      "b" -> Value(2D), "b" -> NM, "b" -> NA, "b" -> Value(4D), "b" -> NM,
+      "c" -> Value(5D), "c" -> NA, "c" -> Value(1D),
+      "d" -> Value(0D))
+    // val sparse = Series(
+    //           Index.fromKeys("a",       "b", "b", "b",       "b", "b",       "c", "c",       "c",       "d"),
+    //   Column.fromCells(Vector(NA, Value(2D),  NM,  NA, Value(4D),  NM, Value(5D),  NA, Value(1D), Value(0D))))
   }
 
   "Mean" should {
@@ -151,6 +156,101 @@ class ReducerSpec extends Specification {
     "find median in sparse series by key" in {
       duplicate.sparse.reduceByKey(Median[Double]) must_==
         Series.fromCells("a" -> NA, "b" -> Value(3D), "c" -> Value(3D), "d" -> Value(0D))
+    }
+  }
+
+  "First/Last" should {
+    "not find the first/last value in empty series" in {
+      empty.reduce(First[Double]) must_== NA
+      empty.reduce(Last[Double]) must_== NA
+    }
+
+    "return NM if the first value encountered is NM" in {
+      unique.sparse.reduce(Last[Double]) must_== NM
+    }
+
+    "get first element in dense series" in {
+      unique.dense.reduce(First[Double]) must_== Value(1D)
+      duplicate.dense.reduce(First[Double]) must_== Value(1D)
+      odd.dense.reduce(First[Double]) must_== Value(1D)
+    }
+
+    "get last element in dense series" in {
+      unique.dense.reduce(Last[Double]) must_== Value(5D)
+      duplicate.dense.reduce(Last[Double]) must_== Value(6D)
+      odd.dense.reduce(Last[Double]) must_== Value(3D)
+    }
+
+    "get first value of sparse series" in {
+      unique.sparse.reduce(First[Double]) must_== Value(2D)
+      duplicate.sparse.reduce(First[Double]) must_== Value(2D)
+      odd.sparse.reduce(First[Double]) must_== Value(2D)
+    }
+
+    "get last value of sparse series" in {
+      unique.sparse.reduce(Last[Double]) must_== NM
+      duplicate.sparse.reduce(Last[Double]) must_== Value(0D)
+      odd.sparse.reduce(Last[Double]) must_== Value(5D)
+    }
+
+    "get first in dense series by key" in {
+      duplicate.dense.reduceByKey(First[Double]) must_== Series("a" -> 1D, "b" -> 3D, "c" -> 6D)
+    }
+
+    "get last in dense series by key" in {
+      duplicate.dense.reduceByKey(Last[Double]) must_== Series("a" -> 2D, "b" -> 5D, "c" -> 6D)
+    }
+
+    "get first in sparse series by key" in {
+      duplicate.sparse.reduceByKey(First[Double]) must_==
+        Series.fromCells("a" -> NA, "b" -> Value(2D), "c" -> Value(5D), "d" -> Value(0D))
+    }
+
+    "get last in sparse series by key" in {
+      duplicate.sparse.reduceByKey(Last[Double]) must_==
+        Series.fromCells("a" -> NA, "b" -> NM, "c" -> Value(1D), "d" -> Value(0D))
+    }
+  }
+
+  "Unique" should {
+    "return the empty set for an empty series" in {
+      empty.reduce(Unique[Double]) must_== Value(Set.empty)
+      Series.fromCells[Int, Int](1 -> NA, 2 -> NA).reduce(Unique[Int]) must_== Value(Set.empty)
+    }
+
+    "return unique elements from dense series" in {
+      Series(1 -> 1, 2 -> 1, 3 -> 2, 4 -> 1, 5 -> 3, 6 -> 2).reduce(Unique[Int]) must_== Value(Set(1, 2, 3))
+    }
+
+    "return unique elements in sparse series" in {
+      val s = Series.fromCells(1 -> Value("a"), 2 -> NA, 1 -> Value("b"), 3 -> NA)
+      s.reduce(Unique[String]) must_== Value(Set("a", "b"))
+    }
+
+    "return unique elements by key" in {
+      val s = Series.fromCells(
+        1 -> Value("a"), 1 -> Value("b"),
+        2 -> NA, 2 -> Value("c"),
+        3 -> Value("d"), 3 -> NA, 3 -> Value("e"), 3 -> NA, 3 -> Value("e"),
+        4 -> NA, 4 -> NA)
+      s.reduceByKey(Unique[String]) must_== Series(1 -> Set("a", "b"), 2 -> Set("c"), 3 -> Set("d", "e"), 4 -> Set.empty)
+    }
+  }
+
+  "SemigroupReducer" in {
+    "return NA when empty" in {
+      Series.empty[Int, String].reduce(SemigroupReducer[String]) must_== NA
+      Series.fromCells[Int, String](1 -> NA, 2 -> NA).reduce(SemigroupReducer[String]) must_== NA
+    }
+
+    "reduce by key" in {
+      val s = Series.fromCells(
+        1 -> Value("a"), 1 -> Value("b"),
+        2 -> NA, 2 -> Value("c"),
+        3 -> Value("d"), 3 -> NA, 3 -> Value("e"), 3 -> NA, 3 -> Value("e"),
+        4 -> NA, 4 -> NA)
+      s.reduceByKey(SemigroupReducer[String]) must_==
+        Series.fromCells(1 -> Value("ab"), 2 -> Value("c"), 3 -> Value("dee"), 4 -> NA)
     }
   }
 }
