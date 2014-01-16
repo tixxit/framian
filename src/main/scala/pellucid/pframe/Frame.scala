@@ -48,6 +48,7 @@ trait Frame[Row, Col] {
       (key, Series(rowIndex, col.cast[V]).reduceByKey(reducer))
     }.toSeq: _*)
 
+  // TODO: Use a closed set of objects for keys for Mean, Median, Max, Min, etc.
   def summary[T: ClassTag: Field: Order: ColumnTyper]: Frame[Col, String] = {
     Frame.fromSeries(
       ("Mean", reduceFrame(reduce.Mean[T])),

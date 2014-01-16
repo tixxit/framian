@@ -155,7 +155,7 @@ trait ColumnSelection[Row, Col, Sz <: Size] {
 
     val (keys, rows) = (for {
       (group, rows) <- groups.toList
-      row <- rows
+      row <- rows.reverse
     } yield (group -> row)).unzip
     val groupedIndex = Index.ordered(keys.toArray, rows.toArray)
     frame.withRowIndex(groupedIndex)
