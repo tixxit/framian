@@ -58,6 +58,36 @@ sealed trait Index[K] extends Iterable[(K, Int)] with IterableLike[(K, Int), Ind
     if (i >= 0) Some(i) else None
   }
 
+  def getAll(k: K): Index[K] = {
+    @tailrec def findLower(j: Int): Int =
+      if (j > 0 && keys(j - 1) === k) findLower(j - 1)
+      else j
+
+    @tailrec def findUpper(j: Int): Int =
+      if (j < keys.length && keys(j) === k) findUpper(j + 1)
+      else j
+
+    val i = search(k)
+    if (i >= 0) {
+      val lb = findLower(i)
+      val ub = findUpper(i + 1)
+      Index.ordered(keys.slice(lb, ub), indices.slice(lb, ub))
+    } else {
+      Index.empty[K]
+    }
+  }
+
+  def reverse: Index[K] = {
+    val keys0 = new Array[K](keys.length)
+    val indices0 = new Array[Int](indices.length)
+    cfor(0)(_ < keys.length, _ + 1) { i =>
+      val j = keys.length - i - 1
+      keys0(i) = keyAt(j)
+      indices0(i) = indexAt(j)
+    }
+    Index(keys0, indices0)
+  }
+
   def sorted: OrderedIndex[K] = Index.ordered(keys, indices)
   def resetIndices: Index[K]
 

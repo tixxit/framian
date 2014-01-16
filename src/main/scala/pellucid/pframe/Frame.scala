@@ -57,6 +57,12 @@ trait Frame[Row, Col] {
       ("Min", reduceFrame(reduce.Min[T])))
   }
 
+  def getColumnGroup(col: Col): Frame[Row, Col] =
+    withColIndex(colIndex.getAll(col))
+
+  def getRowGroup(row: Row): Frame[Row, Col] =
+    withRowIndex(rowIndex.getAll(row))
+
   def mapRowGroups[R1: ClassTag: Order, C1: ClassTag: Order](f: (Row, Frame[Row, Col]) => Frame[R1, C1]): Frame[R1, C1] = {
     val columns = columnsAsSeries.toList collect { case (key, Value(col)) => key -> col }
     val grouper = new Index.Grouper[Row] {
@@ -89,6 +95,12 @@ trait Frame[Row, Col] {
 
   def orderColumns: Frame[Row, Col] = withColIndex(colIndex.sorted)
   def orderRows: Frame[Row, Col] = withRowIndex(rowIndex.sorted)
+
+  def reverseColumns: Frame[Row, Col] =
+    withColIndex(colIndex.reverse)
+
+  def reverseRows: Frame[Row, Col] =
+    withRowIndex(rowIndex.reverse)
 
   /**
    * Map the row index using `f`. This retains the traversal order of the rows.

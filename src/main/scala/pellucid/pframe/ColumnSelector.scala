@@ -139,16 +139,21 @@ trait ColumnSelection[Row, Col, Sz <: Size] {
   }
 
   // TODO: Grouping should take a strategy so that we can deal with missing values.
-  private def groupBy0[A: RowExtractorAux, B: Order: ClassTag](f: A => B): Frame[B, Col] = {
+  private def groupBy0[A: RowExtractorAux, B: Order: ClassTag](f: A => B, g: Missing => Option[B]): Frame[B, Col] = {
     import spire.compat._
 
     val extractor = RowExtractor[A, Col, Sz]
     var groups: SortedMap[B, List[Int]] = SortedMap.empty // TODO: Lots of room for optimization here.
     for (p <- extractor.prepare(frame, cols)) {
       frame.rowIndex foreach { (key, row) =>
-        for (group0 <- extractor.extract(frame, key, row, p)) {
-          val group = f(group0)
-          groups += (group -> (row :: groups.getOrElse(group, Nil)))
+        extractor.extract(frame, key, row, p) match {
+          case Value(group0) =>
+            val group = f(group0)
+            groups += (group -> (row :: groups.getOrElse(group, Nil)))
+          case (missing: Missing) =>
+            g(missing) foreach { group =>
+              groups += (group -> (row :: groups.getOrElse(group, Nil)))
+            }
         }
       }
     }
@@ -162,11 +167,18 @@ trait ColumnSelection[Row, Col, Sz <: Size] {
   }
 
   def groupAs[A: RowExtractorAux: Order: ClassTag]: Frame[A, Col] =
-    groupBy0[A, A](a => a)
+    groupBy0[A, A](a => a, _ => None)
+
+  def groupWithMissingAs[A: RowExtractorAux: Order: ClassTag]: Frame[Cell[A], Col] =
+    groupBy0[A, Cell[A]](Value(_), Some(_))
 
   def groupBy[F, L <: HList, A](f: F)(implicit fntop: FnToProduct.Aux[F, L => A],
       extractor: RowExtractorAux[L], order: Order[A], ct: ClassTag[A]): Frame[A, Col] =
-    groupBy0[L, A](fntop(f))
+    groupBy0[L, A](fntop(f), _ => None)
+
+  def groupWithMissingBy[F, L <: HList, A](f: F)(implicit fntop: FnToProduct.Aux[F, L => A],
+      extractor: RowExtractorAux[L], order: Order[A], ct: ClassTag[A]): Frame[Cell[A], Col] =
+    groupBy0[L, Cell[A]](fntop(f) andThen (Value(_)), Some(_))
 }
 
 final case class SimpleColumnSelection[Row, Col, Sz <: Size](frame: Frame[Row, Col], cols: List[Col]) extends ColumnSelection[Row, Col, Sz]
