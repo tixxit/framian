@@ -56,11 +56,11 @@ trait Frame[Row, Col] {
       ("Min", reduceFrame(reduce.Min[T])))
   }
 
-  def mapRowGroups[R1: ClassTag: Order](f: (Row, Frame[Row, Col]) => Frame[R1, Col]): Frame[R1, Col] = {
+  def mapRowGroups[R1: ClassTag: Order, C1: ClassTag: Order](f: (Row, Frame[Row, Col]) => Frame[R1, C1]): Frame[R1, C1] = {
     val columns = columnsAsSeries.toList collect { case (key, Value(col)) => key -> col }
     val grouper = new Index.Grouper[Row] {
-      case class State(rows: Int, keys: Vector[Array[R1]], cols: Series[Col, UntypedColumn]) {
-        def result(): Frame[R1, Col] = Frame(
+      case class State(rows: Int, keys: Vector[Array[R1]], cols: Series[C1, UntypedColumn]) {
+        def result(): Frame[R1, C1] = Frame(
           Index(Array.concat(keys: _*)),
           cols.toSeq collect { case (key, Value(col)) => key -> col }: _*)
       }
