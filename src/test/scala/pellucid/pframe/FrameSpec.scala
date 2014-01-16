@@ -332,6 +332,40 @@ class FrameSpec extends Specification {
     }
   }
 
+  "mapRowGroups" should {
+    "not modify frame for identity" in {
+      f0.mapRowGroups { (_, f) => f } must_== f0
+      f1.mapRowGroups { (_, f) => f } must_== f1
+    }
+
+    val dups = Frame.fromRows(
+      1 :: 2.0 :: HNil,
+      2 :: 0.5 :: HNil,
+      3 :: 1.0 :: HNil,
+      4 :: 1.0 :: HNil,
+      5 :: 8.9 :: HNil,
+      6 :: 9.2 :: HNil
+    ).withRowIndex(Index.fromKeys("a", "a", "b", "c", "c", "c"))
+
+    "reduce groups" in {
+      dups.mapRowGroups { (row, f) =>
+        val reduced = f.reduceFrame(reduce.Sum[Double]).toList
+        Frame(Index.fromKeys(row), reduced map { case (key, value) =>
+          key -> TypedColumn(Column.fromCells(Vector(value)))
+        }: _*)
+      } must_== dups.reduceFrameByKey(reduce.Sum[Double])
+    }
+
+    "replace groups with constant" in {
+      val const = Frame.fromRows("repeat" :: HNil)
+      dups.mapRowGroups { (_, f) => const } must_== Frame.fromRows(
+        "repeat" :: HNil,
+        "repeat" :: HNil,
+        "repeat" :: HNil
+      ).withRowIndex(Index.fromKeys(0, 0, 0))
+    }
+  }
+
   "ColumnSelection" should {
     "get row as HList" in {
       f0.columns(0, 1).get[String :: Int :: HNil](0) must_== Value("a" :: 1 :: HNil)

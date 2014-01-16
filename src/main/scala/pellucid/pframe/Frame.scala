@@ -56,13 +56,35 @@ trait Frame[Row, Col] {
       ("Min", reduceFrame(reduce.Min[T])))
   }
 
+  def mapRowGroups[R1: ClassTag: Order](f: (Row, Frame[Row, Col]) => Frame[R1, Col]): Frame[R1, Col] = {
+    val columns = columnsAsSeries.toList collect { case (key, Value(col)) => key -> col }
+    val grouper = new Index.Grouper[Row] {
+      case class State(rows: Int, keys: Vector[Array[R1]], cols: Series[Col, UntypedColumn]) {
+        def result(): Frame[R1, Col] = Frame(
+          Index(Array.concat(keys: _*)),
+          cols.toSeq collect { case (key, Value(col)) => key -> col }: _*)
+      }
+
+      def init = State(0, Vector.empty, Series.empty)
+      def group(state: State)(keys: Array[Row], indices: Array[Int], start: Int, end: Int): State = {
+        val groupRowIndex = Index(keys.slice(start, end), indices.slice(start, end))
+        val groupKey = keys(start)
+        val group = Frame(groupRowIndex, columns: _*)
+
+        val State(offset, groupKeys, cols) = state
+        val result = f(groupKey, group)
+        val newCols = cols.merge(result.columnsAsSeries mapValues {
+          _.reindex(result.rowIndex.indices).shift(offset)
+        })
+        State(offset + result.rowIndex.size, groupKeys :+ result.rowIndex.keys, newCols)
+      }
+    }
+
+    Index.group(rowIndex)(grouper).result()
+  }
+
   def withColIndex[C1](ci: Index[C1]): Frame[Row, C1]
   def withRowIndex[R1](ri: Index[R1]): Frame[R1, Col]
-
-  def mapColumnIndex[Col2: ClassTag: Order: ColumnTyper](f: Col => Col2): Frame[Row, Col2] =
-    withColIndex(Index(colIndex map { case (col, index) => (f(col), index) } toSeq: _*))
-  def mapRowIndex[Row2: ClassTag: Order: ColumnTyper](f: Row => Row2): Frame[Row2, Col] =
-    withRowIndex(Index(rowIndex map { case (row, index) => (f(row), index) } toSeq: _*))
 
   def orderColumns: Frame[Row, Col] = withColIndex(colIndex.sorted)
   def orderRows: Frame[Row, Col] = withRowIndex(rowIndex.sorted)
