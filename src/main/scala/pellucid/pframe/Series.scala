@@ -153,6 +153,28 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
    */
   def filterValues(f: Cell[V] => Boolean): Series[K, V] = this.filter { case (index, value) => f(value) }
 
+  def firstValue: Option[(K, V)] = {
+    var i = 0
+    while (i < index.size) {
+      val row = index.indexAt(i)
+      if (column.exists(row))
+        return Some(index.keyAt(i) -> column.value(row))
+      i += 1
+    }
+    None
+  }
+
+  def lastValue: Option[(K, V)] = {
+    var i = index.size - 1
+    while (i >= 0) {
+      val row = index.indexAt(i)
+      if (column.exists(row))
+        return Some(index.keyAt(i) -> column.value(row))
+      i -= 1
+    }
+    None
+  }
+
   /**
    * Returns a compacted version of this `Series`. The new series will be equal
    * to the old one, but the backing column will be dropped and replaced with a

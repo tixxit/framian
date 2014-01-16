@@ -103,6 +103,22 @@ trait Frame[Row, Col] {
     this.withColIndex(colIndex.map { case (k, v) => (f(k), v) })
 
   /**
+   * Retain only the rows in `rows`, dropping all others.
+   */
+  def retainRows(rows: Row*): Frame[Row, Col] = {
+    val keep = rows.toSet
+    withRowIndex(rowIndex filter { case (key, _) => keep(key) })
+  }
+
+  /**
+   * Retain only the cols in `cols`, dropping all others.
+   */
+  def retainColumns(cols: Col*): Frame[Row, Col] = {
+    val keep = cols.toSet
+    withColIndex(colIndex filter { case (key, _) => keep(key) })
+  }
+
+  /**
    * Drop the columns `cols` from the column index. This simply removes the
    * columns from the column index and does not modify the actual columns.
    */

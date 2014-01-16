@@ -137,5 +137,15 @@ class SeriesSpec extends Specification {
       val s1 = Series.fromCells(0 -> Value("c"), 1 -> Value("d"))
       (s0 merge s1) must_== Series.fromCells(0 -> Value("c"), 1 -> Value("ad"), 1 -> Value("b"), 2 -> Value("e"))
     }
+
+    "get first/last value in series" in {
+      val s0 = Series(1 -> "x", 2 -> "y")
+      s0.firstValue must_== Some(1 -> "x")
+      s0.lastValue must_== Some(2 -> "y")
+
+      val s1 = Series.fromCells(1 -> NA, 2 -> NM, 3 -> Value("a"), 4 -> NA, 5 -> Value("b"), 6 -> NA)
+      s1.firstValue must_== Some(3 -> "a")
+      s1.lastValue must_== Some(5 -> "b")
+    }
   }
 }
