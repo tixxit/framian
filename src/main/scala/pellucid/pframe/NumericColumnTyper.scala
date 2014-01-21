@@ -18,6 +18,8 @@ import shapeless._
 //   - BigDecimal
 //   - Rational
 //   - Number
+//
+// TODO: Support Algebraic and Real.
 
 trait NumericColumnTyper[@spec(Int,Long,Float,Double) A] extends ColumnTyper[A] {
   def castValue(x: Any): Option[A]
