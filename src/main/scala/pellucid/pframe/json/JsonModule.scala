@@ -7,6 +7,7 @@ import spire.algebra.Order
 
 trait JsonModule {
   type JsonValue
+  def JsonValue: JsonValueCompanion
 
   type JsonError
   def JsonError: JsonErrorCompanion
@@ -23,6 +24,15 @@ trait JsonModule {
   def parseSeq(jsonStr: String): Either[JsonError, Seq[JsonValue]] =
     parse(jsonStr).right flatMap visitJson(SeqExtractor)
 
+  trait JsonValueCompanion {
+    def jsonObject(values: Seq[(String, JsonValue)]): JsonValue
+    def jsonArray(values: Seq[JsonValue]): JsonValue
+    def jsonString(value: String): JsonValue
+    def jsonNumber(value: BigDecimal): JsonValue
+    def jsonBoolean(value: Boolean): JsonValue
+    def jsonNull: JsonValue
+  }
+
   trait JsonVisitor[A] {
     def jsonObject(values: Iterable[(String, JsonValue)]): A
     def jsonArray(values: Seq[JsonValue]): A
@@ -35,18 +45,69 @@ trait JsonModule {
   trait JsonPathCompanion {
     def root: JsonPath
 
-    def prepend(fieldName: String, path: JsonPath): JsonPath
-    def prepend(index: Int, path: JsonPath): JsonPath
+    def cons(fieldName: String, path: JsonPath): JsonPath
+    def cons(index: Int, path: JsonPath): JsonPath
+    def uncons[A](path: JsonPath)(z: => A, f: (String, JsonPath) => A, g: (Int, JsonPath) => A): A
+    def isEmpty(path: JsonPath): Boolean = uncons(path)(true, (_, _) => false, (_, _) => false)
   }
 
   implicit final class JsonPathOps(path: JsonPath) {
-    def :: (fieldName: String): JsonPath = JsonPath.prepend(fieldName, path)
-    def :: (index: Int): JsonPath = JsonPath.prepend(index, path)
+    def :: (fieldName: String): JsonPath = JsonPath.cons(fieldName, path)
+    def :: (index: Int): JsonPath = JsonPath.cons(index, path)
+    def uncons[A](z: => A, f: (String, JsonPath) => A, g: (Int, JsonPath) => A): A = JsonPath.uncons(path)(z, f, g)
+    def isEmpty: Boolean = JsonPath.isEmpty(path)
   }
 
   trait JsonErrorCompanion {
     def invalidJson(message: String): JsonError
     def ioError(e: Exception): JsonError
+  }
+
+  /**
+   * Inflates a JSON object from a set of paths and values. These paths/values
+   * must be consistent, otherwise `None` will be returned.
+   */
+  def inflate(kvs: List[(JsonPath, JsonValue)]): Option[JsonValue] = {
+    def sequence[A](xs: List[Option[A]], acc: Option[List[A]] = None): Option[List[A]] =
+      xs.foldLeft(Some(Nil): Option[List[A]]) { (acc, x) =>
+        acc flatMap { ys => x map (_ :: ys) }
+      }
+
+    def makeArray(fields: List[(Int, JsonValue)]): JsonValue = {
+      val size = fields.map(_._1).max
+      val elems = fields.foldLeft(Vector.fill(size)(JsonValue.jsonNull)) { case (xs, (i, x)) =>
+        xs.updated(i, x)
+      }
+      JsonValue.jsonArray(elems)
+    }
+
+    def obj(kvs: List[(JsonPath, JsonValue)]): Option[JsonValue] = {
+      val fields: Option[List[(String, (JsonPath, JsonValue))]] = sequence(kvs map { case (path, value) =>
+        path.uncons(None, (key, path0) => Some((key, (path0, value))), (_, _) => None)
+      })
+      fields flatMap { fields0 =>
+        sequence(fields0.groupBy(_._1).toList map { case (key, kvs0) =>
+          inflate(kvs0 map (_._2)) map (key -> _)
+        }) map JsonValue.jsonObject
+      }
+    }
+
+    def arr(kvs: List[(JsonPath, JsonValue)]): Option[JsonValue] = {
+      val fields: Option[List[(Int, (JsonPath, JsonValue))]] = sequence(kvs map { case (path, value) =>
+        path.uncons(None, (_, _) => None, (idx, path0) => Some((idx, (path0, value))))
+      })
+      fields flatMap { fields0 =>
+        sequence(fields0.groupBy(_._1).toList map { case (idx, kvs0) =>
+          inflate(kvs0 map (_._2)) map (idx -> _)
+        }) map makeArray
+      }
+    }
+
+    kvs match {
+      case Nil => None
+      case (path, value) :: Nil if path.isEmpty => Some(value)
+      case _ => obj(kvs) orElse arr(kvs)
+    }
   }
 
   private object SeqExtractor extends JsonVisitor[Either[JsonError, Seq[JsonValue]]] {

@@ -40,8 +40,14 @@ trait JsonSelectorModule extends JsonModule {
 
   object JsonPath extends JsonPathCompanion {
     def root: JsonPath = Select
-    def prepend(fieldName: String, path: JsonPath): JsonPath = Field(fieldName, path)
-    def prepend(index: Int, path: JsonPath): JsonPath = Index(index, path)
+    def cons(fieldName: String, path: JsonPath): JsonPath = Field(fieldName, path)
+    def cons(index: Int, path: JsonPath): JsonPath = Index(index, path)
+    def uncons[A](path: JsonPath)(z: => A, f: (String, JsonPath) => A, g: (Int, JsonPath) => A): A =
+      path match {
+        case Select => z
+        case Field(key, tail) => f(key, tail)
+        case Index(idx, tail) => g(idx, tail)
+      }
   }
 
   val JsonPathOrder = JsonSelector.order
