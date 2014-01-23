@@ -13,6 +13,15 @@ import spire.algebra.Order
 object PlayJson extends JsonModule with JsonLoader {
   type JsonValue = JsValue
 
+  object JsonValue extends JsonValueCompanion {
+    def jsonObject(values: Seq[(String, JsonValue)]) = JsObject(values)
+    def jsonArray(values: Seq[JsonValue]) = JsArray(values)
+    def jsonString(value: String) = JsString(value)
+    def jsonNumber(value: BigDecimal) = JsNumber(value)
+    def jsonBoolean(value: Boolean) = JsBoolean(value)
+    def jsonNull = JsNull
+  }
+
   def parse(jsonStr: String): Either[JsonError, JsonValue] = try {
     Right(Json.parse(jsonStr))
   } catch { case (e: IOException) =>
@@ -30,10 +39,17 @@ object PlayJson extends JsonModule with JsonLoader {
 
   object JsonPath extends JsonPathCompanion {
     def root: JsonPath = JsPath
-    def prepend(fieldName: String, path: JsonPath): JsonPath =
+    def cons(fieldName: String, path: JsonPath): JsonPath =
       JsPath(KeyPathNode(fieldName) :: path.path)
-    def prepend(index: Int, path: JsonPath): JsonPath =
+    def cons(index: Int, path: JsonPath): JsonPath =
       JsPath(IdxPathNode(index) :: path.path)
+    def uncons[A](path: JsonPath)(z: => A, f: (String, JsonPath) => A, g: (Int, JsonPath) => A): A =
+      path.path match {
+        case Nil => z
+        case KeyPathNode(k) :: path0 => f(k, JsPath(path0))
+        case IdxPathNode(i) :: path0 => g(i, JsPath(path0))
+        case RecursiveSearch(_) :: _ => ???
+      }
   }
 
   val JsonPathClassTag = implicitly[ClassTag[JsonPath]]
