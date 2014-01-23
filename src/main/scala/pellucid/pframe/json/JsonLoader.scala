@@ -55,17 +55,17 @@ trait JsonLoader extends JsonModule {
   private def populate(schema: Schema[JsonColumn], row: Int, json: JsonValue): Schema[JsonColumn] =
     visitJson(new RowPopulator(schema, row))(json)
 
-  def load(file: File): Either[JsonError, Frame[Int, JsonPath]] = try {
+  def loadJsonToFrame(file: File): Either[JsonError, Frame[Int, JsonPath]] = try {
     val reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), Charset.forName("UTF-8")))
     val jsonStr = Iterator.continually(reader.readLine()).takeWhile(_ != null).mkString("\n")
     reader.close()
-    parseToFrame(jsonStr)
+    parseJsonToFrame(jsonStr)
   } catch { case (e: IOException) =>
     Left(JsonError.ioError(e))
   }
 
-  def parseToFrame(jsonStr: String): Either[JsonError, Frame[Int, JsonPath]] =
-    parseSeq(jsonStr).right map jsonToFrame
+  def parseJsonToFrame(jsonStr: String): Either[JsonError, Frame[Int, JsonPath]] =
+    parseJsonSeq(jsonStr).right map jsonToFrame
 
   def jsonToFrame(objs: Seq[JsonValue]): Frame[Int, JsonPath] = {
     type FlatJson = Iterable[(JsonPath, UntypedColumn)]

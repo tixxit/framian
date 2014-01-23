@@ -19,10 +19,10 @@ trait JsonModule {
 
   def visitJson[A](visitor: JsonVisitor[A])(json: JsonValue): A
 
-  def parse(jsonStr: String): Either[JsonError, JsonValue]
+  def parseJson(jsonStr: String): Either[JsonError, JsonValue]
 
-  def parseSeq(jsonStr: String): Either[JsonError, Seq[JsonValue]] =
-    parse(jsonStr).right flatMap visitJson(SeqExtractor)
+  def parseJsonSeq(jsonStr: String): Either[JsonError, Seq[JsonValue]] =
+    parseJson(jsonStr).right flatMap visitJson(SeqExtractor)
 
   trait JsonValueCompanion {
     def jsonObject(values: Seq[(String, JsonValue)]): JsonValue

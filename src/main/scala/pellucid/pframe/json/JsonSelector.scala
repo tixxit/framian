@@ -12,7 +12,7 @@ object JsonSelector {
   final case class Index(pos: Int, tail: JsonSelector) extends JsonSelector
   final case class Field(name: String, tail: JsonSelector) extends JsonSelector
 
-  implicit object order extends Order[JsonSelector] {
+  implicit object JsonSelectorOrder extends Order[JsonSelector] {
     def compare(lhs: JsonSelector, rhs: JsonSelector): Int = (lhs, rhs) match {
       case (Select, Select) => 0
       case (Select, _) => -1
@@ -50,6 +50,6 @@ trait JsonSelectorModule extends JsonModule {
       }
   }
 
-  val JsonPathOrder = JsonSelector.order
+  val JsonPathOrder = JsonSelectorOrder
   val JsonPathClassTag = implicitly[ClassTag[JsonPath]]
 }
