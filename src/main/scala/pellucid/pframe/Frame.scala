@@ -93,6 +93,12 @@ trait Frame[Row, Col] {
   def withColIndex[C1](ci: Index[C1]): Frame[Row, C1]
   def withRowIndex[R1](ri: Index[R1]): Frame[R1, Col]
 
+  def filter(f: Row => Boolean) = filterRowIndex(f)
+  def filterRowIndex(f: Row => Boolean) = {
+    val filteredRowIndex = rowIndex.filter { case (row, _) => f(row) }
+    withRowIndex(filteredRowIndex)
+  }
+
   def orderColumns: Frame[Row, Col] = withColIndex(colIndex.sorted)
   def orderRows: Frame[Row, Col] = withRowIndex(rowIndex.sorted)
 
