@@ -10,7 +10,7 @@ import play.api.libs.json._
 
 import spire.algebra.Order
 
-object PlayJson extends JsonModule with JsonLoader {
+object PlayJson extends JsonModule with JsonLoader with JsonExtractor {
   type JsonValue = JsValue
 
   object JsonValue extends JsonValueCompanion {
@@ -22,7 +22,7 @@ object PlayJson extends JsonModule with JsonLoader {
     def jsonNull = JsNull
   }
 
-  def parse(jsonStr: String): Either[JsonError, JsonValue] = try {
+  def parseJson(jsonStr: String): Either[JsonError, JsonValue] = try {
     Right(Json.parse(jsonStr))
   } catch { case (e: IOException) =>
     Left(JsonError(e.getMessage, e))
