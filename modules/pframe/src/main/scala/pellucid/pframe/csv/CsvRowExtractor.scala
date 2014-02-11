@@ -99,7 +99,7 @@ final case class Csv(header: Option[List[String]], rows: List[CsvRow]) {
 object Csv {
   def fromFrame(frame: Frame[_, String]): Csv = {
     val header = frame.colIndex.toList map (_._1)
-    val rows = frame.columns.as[CsvRow].toList collect {
+    val rows = frame.get(Cols.all.as[CsvRow]).toList collect {
       case (_, Value(row)) => row
     }
     Csv(Some(header), rows)

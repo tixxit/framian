@@ -13,6 +13,16 @@ trait RowExtractor[A, Col, RowSize <: Size] {
   type P
   def prepare[Row](frame: Frame[Row, Col], cols: List[Col]): Option[P]
   def extract[Row](frame: Frame[Row, Col], key: Row, row: Int, p: P): Cell[A]
+  def map[B](f: A => B): RowExtractor[B, Col, RowSize] = new MappedRowExtractor(this, f)
+}
+
+private final class MappedRowExtractor[A, B, Col, RowSize <: Size](val e: RowExtractor[A, Col, RowSize], f: A => B)
+    extends RowExtractor[B, Col, RowSize] {
+  type P = e.P
+  def prepare[Row](frame: Frame[Row, Col], cols: List[Col]): Option[P] =
+    e.prepare(frame, cols)
+  def extract[Row](frame: Frame[Row, Col], key: Row, row: Int, p: P): Cell[B] =
+    e.extract(frame, key, row, p) map f
 }
 
 trait RowExtractorLow0 {
@@ -26,7 +36,7 @@ trait RowExtractorLow0 {
     }
 }
 
-trait RowExtractorLow1 {
+trait RowExtractorLow1 extends RowExtractorLow0 {
   implicit def generic[A, B, Col, S <: Size](implicit generic: Generic.Aux[A, B],
       extractor: RowExtractor[B, Col, S]) =
     new RowExtractor[A,Col,S] {

@@ -70,16 +70,16 @@ class FrameSpec extends Specification {
       f0 must_== f0
       f0 must_!= f1
       f1 must_!= f0
-      f0.columns(0).as[String].toFrame("abc") must_== f1.columns(0).as[String].toFrame("abc")
-      f0.columns(1).as[Int].toFrame("123") must_!= f1.columns(1).as[Int].toFrame("123")
+      f0.column[String](0).toFrame("abc") must_== f1.column[String](0).toFrame("abc")
+      f0.column[Int](1).toFrame("123") must_!= f1.column[Int](1).toFrame("123")
     }
 
     "have sane hashCode" in {
       f0.hashCode must_== f0.hashCode
       f0.hashCode must_!= f1.hashCode
       f1.hashCode must_!= f0.hashCode
-      f0.columns(0).as[String].toFrame("abc").hashCode must_== f1.columns(0).as[String].toFrame("abc").hashCode
-      f0.columns(1).as[Int].toFrame("123").hashCode must_!= f1.columns(1).as[Int].toFrame("123").hashCode
+      f0.column[String](0).toFrame("abc").hashCode must_== f1.column[String](0).toFrame("abc").hashCode
+      f0.column[Int](1).toFrame("123").hashCode must_!= f1.column[Int](1).toFrame("123").hashCode
     }
 
     "order columns" in {
@@ -368,45 +368,61 @@ class FrameSpec extends Specification {
 
   "ColumnSelection" should {
     "get row as HList" in {
-      f0.columns(0, 1).get[String :: Int :: HNil](0) must_== Value("a" :: 1 :: HNil)
-      f0.columns(0, 1).get[String :: Int :: HNil](1) must_== Value("b" :: 2 :: HNil)
-      f0.columns(0, 1).get[String :: Int :: HNil](2) must_== Value("c" :: 3 :: HNil)
-      f0.columns(0, 1).get[String :: Int :: HNil](3) must_== NA
-      f0.columns(0).get[String :: HNil](0) must_== Value("a" :: HNil)
-      f0.columns(1).get[Int :: HNil](2) must_== Value(3 :: HNil)
+      f0.get(Cols(0, 1).as[String :: Int :: HNil])(0) must_== Value("a" :: 1 :: HNil)
+      f0.get(Cols(0, 1).as[String :: Int :: HNil])(1) must_== Value("b" :: 2 :: HNil)
+      f0.get(Cols(0, 1).as[String :: Int :: HNil])(2) must_== Value("c" :: 3 :: HNil)
+      f0.get(Cols(0, 1).as[String :: Int :: HNil])(3) must_== NA
+      f0.get(Cols(0).as[String :: HNil])(0) must_== Value("a" :: HNil)
+      f0.get(Cols(1).as[Int :: HNil])(2) must_== Value(3 :: HNil)
     }
 
     "convert to series" in {
-      f0.columns(0).as[String] must_== Series(0 -> "a", 1 -> "b", 2 -> "c")
-      f0.columns(0).as[Int] must_== Series(Index.fromKeys(0, 1, 2), Column.fromCells(Vector(NM, NM, NM)))
-      f0.columns(1).as[Int] must_== Series(0 -> 1, 1 -> 2, 2 -> 3)
-      f0.columns(0, 1).as[String :: Int :: HNil] must_== Series(
+      f0.get(Cols(0).as[String]) must_== Series(0 -> "a", 1 -> "b", 2 -> "c")
+      f0.get(Cols(0).as[Int]) must_== Series(Index.fromKeys(0, 1, 2), Column.fromCells(Vector(NM, NM, NM)))
+      f0.get(Cols(1).as[Int]) must_== Series(0 -> 1, 1 -> 2, 2 -> 3)
+      f0.get(Cols(0, 1).as[String :: Int :: HNil]) must_== Series(
         0 -> ("a" :: 1 :: HNil),
         1 -> ("b" :: 2 :: HNil),
         2 -> ("c" :: 3 :: HNil))
     }
 
     "map to series" in {
-      f0.columns(1) map { (x: Int) => x + 1 } must_== Series(0 -> 2, 1 -> 3, 2 -> 4)
-      f0.columns(0) map { (x: String) => 42 } must_== Series(0 -> 42, 1 -> 42, 2 -> 42)
-      f0.columns(1, 0) map { (x: Int, y: String) => y + x } must_== Series(0 -> "a1", 1 -> "b2", 2 -> "c3")
+      f0.map(Cols(1).as[Int], 2)(_ + 1) must_== Frame.fromRows(
+        "a" :: 1 :: 2 :: HNil,
+        "b" :: 2 :: 3 :: HNil,
+        "c" :: 3 :: 4 :: HNil)
+      f0.map(Cols(0).as[String], 2)(_ => 42) must_== Frame.fromRows(
+        "a" :: 1 :: 42 :: HNil,
+        "b" :: 2 :: 42 :: HNil,
+        "c" :: 3 :: 42 :: HNil)
+      f0.map(Cols(1, 0).as[(Int, String)], 2) { case (x, y) =>
+        y + x
+      } must_== Frame.fromRows(
+        "a" :: 1 :: "a1" :: HNil,
+        "b" :: 2 :: "b2" :: HNil,
+        "c" :: 3 :: "c3" :: HNil)
     }
 
     "map with index to series" in {
-      f0.columns(0) mapWithIndex { (i: Int, x: String) => i + x } must_== Series(0 -> "0a", 1 -> "1b", 2 -> "2c")
-      f0.columns(1) mapWithIndex { (i: Int, j: Int) => i + j } must_== Series(0 -> 1, 1 -> 3, 2 -> 5)
+      f0.mapWithIndex(Cols(0).as[String], 2)(_ + _) must_== Frame.fromRows(
+        "a" :: 1 :: "0a" :: HNil,
+        "b" :: 2 :: "1b" :: HNil,
+        "c" :: 3 :: "2c" :: HNil)
+      f0.mapWithIndex(Cols(1).as[Int], 2)(_ + _) must_== Frame.fromRows(
+        "a" :: 1 :: 1 :: HNil,
+        "b" :: 2 :: 3 :: HNil,
+        "c" :: 3 :: 5 :: HNil)
     }
 
     "filter whole frame" in {
-      f0.columns(1) filter { (x: Int) => x % 2 == 0 } must_==
+      f0.filter(Cols(1).as[Int])(_ % 2 == 0) must_==
         Frame.fromRows("b" :: 2 :: HNil).withRowIndex(Index.fromKeys(1))
     }
 
     "group by column values" in {
-      f0.columns(0).groupAs[String] must_== f0.withRowIndex(Index.fromKeys("a", "b", "c"))
-      f0.columns(1).groupBy { (x: Int) => -x } must_== f0.withRowIndex(Index(-3 -> 2, -2 -> 1, -1 -> 0))
-      f2.columns(0).groupBy { (x: String) => x } must_== f2.withRowIndex(Index(("a",0), ("b",2), ("b",1)))
+      f0.group(Cols(0).as[String]) must_== f0.withRowIndex(Index.fromKeys("a", "b", "c"))
+      f0.groupBy(Cols(1).as[Int])(-_) must_== f0.withRowIndex(Index(-3 -> 2, -2 -> 1, -1 -> 0))
+      f2.groupBy(Cols(0).as[String])(a => a) must_== f2.withRowIndex(Index(("a",0), ("b",2), ("b",1)))
     }
   }
 }
-

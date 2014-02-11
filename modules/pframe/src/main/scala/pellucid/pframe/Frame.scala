@@ -1,6 +1,7 @@
 package pellucid
 package pframe
 
+import scala.collection.SortedMap
 import scala.reflect.ClassTag
 
 import spire.algebra._
@@ -24,14 +25,8 @@ trait Frame[Row, Col] {
   private implicit def colClassTag = colIndex.classTag
   private implicit def colOrder = colIndex.order
 
-  def apply[T: ColumnTyper](r: Row, c: Col): Cell[T] = columns(c).get[T](r)
-  def column[T: ColumnTyper](c: Col): Series[Row, T] =
-    Series(rowIndex, columnsAsSeries(c) map (_.cast[T]) getOrElse Column.empty[T])
-
   def columnsAsSeries: Series[Col, UntypedColumn]
   def rowsAsSeries: Series[Row, UntypedColumn]
-
-  def columns: ColumnSelector[Row, Col] = ColumnSelector(this)
 
   /** The following methods allow a user to apply reducers directly across a frame. In
     * particular, this API demands that we specify the type that the reducer accepts and
@@ -150,6 +145,96 @@ trait Frame[Row, Col] {
    */
   def dropRows(rows: Row*): Frame[Row, Col] =
     withRowIndex(Index(rowIndex filter { case (row, _) => !rows.contains(row) } toSeq: _*))
+
+  def apply[A: ColumnTyper](rowKey: Row, colKey: Col): Cell[A] = for {
+    col <- columnsAsSeries(colKey)
+    row <- Cell.fromOption(rowIndex get rowKey)
+    a <- col.cast[A].apply(row)
+  } yield a
+
+  def column[T: ColumnTyper](c: Col): Series[Row, T] = get(Cols(c).as[T])
+
+  def get[A](cols: Cols[Col, A]): Series[Row, A] = {
+    val keys = cols getOrElse columnsAsSeries.index.keys.toList
+    val column = cols.extractor.prepare(this, keys).fold(Column.empty[A]) { p =>
+      val cells = rowIndex map { case (key, row) =>
+        cols.extractor.extract(this, key, row, p)
+      }
+      Column.fromCells(cells.toVector)
+    }
+    Series(rowIndex, column)
+  }
+
+  def getRow(key: Row): Option[Rec[Col]] = rowIndex.get(key) map (Rec(columnsAsSeries, _))
+
+  def getCol(key: Col): Option[Rec[Row]] = colIndex.get(key) map (Rec(rowsAsSeries, _))
+
+  def mapWithIndex[A, B: ClassTag](cols: Cols[Col, A], to: Col)(f: (Row, A) => B): Frame[Row, Col] = {
+    val extractor = cols.extractor
+    val keys = cols getOrElse columnsAsSeries.index.keys.toList
+    val column = extractor.prepare(this, keys).fold(Column.empty[B]) { p =>
+      val cells = rowIndex map { case (key, row) =>
+        extractor.extract(this, key, row, p) map (f(key, _))
+      }
+      Column.fromCells(cells.toVector)
+    }
+    val untypedColumn = TypedColumn[B](column)
+    Frame.fromColumns(rowIndex, columnsAsSeries ++ Series(to -> untypedColumn))
+  }
+
+  def map[A, B: ClassTag](cols: Cols[Col, A], to: Col)(f: A => B): Frame[Row, Col] = {
+    val extractor = cols.extractor
+    val keys = cols getOrElse columnsAsSeries.index.keys.toList
+    val column = extractor.prepare(this, keys).fold(Column.empty[B]) { p =>
+      val cells = rowIndex map { case (key, row) =>
+        extractor.extract(this, key, row, p) map f
+      }
+      Column.fromCells(cells.toVector)
+    }
+    val untypedColumn = TypedColumn[B](column)
+    Frame.fromColumns(rowIndex, columnsAsSeries ++ Series(to -> untypedColumn))
+  }
+
+  def filter[A](cols: Cols[Col, A])(f: A => Boolean): Frame[Row, Col] = {
+    val extractor = cols.extractor
+    val keys = cols getOrElse columnsAsSeries.index.keys.toList
+    withRowIndex(extractor.prepare(this, keys).fold(rowIndex.empty) { p =>
+      rowIndex filter { case (key, row) =>
+        extractor.extract(this, key, row, p) map f getOrElse false
+      }
+    })
+  }
+
+  def group[A: Order: ClassTag](cols: Cols[Col, A], na: Option[A] = None, nm: Option[A] = None): Frame[A, Col] = {
+    import spire.compat._
+
+    val extractor = cols.extractor
+    val colKeys = cols getOrElse columnsAsSeries.index.keys.toList
+    var groups: SortedMap[A, List[Int]] = SortedMap.empty // TODO: Lots of room for optimization here.
+    for (p <- extractor.prepare(this, colKeys)) {
+      rowIndex foreach { (key, row) =>
+        extractor.extract(this, key, row, p) match {
+          case Value(group) =>
+            groups += (group -> (row :: groups.getOrElse(group, Nil)))
+          case (missing: Missing) =>
+            val missingValue = if (missing == NA) na else nm
+            missingValue foreach { group =>
+              groups += (group -> (row :: groups.getOrElse(group, Nil)))
+            }
+        }
+      }
+    }
+
+    val (keys, rows) = (for {
+      (group, rows) <- groups.toList
+      row <- rows.reverse
+    } yield (group -> row)).unzip
+    val groupedIndex = Index.ordered(keys.toArray, rows.toArray)
+    withRowIndex(groupedIndex)
+  }
+
+  def groupBy[A, B: Order: ClassTag](cols: Cols[Col, A], na: Option[B] = None, nm: Option[B] = None)(f: A => B): Frame[B, Col] =
+    group(cols map f)
 
   override def hashCode: Int = {
     val values = columnsAsSeries.iterator flatMap { case (colKey, cell) =>
@@ -356,6 +441,12 @@ object Frame {
     pop.frame(rows.zipWithIndex.foldLeft(pop.init) { case (state, (data, row)) =>
       pop.populate(state, row, data)
     })
+
+  def fromColumns[Row, Col](
+    rowIdx: Index[Row],
+    cols: Series[Col, UntypedColumn]
+  ): Frame[Row, Col] =
+    ColOrientedFrame(rowIdx, cols.index, cols.column)
 
   def fromColumns[Row, Col](
     rowIdx: Index[Row],
