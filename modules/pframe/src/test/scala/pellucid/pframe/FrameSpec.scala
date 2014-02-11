@@ -366,7 +366,7 @@ class FrameSpec extends Specification {
     }
   }
 
-  "ColumnSelection" should {
+  "Frame" should {
     "get row as HList" in {
       f0.get(Cols(0, 1).as[String :: Int :: HNil])(0) must_== Value("a" :: 1 :: HNil)
       f0.get(Cols(0, 1).as[String :: Int :: HNil])(1) must_== Value("b" :: 2 :: HNil)
