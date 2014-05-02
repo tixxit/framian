@@ -136,7 +136,7 @@ object ShellPrompt {
 
 object Dependencies {
   import Dependency._
-  val pframe = Seq(shapeless, spire, Test.discipline, Test.specs2, Test.scalaCheck, Test.spireLaws)
+  val pframe = Seq(shapeless, spire, jodaTime, jodaConvert, Test.discipline, Test.specs2, Test.scalaCheck, Test.spireLaws)
 }
 
 object Dependency {
@@ -149,6 +149,9 @@ object Dependency {
     val Spire              = "0.7.1"
     val Shapeless          = "2.0.0-M1"
     val Discipline         = "0.2.1-SNAPSHOT"
+
+    val JodaTime           = "2.3"
+    val JodaConvert           = "1.5"
 
     // Test libraries
     val Mockito            = "1.9.5"
@@ -168,6 +171,9 @@ object Dependency {
 
   val spire              =   "org.spire-math"                       %% "spire"                   % V.Spire
   val shapeless          =   "com.chuusai"                           % "shapeless_2.10.2"        % V.Shapeless
+
+  val jodaTime           =  "joda-time"                              % "joda-time"               % V.JodaTime
+  val jodaConvert        =  "org.joda"                               % "joda-convert"            % V.JodaConvert
 
   // Test
   object Test {
