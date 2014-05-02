@@ -80,47 +80,6 @@ trait Frame[Row, Col] {
       (key, Series(rowIndex, col.cast[V]).reduceByKey(reducer))
     }.toSeq: _*)
 
-  def reduceFrameWithDate[V: ClassTag: ColumnTyper, R: ClassTag: ColumnTyper](
-    dateColumnId: Col,
-    reducer: Reducer[(LocalDate, V), R]
-  ): Series[Col, R] = {
-    val columns = columnsAsSeries
-    columnsAsSeries(dateColumnId).map(_.cast[LocalDate]).fold(Series.empty[Col, R], Series.empty[Col, R]) {
-      dateColumn =>
-      Series.fromCells(
-        columns.collect { case (key, Value(col)) if (key != dateColumnId) =>
-          (key, Series(rowIndex, dateColumn.zipMap(col.cast[V]) { case (date, v) => (date, v) }).reduce(reducer))
-        }.toSeq: _*)
-    }
-  }
-
-  def reduceFrameWithDateByKey[V: ClassTag: ColumnTyper, R: ClassTag: ColumnTyper](
-    dateColumnId: Col,
-    reducer: Reducer[(LocalDate, V), R]
-  ): Frame[Row, Col] = {
-    val columns = columnsAsSeries
-    columnsAsSeries(dateColumnId).map(_.cast[LocalDate]).fold(Frame.empty[Row, Col], Frame.empty[Row, Col]) {
-      dateColumn =>
-      Frame.fromSeries(
-        columns.collect { case (key, Value(col)) if (key != dateColumnId) =>
-          (key, Series(rowIndex, dateColumn.zipMap(col.cast[V]) { case (date, v) => (date, v) }).reduceByKey(reducer))
-        }.toSeq: _*)
-    }
-  }
-
-  // TODO: Use a closed set of objects for keys for Mean, Median, Max, Min, etc.
-  def summary[T: ClassTag: Field: Order: ColumnTyper](dateCol: Option[Col] = None): Frame[Col, String] = {
-    val standardSums = List(
-      ("Mean", reduceFrame(reduce.Mean[T])),
-      ("Median", reduceFrame(reduce.Median[T])),
-      ("Max", reduceFrame(reduce.Max[T])),
-      ("Min", reduceFrame(reduce.Min[T])))
-
-    dateCol.fold(Frame.fromSeries(standardSums: _*)) { col =>
-      Frame.fromSeries((("Current", reduceFrameWithDate(col, reduce.Current[T])) :: standardSums): _*)
-    }
-  }
-
   def getColumnGroup(col: Col): Frame[Row, Col] =
     withColIndex(colIndex.getAll(col))
 
