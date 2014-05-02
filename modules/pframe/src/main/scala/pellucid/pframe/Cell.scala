@@ -15,6 +15,7 @@ sealed trait Cell[+A] {
   def isMissing: Boolean
 
   def value: Option[A]
+  def valueString: String
 
   def fold[B](na: => B, nm: => B)(f: A => B): B = this match {
     case NA => na
@@ -79,20 +80,22 @@ sealed trait Missing extends Cell[Nothing] {
 /**
  * Value is Not Available (NA). This indicates the value is simply missing.
  */
-final case object NA extends Missing
+final case object NA extends Missing { val valueString = "NA" }
 
 /**
  * Value is Not Meaningful (NM). This indicates that a values exist, but it is
  * not meaningful. For instance, if we divide by 0, then the value is not
  * meaningful, but we wouldn't necessarily say it is missing.
  */
-final case object NM extends Missing
+final case object NM extends Missing { val valueString = "NM" }
 
 /**
  * A value that exists and is meaningful.
  */
 final case class Value[+A](get: A) extends Cell[A] {
   def value = Some(get)
+  def valueString = get.toString
+
   val isMissing = if (get == NA || get == NM) true else false
 
   override def equals(that: Any): Boolean = that match {
@@ -133,7 +136,7 @@ private final class CellEq[A: Eq] extends Eq[Cell[A]] {
 @SerialVersionUID(0L)
 private final class CellOrder[A: Order] extends Order[Cell[A]] {
   def compare(x: Cell[A], y: Cell[A]): Int = (x, y) match {
-    case (Value(x0), Value(y0)) => x compare y
+    case (Value(x0), Value(y0)) => x0 compare y0
     case (NA, NA) | (NM, NM) => 0
     case (NA, _) => -1
     case (_, NA) => 1

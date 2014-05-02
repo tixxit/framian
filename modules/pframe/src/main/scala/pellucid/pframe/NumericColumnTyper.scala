@@ -48,6 +48,7 @@ private object Classes {
   val JavaBigDecimal = classOf[java.math.BigDecimal]
   val Rational = classOf[Rational]
   val Number = classOf[Number]
+  val String = classOf[String]
 }
 
 object NumericColumnTyper {
@@ -71,6 +72,7 @@ object NumericColumnTyper {
       bigInt: BigInt => A,
       bigFloat: BigDecimal => A,
       rational: Rational => A,
+      string: String => A,
       z: => A): A = {
     x match {
       case (x: Byte) => primInt(x.asInstanceOf[Byte].toLong)
@@ -92,6 +94,7 @@ object NumericColumnTyper {
           if (x.isExact) rational(x.toRational)
           else bigFloat(x.toBigDecimal)
         }
+      case (x: String) => string(x)
       case _ => z
     }
   }
@@ -102,6 +105,7 @@ object NumericColumnTyper {
       bigInt: Column[BigInt] => A,
       bigFloat: Column[BigDecimal] => A,
       rational: Column[Rational] => A,
+      string: Column[String] => A,
       z: => A): A = {
     val column = col.column
     val runtimeClass = col.classTagA.runtimeClass
@@ -117,6 +121,7 @@ object NumericColumnTyper {
       case Classes.BigDecimal => bigFloat(column.asInstanceOf[Column[BigDecimal]])
       case Classes.JavaBigDecimal => bigFloat(column.asInstanceOf[Column[java.math.BigDecimal]] map (BigDecimal(_)))
       case cls if Classes.Rational isAssignableFrom cls => rational(column.asInstanceOf[Column[Rational]])
+      case Classes.String => string(column.asInstanceOf[Column[String]])
       case _ => z
     }
   }
@@ -136,6 +141,7 @@ final class IntColumnTyper extends ColumnTyper[Int] {
     n => if (n >= Int.MinValue && n <= Int.MaxValue) Value(n.toInt) else NM,
     safeToInt(_),
     safeToInt(_),
+    n => Try(BigDecimal(n).toInt).toOption.fold[Cell[Int]](NM) { Value(_) },
     NM
   )
 
@@ -170,6 +176,7 @@ final class LongColumnTyper extends NumericColumnTyper[Long] {
           if (m == n0) Some(m) else None
         } else None
       },
+      n => Try(java.lang.Long.parseLong(n)).toOption,
       None
     )
 
@@ -180,6 +187,7 @@ final class LongColumnTyper extends NumericColumnTyper[Long] {
       col => None,
       col => None,
       col => None,
+      col => None, // TODO: why are these all None?
       None
     )
 }
@@ -198,6 +206,7 @@ final class DoubleColumnTyper extends NumericColumnTyper[Double] {
       n => Some(n.toDouble),
       n => Some(n.toDouble),
       n => Some(n.toDouble),
+      n => Try(java.lang.Double.parseDouble(n)).toOption,
       None
     )
 
@@ -208,6 +217,7 @@ final class DoubleColumnTyper extends NumericColumnTyper[Double] {
       col => Some(col map (_.toDouble)),
       col => Some(col map (_.toDouble)),
       col => Some(col map (_.toDouble)),
+      col => Some(col map (java.lang.Double.parseDouble(_))),
       None
     )
 }
@@ -220,6 +230,7 @@ final class BigIntTyper extends NumericColumnTyper[BigInt] {
       n => Some(n),
       n => if (n.isWhole) Some(n.toBigInt) else None,
       n => if (n.isWhole) Some(n.numerator) else None,
+      n => Try(BigInt(n)).toOption,
       None
     )
 
@@ -228,6 +239,7 @@ final class BigIntTyper extends NumericColumnTyper[BigInt] {
       col => Some(col map (BigInt(_))),
       col => None,
       col => Some(col),
+      col => None,
       col => None,
       col => None,
       None
@@ -242,6 +254,7 @@ final class BigDecimalTyper extends NumericColumnTyper[BigDecimal] {
       n => Some(BigDecimal(n)),
       n => Some(n),
       n => Try(n.toBigDecimal).toOption,
+      n => Try(BigDecimal(n)).toOption,
       None
     )
 
@@ -251,6 +264,7 @@ final class BigDecimalTyper extends NumericColumnTyper[BigDecimal] {
       col => Some(col map (BigDecimal(_))),
       col => Some(col map (BigDecimal(_))),
       col => Some(col),
+      col => None,
       col => None,
       None
     )
@@ -264,6 +278,7 @@ final class RationalTyper extends NumericColumnTyper[Rational] {
       n => Some(Rational(n)),
       n => Some(Rational(n)),
       n => Some(n),
+      n => Try(Rational(n)).toOption,
       None
     )
 
@@ -274,6 +289,7 @@ final class RationalTyper extends NumericColumnTyper[Rational] {
       col => Some(col map (Rational(_))),
       col => Some(col map (Rational(_))),
       col => Some(col),
+      col => Some(col map (Rational(_))),
       None
     )
 }
@@ -286,11 +302,13 @@ final class NumberTyper extends NumericColumnTyper[Number] {
       n => Some(Number(n)),
       n => Some(Number(n)),
       n => Some(Number(n)),
+      n => Try(Number(n)).toOption,
       None
     )
 
   def castColumn(col: TypedColumn[_]): Option[Column[Number]] =
     foldColumn(col)(
+      col => Some(col map (Number(_))),
       col => Some(col map (Number(_))),
       col => Some(col map (Number(_))),
       col => Some(col map (Number(_))),

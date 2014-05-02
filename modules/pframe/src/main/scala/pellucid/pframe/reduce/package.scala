@@ -1,5 +1,7 @@
 package pellucid.pframe
 
+import org.joda.time.LocalDate
+
 import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
@@ -19,7 +21,8 @@ package object reduce {
   def Quantile[A: Field: Order: ClassTag](probabilities: Seq[Double] = Seq(0, .25, .5, .75, 1)): Reducer[A, Seq[(Double, A)]] =
     new Quantile(probabilities)
 
-  def Outliers[A: Field: Order: ClassTag]: Reducer[A, (Option[A], Option[A])] = new Outliers
+  def Outliers[A: Field: Order: ClassTag](k: Double = 1.5): Reducer[A, (Option[A], Option[A])] =
+    new Outliers(k)
 
   def Max[A: Order]: Reducer[A, A] = new Max[A]
 
@@ -28,6 +31,8 @@ package object reduce {
   def First[A]: Reducer[A, A] = new First[A]
 
   def Last[A]: Reducer[A, A] = new Last[A]
+
+  def Current[A]: Reducer[(LocalDate, A), A] = new Current[A]
 
   def Unique[A]: Reducer[A, Set[A]] = new Unique[A]
 }

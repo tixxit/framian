@@ -20,7 +20,7 @@ import spire.compat._
 import pellucid.pframe.reduce.Reducer
 import pellucid.pframe.util.TrivialMetricSpace
 
-final class Series[K,V](val index: Index[K], val column: Column[V])
+final class Series[K, V](val index: Index[K], val column: Column[V])
     extends Iterable[(K, Cell[V])] with IterableLike[(K, Cell[V]), Series[K, V]] {
 
   private implicit def classTag = index.classTag
@@ -31,7 +31,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
   def iterator: Iterator[(K, Cell[V])] = index.iterator map { case (k, row) =>
     k -> column(row)
   }
-  override protected def newBuilder: Builder[(K, Cell[V]), Series[K, V]] =
+  override protected def newBuilder: SeriesBuilder[K, V] =
     new SeriesBuilder
 
   def keys: Vector[K] = index.map(_._1)(collection.breakOut)
@@ -90,6 +90,36 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
   }
 
   /**
+   * Merges 2 series together, taking the first non-NA or NM value.
+   */
+  def ++[VV >: V: ClassTag](that: Series[K, VV]): Series[K, VV] = {
+    val merger = Merger[K](Merge.Outer)
+    val (keys, lIndices, rIndices) = Index.cogroup(this.index, that.index)(merger).result()
+    val lCol = this.column
+    val rCol = that.column
+
+    // TODO: Remove duplication between this and zipMap.
+    val bldr = Column.builder[VV]
+    cfor(0)(_ < lIndices.length, _ + 1) { i =>
+      val l = lIndices(i)
+      val r = rIndices(i)
+      val lExists = lCol.exists(l)
+      val rExists = rCol.exists(r)
+      if (lExists && rExists) {
+        bldr.addValue(lCol.value(l): VV)
+      } else if (lExists) {
+        bldr.addValue(lCol.value(l))
+      } else if (rExists) {
+        bldr.addValue(rCol.value(r))
+      } else {
+        bldr.addMissing(if (lCol.missing(l) == NM) NM else rCol.missing(r))
+      }
+    }
+
+    Series(Index.ordered(keys), bldr.result())
+  }
+
+  /**
    * Performs an inner join on this `Series` with `that`. Each pair of values
    * for a matching key is passed to `f`.
    */
@@ -134,6 +164,18 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
     import spire.std.int._
     Frame[K, Int](index, 0 -> TypedColumn(column))
   }
+
+  def closestKeyTo(k: K, tolerance: Double)(implicit K0: MetricSpace[K, Double], K1: Order[K]): Option[K] =
+    apply(k) match {
+      case Value(v) => Some(k)
+      case _ =>
+        val possibleDates =
+          keys.filter { key =>
+            val distance = K0.distance(key, k)
+            (distance <= tolerance)
+          }
+        possibleDates.headOption
+    }
 
   /**
    * Map the values of this series only. Note that the function `f` will be
@@ -247,7 +289,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
 
     loop(0, 0)
 
-    Series(index.withIndices(indices), column)
+    Series(index, column.reindex(indices))
   }
 
   override def toString: String =
@@ -302,7 +344,7 @@ object Series {
     }
 }
 
-private final class SeriesBuilder[K: Order: ClassTag, V] extends Builder[(K, Cell[V]), Series[K,V]] {
+final class SeriesBuilder[K: Order: ClassTag, V] extends Builder[(K, Cell[V]), Series[K,V]] {
   val keys = ArrayBuilder.make[K]()
   val values = ArrayBuilder.make[Cell[V]]()
 

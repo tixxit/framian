@@ -109,7 +109,7 @@ final class MapColumn[A](values: Map[Int,A]) extends Column[A] {
 
 final class MergedColumn[A](left: Column[A], right: Column[A]) extends Column[A] {
   def exists(row: Int): Boolean = left.exists(row) || right.exists(row)
-  def missing(row: Int): Missing = 
+  def missing(row: Int): Missing =
     if (!right.exists(row) && right.missing(row) == NM) NM else left.missing(row)
   def value(row: Int): A = if (right.exists(row)) right.value(row) else left.value(row)
 }

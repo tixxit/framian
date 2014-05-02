@@ -89,6 +89,14 @@ sealed trait Index[K] extends Iterable[(K, Int)] with IterableLike[(K, Int), Ind
   }
 
   def sorted: OrderedIndex[K] = Index.ordered(keys, indices)
+  /*def sortWith(f: ((K, Int), (K, Int)) => Boolean) = {
+    val ind = keys.zip(indices)
+    val sorted = ind.sortWith(f)
+    val (ks, ids) = sorted.unzip
+
+    Index.unordered(keys, indices)
+  }*/
+
   def resetIndices: Index[K]
 
   // These must contain both the keys and the indices, in sorted order.

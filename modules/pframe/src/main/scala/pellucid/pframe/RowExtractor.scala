@@ -95,4 +95,16 @@ object RowExtractor extends RowExtractorLow3 {
     }
 
   final def apply[A, C, S <: Size](implicit e: RowExtractor[A, C, S]) = e
+
+  def listOf[A, Col](implicit e: RowExtractor[A, Col, Fixed[Nat._1]]) = new RowExtractor[List[Cell[A]], Col, Variable] {
+    type P = List[e.P]
+
+    def prepare[Row](frame: Frame[Row, Col], cols: List[Col]): Option[List[e.P]] =
+      cols.foldRight(Some(Nil): Option[List[e.P]]) { (col, acc) =>
+        acc flatMap { ps => e.prepare(frame, col :: Nil).map(_ :: ps) }
+      }
+
+    def extract[Row](frame: Frame[Row, Col], key: Row, row: Int, ps: List[e.P]): Cell[List[Cell[A]]] =
+      Value(ps.map { p => e.extract(frame, key, row, p) })
+  }
 }

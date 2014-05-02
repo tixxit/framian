@@ -19,87 +19,112 @@ package object utilities {
     * @param rowIndex whether or not the first column is expected to express the row index of the frame
     */
   def loadFrameFromCSV(
-    location: String,
+    csvFile: File,
     delimiter: String = ",",
     quote: String = "\"",
     rowIndex: Int = -1,
     columnIndex: Boolean = false,
-    contentColumnsToParse: List[Int] = List()
-  ) = {
-    // sometimes you just want the bulk of the state-machine compiled for you...
+    columns: List[Int] = List()
+    ) = {
+    // sometimes you just want the bulk of a state-machine compiled for you...
     val stripWhitespaceCheckQuoteState =
       s"(?:[\\s]*($quote[^$quote]*$quote|[^\\s$quote]*(?:[\\s]*[^\\s$quote]*)*)[\\s]*)|[\\s]*($quote[^$quote]*)".r
     val checkQuoteFinished = s"([^$quote]*)|([^$quote]*$quote)[\\s]*".r
 
-    val file = new BufferedReader(new FileReader(location))
+    val stripQuotes = s"$quote?([^$quote]*)$quote?".r
+
+    val file = new BufferedReader(new FileReader(csvFile))
+
     var nextLine = file.readLine()
 
-    // assuming sorted list of desired values...
+    // for now we're just making sure that the delimiter produces more than one column...
+    // otherwise, assuming misconfigured and not even trying to parse the file (ie comma on tsv)
+    assert(nextLine.split(delimiter).length > 1)
+
+    // assuming sorted list of desired columns...
     def parseLine(line: String, columns: List[Int] = List()): ArrayBuffer[String] = {
       val lineScanner = new Scanner(line).useDelimiter(delimiter)
+      val results = ArrayBuffer[String]()
+      val columnsNotProvided = columns.isEmpty
+
       var inQuote = false
       var position = 0
-      val results = ArrayBuffer[String]()
       var quoteBuilder: StringBuilder = null
+      var remainingColumns = columns
 
-      while (lineScanner.hasNext) {
+      def takeColumnIfRequested(value: String) = {
+        if (columnsNotProvided || remainingColumns.head == position) {
+          if (!columnsNotProvided) remainingColumns = remainingColumns.tail
+          val stripQuotes(cleanedValue) = value
+          results += cleanedValue
+        }
+        position += 1
+      }
+
+      while (lineScanner.hasNext && (columnsNotProvided || !remainingColumns.isEmpty)) {
         val next = lineScanner.next()
         if (inQuote) {
           val checkQuoteFinished(middle, endOfQuote) = next
-          if (endOfQuote != null) {
-            quoteBuilder ++= middle
-          } else {
-            results += quoteBuilder.result
-            position += 1
+          // either we're in the middle of a quote in which case add the middle
+          // to builder and move to the next segment of the lineScanner
+          if (middle != null)
+            quoteBuilder ++= delimiter + middle
+          // or we're at the end and need to add final value to quote builder and take column if needed
+          else {
+            quoteBuilder ++= delimiter + endOfQuote
+            takeColumnIfRequested(quoteBuilder.result)
             inQuote = false
           }
         } else {
           val stripWhitespaceCheckQuoteState(completeValue, quoteBeginning) = next
-          if (completeValue != null) {
-            results += completeValue
-            position += 1
-          } else {
+          if (completeValue != null)
+            takeColumnIfRequested(completeValue)
+          else {
             quoteBuilder = new StringBuilder(quoteBeginning)
             inQuote = true
           }
         }
       }
 
-      nextLine = file.readLine()
       results
     }
 
     // if you want a row index, you don't have to explicitly specify the first column in columnsToParse
     val columnsToParse =
       if (rowIndex < 0)
-        contentColumnsToParse
+        columns
       else {
-        if (!contentColumnsToParse.isEmpty && !contentColumnsToParse.contains(rowIndex))
-          rowIndex :: contentColumnsToParse
+        if (!columns.isEmpty && !columns.contains(rowIndex))
+          (rowIndex :: columns).sorted
         else
-          contentColumnsToParse
+          columns
       }
-    // first line might be the column index and not real values, also want to instantiate column cache
-    val firstParsedLine = parseLine(nextLine, columnsToParse)
-    val numberOfColumns = firstParsedLine.length
 
+    // first line might be the column index and not real values, also want to instantiate column cache
+    val firstLine = parseLine(nextLine, columnsToParse)
+    val numberOfColumns = firstLine.length
     // we either want to pull out that first row as the column index or produce a default integer index
-    val columnsSeq = 0 to numberOfColumns map (_.toString)
-    val (colIndexArray, columns) =
-      if (columnIndex)
-        (firstParsedLine, ArrayBuffer[ArrayBuffer[String]](columnsSeq map { _ => ArrayBuffer[String]() }: _*))
-      else
-        (ArrayBuffer(columnsSeq: _*), ArrayBuffer[ArrayBuffer[String]]())
+    val columnsSeq = 0 to (numberOfColumns - 1) map (_.toString)
+    val parsedColumns = ArrayBuffer[ArrayBuffer[String]](columnsSeq map { _ => ArrayBuffer[String]() }: _*)
+
+    // need to make sure that we parse the first line if it isn't a column index.
+    val colIndexArray =
+      if (columnIndex) {
+        nextLine = file.readLine()
+        firstLine
+      } else
+        ArrayBuffer(columnsSeq: _*)
 
     var index = 0
     while (nextLine != null) {
       val parsed = parseLine(nextLine, columnsToParse)
       while (index < numberOfColumns) {
-        columns(index) += parsed(index)
+        parsedColumns(index) += parsed(index)
         index += 1
       }
 
       index = 0
+      nextLine = file.readLine()
     }
     file.close()
 
@@ -107,9 +132,18 @@ package object utilities {
     // also, if there's a row index we need to drop first value in column index as un-needed.
     val (rowIndexValues, valueColumns, valueColumnIndex) =
       if (rowIndex < 0)
-        ((0 to columns(0).length - 1) map (_.toString), columns, colIndexArray)
-      else
-        (columns(0), columns.slice(1, columns.length), colIndexArray.drop(1))
+        ((0 to parsedColumns(0).length - 1) map (_.toString), parsedColumns, colIndexArray)
+      else {
+        val rowIndexPosition = if (columnsToParse.isEmpty) rowIndex else columnsToParse.indexOf(rowIndex)
+        val (colIndexLeft, colIndexRight) = colIndexArray.splitAt(rowIndexPosition)
+        val (colsLeft, colsRight) = parsedColumns.splitAt(rowIndexPosition)
+        (parsedColumns(rowIndexPosition),
+         colsLeft ++ colsRight.drop(1),
+         // if column index, make sure row index name not a part of it
+         if (columnIndex) colIndexLeft ++ colIndexRight.drop(1)
+         // otherwise, make sure we get one fewer column index value than expected
+         else colIndexArray.slice(0, parsedColumns.length - 1))
+      }
 
     Frame(
       Index(rowIndexValues.toArray),
