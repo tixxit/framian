@@ -2,11 +2,30 @@ package pellucid.pframe
 
 import org.specs2.mutable._
 
+import spire.algebra.{ Eq, Order, Semigroup, Monoid }
+import spire.syntax.order._
+import spire.syntax.semigroup._
+import spire.implicits._
+
 class CellSpec extends Specification {
   "Cell" should {
     "be constructable from Option" in {
       Cell.fromOption(Some(2)) must_== Value(2)
       Cell.fromOption(None) must_== NA
+    }
+
+    "have sane comparison" in {
+      val order = Cell.cellOrder[Int]
+      order.compare(Value(1), Value(1)) must_== 0
+      order.compare(Value(2), Value(1)) must_== 1
+      order.compare(Value(1), Value(2)) must_== -1
+      order.compare(NA, NA) must_== 0
+      order.compare(NM, NM) must_== 0
+      order.compare(NA, NM) must_== -1
+      order.compare(NA, Value(1)) must_== -1
+      order.compare(Value(1), NA) must_== 1
+      order.compare(NM, NA) must_== 1
+      order.compare(Value(1), NM) must_== 1
     }
 
     "have sane equality" in {

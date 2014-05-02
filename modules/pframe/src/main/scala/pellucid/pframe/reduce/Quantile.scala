@@ -18,7 +18,8 @@ final class Quantile[A: Field: Order: ClassTag](probabilities: Seq[Double]) exte
 
   def quantiles(s: Array[A]): List[(Double, A)] = {
     def interpolate(x: Double, pos: (Double, A), pos1: (Double, A)) =
-      pos._2 + (pos1._2 - pos._2) * (x - pos._1) / (pos1._1 - pos._1)
+      if (pos == pos1) Field[A].zero
+      else pos._2 + (pos1._2 - pos._2) * (x - pos._1) / (pos1._1 - pos._1)
 
     val points = s.sorted
     val segments = points.length
@@ -36,9 +37,9 @@ final class Quantile[A: Field: Order: ClassTag](probabilities: Seq[Double]) exte
           val rangeIndex = remainingPoints.indexWhere(_._1 > newProbability)
           val rangeStart =
             if (rangeIndex == -1) 0
-            else if (rangeIndex == (remainingPoints.length - 1)) (rangeIndex - 1)
+            else if (rangeIndex == (remainingPoints.length - 1) && remainingPoints.length > 1) (rangeIndex - 1)
             else rangeIndex
-          val rangeEnd = rangeStart + 1
+          val rangeEnd = if (remainingPoints.length <= 1) rangeStart else rangeStart + 1
           val (_, remainder) = remainingPoints.splitAt(rangeStart)
 
           (remainder,

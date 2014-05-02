@@ -3,6 +3,8 @@ package pframe
 
 import scala.reflect.ClassTag
 
+import org.joda.time._
+
 import spire.algebra._
 import spire.implicits._
 import spire.compat._
@@ -33,6 +35,36 @@ trait Frame[Row, Col] {
 
   def columns: ColumnSelector[Row, Col] = ColumnSelector(this)
 
+  def isEmpty =
+    columnsAsSeries.collectFirst {
+      case (id, Value(column)) if Series(rowIndex, column.cast[Any]).hasValues => id
+    }.isEmpty
+
+  def ++(that: Frame[Row, Col]): Frame[Row, Col] = {
+    // TODO: clean this up... really awful...
+    def magicConversion[T](classTag: ClassTag[T])(col: Column[Any]): TypedColumn[T] =
+      TypedColumn[T](col.asInstanceOf[Column[T]])(classTag)
+
+    val colIds = colIndex.map(_._1).toList
+    val thisCols = columnsAsSeries
+    val thatColIds = colIndex.map(_._1).toList
+
+    var rowIdx = this.rowIndex
+    val colSeries = colIds.map { colId =>
+      val thisColAsColumn = thisCols(colId).value.get.asInstanceOf[TypedColumn[_]]
+      val newCol =
+        if (thatColIds.contains(colId)) {
+          val col = this.column[Any](colId) ++ that.column[Any](colId)
+          rowIdx = col.index
+          col
+        } else
+          column[Any](colId)
+
+      (colId, magicConversion(thisColAsColumn.classTagA)(newCol.column))
+    }
+    Frame(rowIdx, colSeries: _*)
+  }
+
   /** The following methods allow a user to apply reducers directly across a frame. In
     * particular, this API demands that we specify the type that the reducer accepts and
     * it will only apply it in the case that there exists a type conversion for a given
@@ -48,13 +80,45 @@ trait Frame[Row, Col] {
       (key, Series(rowIndex, col.cast[V]).reduceByKey(reducer))
     }.toSeq: _*)
 
+  def reduceFrameWithDate[V: ClassTag: ColumnTyper, R: ClassTag: ColumnTyper](
+    dateColumnId: Col,
+    reducer: Reducer[(LocalDate, V), R]
+  ): Series[Col, R] = {
+    val columns = columnsAsSeries
+    columnsAsSeries(dateColumnId).map(_.cast[LocalDate]).fold(Series.empty[Col, R], Series.empty[Col, R]) {
+      dateColumn =>
+      Series.fromCells(
+        columns.collect { case (key, Value(col)) if (key != dateColumnId) =>
+          (key, Series(rowIndex, dateColumn.zipMap(col.cast[V]) { case (date, v) => (date, v) }).reduce(reducer))
+        }.toSeq: _*)
+    }
+  }
+
+  def reduceFrameWithDateByKey[V: ClassTag: ColumnTyper, R: ClassTag: ColumnTyper](
+    dateColumnId: Col,
+    reducer: Reducer[(LocalDate, V), R]
+  ): Frame[Row, Col] = {
+    val columns = columnsAsSeries
+    columnsAsSeries(dateColumnId).map(_.cast[LocalDate]).fold(Frame.empty[Row, Col], Frame.empty[Row, Col]) {
+      dateColumn =>
+      Frame.fromSeries(
+        columns.collect { case (key, Value(col)) if (key != dateColumnId) =>
+          (key, Series(rowIndex, dateColumn.zipMap(col.cast[V]) { case (date, v) => (date, v) }).reduceByKey(reducer))
+        }.toSeq: _*)
+    }
+  }
+
   // TODO: Use a closed set of objects for keys for Mean, Median, Max, Min, etc.
-  def summary[T: ClassTag: Field: Order: ColumnTyper]: Frame[Col, String] = {
-    Frame.fromSeries(
+  def summary[T: ClassTag: Field: Order: ColumnTyper](dateCol: Option[Col] = None): Frame[Col, String] = {
+    val standardSums = List(
       ("Mean", reduceFrame(reduce.Mean[T])),
       ("Median", reduceFrame(reduce.Median[T])),
       ("Max", reduceFrame(reduce.Max[T])),
       ("Min", reduceFrame(reduce.Min[T])))
+
+    dateCol.fold(Frame.fromSeries(standardSums: _*)) { col =>
+      Frame.fromSeries((("Current", reduceFrameWithDate(col, reduce.Current[T])) :: standardSums): _*)
+    }
   }
 
   def getColumnGroup(col: Col): Frame[Row, Col] =
@@ -101,6 +165,10 @@ trait Frame[Row, Col] {
 
   def orderColumns: Frame[Row, Col] = withColIndex(colIndex.sorted)
   def orderRows: Frame[Row, Col] = withRowIndex(rowIndex.sorted)
+  def orderRowsBy[O](rowOrder: Seq[O])(f: Row => O)(implicit order: Order[Row]): Frame[Row, Col] = {
+    val orderLookup = rowOrder.zipWithIndex.toMap
+    mapRowIndex { row => (orderLookup(f(row)), row) }.orderRows.mapRowIndex(_._2)
+  }
 
   def reverseColumns: Frame[Row, Col] =
     withColIndex(colIndex.reverse)
@@ -136,6 +204,12 @@ trait Frame[Row, Col] {
     val keep = cols.toSet
     withColIndex(colIndex filter { case (key, _) => keep(key) })
   }
+
+  /**
+    * Add an arbitrary sequence of values to your frame as a column.
+    */
+  def addColumn[T: ClassTag](column: Seq[T], columnKey: Col): Frame[Row, Col] =
+    this.merge(Series(rowIndex, Column.fromArray(column.toArray)), columnKey)(Merge.Outer)
 
   /**
    * Drop the columns `cols` from the column index. This simply removes the

@@ -2,6 +2,7 @@ package pellucid.pframe
 package csv
 
 import spire.syntax.monoid._
+import org.joda.time._
 
 sealed abstract class CsvRowDelim(val value: String)
 object CsvRowDelim {
@@ -13,8 +14,8 @@ case class CsvFormat(
   separator: String,
   quote: String = "\"",
   quoteEscape: String = "\"",
-  empty: String = "",
-  invalid: String = "",
+  empty: String = "NA",
+  invalid: String = "NM",
   header: Boolean = true,
   rowDelim: CsvRowDelim = CsvRowDelim.Windows
 ) {
@@ -62,7 +63,8 @@ object CsvCell {
     def cast(col: TypedColumn[_]): Column[CsvCell] = {
       val num = col.cast[BigDecimal] map (Number(_): CsvCell)
       val text = col.cast[String] map (Text(_): CsvCell)
-      num |+| text
+      val date = col.cast[LocalDate] map { date: LocalDate => Text(date.toString): CsvCell }
+      num |+| text |+| date
     }
   }
 }
