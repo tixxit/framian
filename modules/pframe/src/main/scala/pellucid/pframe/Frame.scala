@@ -198,9 +198,9 @@ trait Frame[Row, Col] {
     Series(rowIndex, column)
   }
 
-  def getRow(key: Row): Option[Rec[Col]] = rowIndex.get(key) map (Rec(columnsAsSeries, _))
+  def getRow(key: Row): Option[Rec[Col]] = rowIndex.get(key) map Rec.fromRow(this)
 
-  def getCol(key: Col): Option[Rec[Row]] = colIndex.get(key) map (Rec(rowsAsSeries, _))
+  def getCol(key: Col): Option[Rec[Row]] = colIndex.get(key) map Rec.fromCol(this)
 
   def mapWithIndex[A, B: ClassTag](cols: Cols[Col, A], to: Col)(f: (Row, A) => B): Frame[Row, Col] = {
     val extractor = cols.extractor

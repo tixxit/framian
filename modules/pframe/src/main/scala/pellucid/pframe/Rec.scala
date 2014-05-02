@@ -9,6 +9,10 @@ object TypeWitness {
   implicit def lift[A: ClassTag](a: A) = new TypeWitness[A](a)
 }
 
+/**
+ * A `Rec` is an untyped sequence of values - usually corresponding to a row or
+ * column in a Frame.
+ */
 final class Rec[K](cols: Series[K, UntypedColumn], row: Int) {
   def get[A: ColumnTyper](col: K): Cell[A] =
     cols(col) flatMap (_.cast[A].apply(row))
@@ -42,8 +46,11 @@ object Rec {
     new Rec(cols, 0)
   }
 
-  def apply[K](cols: Series[K, UntypedColumn], row: Int): Rec[K] =
-    new Rec(cols, row)
+  def fromRow[K](frame: Frame[_, K])(row: Int): Rec[K] =
+    new Rec(frame.columnsAsSeries, row)
+
+  def fromCol[K](frame: Frame[K, _])(col: Int): Rec[K] =
+    new Rec(frame.rowsAsSeries, col)
 
   implicit def RecRowExtractor[K]: RowExtractor[Rec[K], K, Variable] = new RowExtractor[Rec[K], K, Variable] {
     type P = Series[K, UntypedColumn]
@@ -55,6 +62,6 @@ object Rec {
     }
 
     def extract[R](frame: Frame[R, K], key: R, row: Int, cols: P): Cell[Rec[K]] =
-      Value(Rec(cols, row))
+      Value(new Rec(cols, row))
   }
 }
