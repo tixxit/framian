@@ -88,8 +88,7 @@ object ApplicationBuild extends Build {
       | import pellucid.pframe._
       | import shapeless._
       | import spire.implicits._""".stripMargin('|'),
-      libraryDependencies ++= Dependencies.pframe,
-      addCompilerPlugin("org.scala-lang.plugins" % "macro-paradise_2.10.3" % "2.0.0-SNAPSHOT")
+      libraryDependencies ++= Dependencies.pframe
     ) ++ net.virtualvoid.sbt.graph.Plugin.graphSettings
 
   lazy val pframe = Project("pframe", file("modules/pframe")).
