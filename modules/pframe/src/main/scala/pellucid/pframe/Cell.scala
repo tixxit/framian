@@ -1,6 +1,8 @@
 package pellucid
 package pframe
 
+import scala.language.implicitConversions
+
 import spire.algebra.{ Eq, Order, Semigroup, Monoid }
 import spire.syntax.order._
 import spire.syntax.semigroup._

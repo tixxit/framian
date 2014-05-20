@@ -39,7 +39,7 @@ object BuildSettings {
     scalaVersion                  := buildScalaVersion,
     shellPrompt                   := ShellPrompt.buildShellPrompt,
     maxErrors                     := 5,
-    scalacOptions                ++= Seq("-deprecation"), //, "-Xlog-implicits"),
+    scalacOptions                ++= Seq("-deprecation", "-feature"), //, "-Xlog-implicits"),
     credentials                   += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     release                       := sys.props("data-api-release") == "true",
     gitHeadCommitSha in ThisBuild := Process("git rev-parse --short HEAD").lines.head,
