@@ -6,7 +6,7 @@ import org.scalacheck._
 
 trait CellGenerators {
   def genCell[A](gen: Gen[A]): Gen[Cell[A]] =
-    Gen.oneOf(Gen.value(NA), Gen.value(NM), gen map (Value(_)))
+    Gen.oneOf(Gen.const(NA), Gen.const(NM), gen map (Value(_)))
 }
 
 object CellGenerators extends CellGenerators
