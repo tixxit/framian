@@ -143,16 +143,16 @@ object Dependency {
   object V {
     val Play               = play.core.PlayVersion.current
 
-    val Spire              = "0.7.1"
-    val Shapeless          = "2.0.0-M1"
-    val Discipline         = "0.2.1-SNAPSHOT"
+    val Spire              = "0.7.4"
+    val Shapeless          = "2.0.0"
+    val Discipline         = "0.2.1"
 
     val JodaTime           = "2.3"
-    val JodaConvert           = "1.5"
+    val JodaConvert        = "1.6"
 
     // Test libraries
-    val Specs2             = "2.3.2"
-    val ScalaCheck         = "1.10.1"
+    val Specs2             = "2.3.12"
+    val ScalaCheck         = "1.11.4"
   }
 
   // Compile
