@@ -60,6 +60,13 @@ trait Frame[Row, Col] {
   //  Frame(rowIdx, colSeries: _*)
   //}
 
+  def reduce[A, B: ClassTag](cols: Cols[Col, A], to: Col)(reducer: Reducer[A, B]): Frame[Row, Col] = {
+    val series = get(cols)
+    val cell = series.reduce(reducer)
+    val result = Series(rowIndex, Column.wrap(_ => cell))
+    this.merge(result, to)(Merge.Outer)
+  }
+
   /** The following methods allow a user to apply reducers directly across a frame. In
     * particular, this API demands that we specify the type that the reducer accepts and
     * it will only apply it in the case that there exists a type conversion for a given
