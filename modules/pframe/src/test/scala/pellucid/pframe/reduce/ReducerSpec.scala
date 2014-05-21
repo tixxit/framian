@@ -144,8 +144,8 @@ class ReducerSpec extends Specification {
     }
 
     "find median in sparse series" in {
-      unique.sparse.reduce(Median[Double]) must_== Value(3D)
-      duplicate.sparse.reduce(Median[Double]) must_== Value(2D)
+      unique.sparse.reduce(Median[Double]) must_== NM
+      duplicate.sparse.reduce(Median[Double]) must_== NM
       odd.sparse.reduce(Median[Double]) must_== Value(4D)
     }
 
@@ -155,7 +155,7 @@ class ReducerSpec extends Specification {
 
     "find median in sparse series by key" in {
       duplicate.sparse.reduceByKey(Median[Double]) must_==
-        Series.fromCells("a" -> NA, "b" -> Value(3D), "c" -> Value(3D), "d" -> Value(0D))
+        Series.fromCells("a" -> NA, "b" -> NM, "c" -> Value(3D), "d" -> Value(0D))
     }
   }
 

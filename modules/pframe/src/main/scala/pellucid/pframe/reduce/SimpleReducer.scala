@@ -15,6 +15,8 @@ abstract class SimpleReducer[A: ClassTag, B] extends Reducer[A, B] {
       val row = indices(i)
       if (column.exists(row)) {
         bldr += column.value(row)
+      } else if (column.missing(row) == NM) {
+        return NM
       }
     }
     reduce(bldr.result())
