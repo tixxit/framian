@@ -43,8 +43,9 @@ class ReducerSpec extends Specification {
     }
 
     "find mean of sparse series" in {
-      unique.sparse.reduce(Mean[Double]) must_== Value(3D)
-      duplicate.sparse.reduce(Mean[Double]) must_== Value(12D / 5D)
+      unique   .sparse.reduce(Mean[Double]) must_== NM
+      duplicate.sparse.reduce(Mean[Double]) must_== NM
+      odd      .sparse.reduce(Mean[Double]) must_== Value(11D / 3D)
     }
 
     "find mean of dense series by key" in {
@@ -54,7 +55,7 @@ class ReducerSpec extends Specification {
 
     "find mean of sparse series by key" in {
       duplicate.sparse.reduceByKey(Mean[Double]) must_==
-        Series.fromCells("a" -> NM, "b" -> Value(3D), "c" -> Value(3D), "d" -> Value(0D))
+        Series.fromCells("a" -> NM, "b" -> NM, "c" -> Value(3D), "d" -> Value(0D))
     }
   }
 

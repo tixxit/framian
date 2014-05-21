@@ -14,8 +14,10 @@ final class Mean[A: Field] extends Reducer[A, A] {
       val row = indices(i)
       if (column.exists(row)) {
         loop(i + 1, sum + column.value(row), count + 1)
-      } else {
+      } else if (column.missing(row) == NA) {
         loop(i + 1, sum, count)
+      } else {
+        NM
       }
     } else if (count > 0) {
       Value(sum / count)
