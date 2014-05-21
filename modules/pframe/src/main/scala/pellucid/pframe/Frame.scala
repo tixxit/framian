@@ -248,7 +248,7 @@ trait Frame[Row, Col] {
       val col = cell.getOrElse(UntypedColumn.empty).cast[Any]
       val values = Series(rowIndex, col).map {
         case (_, Value(value)) => value.toString
-        case (_, missing) => missing.toString
+        case (_, nonValue) => nonValue.toString
       }.toList
       justify(header :: values)
     }.toList

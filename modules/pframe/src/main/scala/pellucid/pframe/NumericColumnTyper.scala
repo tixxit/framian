@@ -61,9 +61,9 @@ object NumericColumnTyper {
 
   def convert[A, B](source: Column[A])(isValid: A => Boolean, to: A => B): Column[B] =
     new Column[B] {
-      def exists(row: Int): Boolean = source.exists(row) && isValid(source.value(row))
-      def missing(row: Int): Missing = if (source.exists(row)) NM else source.missing(row)
-      def value(row: Int): B = to(source.value(row))
+      def isValueAt(row: Int): Boolean = source.isValueAt(row) && isValid(source.valueAt(row))
+      def nonValueAt(row: Int): NonValue = if (source.isValueAt(row)) NM else source.nonValueAt(row)
+      def valueAt(row: Int): B = to(source.valueAt(row))
     }
 
   def foldValue[A](x: Any)(

@@ -22,30 +22,39 @@ import spire.syntax.cfor._
  */
 trait Column[@spec(Int,Long,Float,Double) +A] extends ColumnLike[Column[A]] {
 
-  /**
-   * Returns `true` if the value exists; that is, it is available and
-   * meaningful. This method must be called before any calls to `missing` or
-   * `value`, since it is essentially the switch that let's you know which
-   * one to call.
-   */
-  def exists(row: Int): Boolean
+  /** Returns `true` if a value is present at index `row`
+    *
+    * The value at index `row` is both available and meaningful. This
+    * method must be called before any calls to `nonValueAt` or
+    * `valueAt`, since it is essentially the switch that let's you
+    * know which one to call.
+    *
+    * @param row the index in the column to lookup
+    * @return true if a value is present at the given index
+    */
+  def isValueAt(row: Int): Boolean
 
-  /**
-   * If `exists(row) == false`, then this will return either `NA` or `NM` to
-   * indicate the value is not available or not meaningful (resp.). If
-   * `exists(row) == true`, then the result of calling this is undefined.
-   */
-  def missing(row: Int): Missing
+  /** Return the non value at index `row`
+    *
+    * If `isValueAt(row) == false`, then this will return either `NA`
+    * or `NM` to indicate that no value is available or meaningful
+    * (resp.). If `isValue(row) == true`, then the result of calling
+    * this is undefined.
+    *
+    * @param row the index in the column to lookup
+    * @return the non value at the given index, a subtype of [[NonValue]]
+    */
+  def nonValueAt(row: Int): NonValue
 
   /**
    * If `exists(row) == true`, then this will return the value stored in row
    * `row`. If `exists(row) == false`, then the result of calling this is
    * undefined.
    */
-  def value(row: Int): A
+  def valueAt(row: Int): A
 
-  def foldRow[B](row: Int)(f: A => B, g: Missing => B): B =
-    if (exists(row)) f(value(row)) else g(missing(row))
+  def foldRow[B](row: Int)(f: A => B, g: NonValue => B): B =
+    if (isValueAt(row)) f(valueAt(row)) else g(nonValueAt(row))
 
   def apply(row: Int): Cell[A] =
     foldRow(row)(Value(_), m => m)
@@ -97,10 +106,10 @@ trait Column[@spec(Int,Long,Float,Double) +A] extends ColumnLike[Column[A]] {
   def compact[AA >: A](len: Int)(implicit ct: ClassTag[AA]): Column[AA] = {
     val bldr = new ColumnBuilder[AA]
     cfor(0)(_ < len, _ + 1) { row =>
-      if (exists(row)) {
-        bldr.addValue(value(row))
+      if (isValueAt(row)) {
+        bldr.addValue(valueAt(row))
       } else {
-        bldr.addMissing(missing(row))
+        bldr.addNonValue(nonValueAt(row))
       }
     }
     bldr.result()
@@ -117,7 +126,7 @@ object Column extends ColumnAlgebras {
 
   def empty[A]: Column[A] = new EmptyColumn[A](NA)
 
-  def missing[A](missing: Missing): Column[A] = new EmptyColumn[A](missing)
+  def nonValue[A](nonValue: NonValue): Column[A] = new EmptyColumn[A](nonValue)
 
   def const[@spec(Int,Long,Float,Double) A](value: A): Column[A] = new ConstColumn(value)
 
