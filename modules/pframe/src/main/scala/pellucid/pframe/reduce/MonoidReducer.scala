@@ -7,7 +7,6 @@ import spire.algebra.Monoid
 import spire.syntax.monoid._
 
 class MonoidReducer[A: Monoid] extends Reducer[A, A] {
-  type Out = Cell[A]
 
   def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Cell[A] = {
     @tailrec def loop(i: Int, acc: A): Cell[A] = if (i < end) {

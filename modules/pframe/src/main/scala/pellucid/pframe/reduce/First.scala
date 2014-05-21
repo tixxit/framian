@@ -4,7 +4,6 @@ package reduce
 import scala.annotation.tailrec
 
 final class First[A] extends Reducer[A, A] {
-  type Out = Cell[A]
 
   def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Cell[A] = {
     @tailrec def loop(i: Int): Cell[A] = if (i < end) {
@@ -23,7 +22,6 @@ final class First[A] extends Reducer[A, A] {
 }
 
 final class Last[A] extends Reducer[A, A] {
-  type Out = Cell[A]
 
   def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Cell[A] = {
     @tailrec def loop(i: Int): Cell[A] = if (i >= start) {
