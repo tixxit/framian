@@ -12,129 +12,129 @@ import spire.algebra._
 import shapeless._
 import shapeless.syntax.typeable._
 
-final class EmptyColumn[A](missing: Missing) extends Column[A] {
-  def exists(row: Int): Boolean = false
-  def missing(row: Int): Missing = missing
-  def value(row: Int): A = throw new UnsupportedOperationException()
+final class EmptyColumn[A](nonValue: NonValue) extends Column[A] {
+  def isValueAt(row: Int): Boolean = false
+  def nonValueAt(row: Int): NonValue = nonValue
+  def valueAt(row: Int): A = throw new UnsupportedOperationException()
 }
 
 final class ConstColumn[@spec(Int,Long,Float,Double) A](value: A) extends Column[A] {
-  def exists(row: Int): Boolean = true
-  def missing(row: Int): Missing = throw new UnsupportedOperationException()
-  def value(row: Int): A = value
+  def isValueAt(row: Int): Boolean = true
+  def nonValueAt(row: Int): NonValue = throw new UnsupportedOperationException()
+  def valueAt(row: Int): A = value
 }
 
 final class SetNAColumn[A](na: Int, underlying: Column[A]) extends Column[A] {
-  def exists(row: Int): Boolean = row != na && underlying.exists(row)
-  def missing(row: Int): Missing = if (row == na) NA else underlying.missing(row)
-  def value(row: Int): A = underlying.value(row)
+  def isValueAt(row: Int): Boolean = row != na && underlying.isValueAt(row)
+  def nonValueAt(row: Int): NonValue = if (row == na) NA else underlying.nonValueAt(row)
+  def valueAt(row: Int): A = underlying.valueAt(row)
 }
 
 final class ContramappedColumn[A](f: Int => Int, underlying: Column[A]) extends Column[A] {
-  def exists(row: Int): Boolean = underlying.exists(f(row))
-  def missing(row: Int): Missing = underlying.missing(f(row))
-  def value(row: Int): A = underlying.value(f(row))
+  def isValueAt(row: Int): Boolean = underlying.isValueAt(f(row))
+  def nonValueAt(row: Int): NonValue = underlying.nonValueAt(f(row))
+  def valueAt(row: Int): A = underlying.valueAt(f(row))
 }
 
 final class ReindexColumn[A](index: Array[Int], underlying: Column[A]) extends Column[A] {
   @inline private final def valid(row: Int) = row >= 0 && row < index.length
-  def exists(row: Int): Boolean = valid(row) && underlying.exists(index(row))
-  def missing(row: Int): Missing = if (valid(row)) underlying.missing(index(row)) else NA
-  def value(row: Int): A = underlying.value(index(row))
+  def isValueAt(row: Int): Boolean = valid(row) && underlying.isValueAt(index(row))
+  def nonValueAt(row: Int): NonValue = if (valid(row)) underlying.nonValueAt(index(row)) else NA
+  def valueAt(row: Int): A = underlying.valueAt(index(row))
 }
 
 final class ShiftColumn[A](shift: Int, underlying: Column[A]) extends Column[A] {
-  def exists(row: Int): Boolean = underlying.exists(row - shift)
-  def missing(row: Int): Missing = underlying.missing(row - shift)
-  def value(row: Int): A = underlying.value(row - shift)
+  def isValueAt(row: Int): Boolean = underlying.isValueAt(row - shift)
+  def nonValueAt(row: Int): NonValue = underlying.nonValueAt(row - shift)
+  def valueAt(row: Int): A = underlying.valueAt(row - shift)
 }
 
 final class MappedColumn[A, B](f: A => B, underlying: Column[A]) extends Column[B] {
-  def exists(row: Int): Boolean = underlying.exists(row)
-  def missing(row: Int): Missing = underlying.missing(row)
-  def value(row: Int): B = f(underlying.value(row))
+  def isValueAt(row: Int): Boolean = underlying.isValueAt(row)
+  def nonValueAt(row: Int): NonValue = underlying.nonValueAt(row)
+  def valueAt(row: Int): B = f(underlying.valueAt(row))
 }
 
 final class FilteredColumn[A](f: A => Boolean, underlying: Column[A]) extends Column[A] {
-  def exists(row: Int): Boolean = underlying.exists(row) && f(underlying.value(row))
-  def missing(row: Int): Missing = if (underlying.exists(row)) NA else underlying.missing(row)
-  def value(row: Int): A = underlying.value(row)
+  def isValueAt(row: Int): Boolean = underlying.isValueAt(row) && f(underlying.valueAt(row))
+  def nonValueAt(row: Int): NonValue = if (underlying.isValueAt(row)) NA else underlying.nonValueAt(row)
+  def valueAt(row: Int): A = underlying.valueAt(row)
 }
 
 final class MaskedColumn[A](bits: Int => Boolean, underlying: Column[A]) extends Column[A] {
-  def exists(row: Int): Boolean = underlying.exists(row) && bits(row)
-  def missing(row: Int): Missing = if (bits(row)) underlying.missing(row) else NA
-  def value(row: Int): A = underlying.value(row)
+  def isValueAt(row: Int): Boolean = underlying.isValueAt(row) && bits(row)
+  def nonValueAt(row: Int): NonValue = if (bits(row)) underlying.nonValueAt(row) else NA
+  def valueAt(row: Int): A = underlying.valueAt(row)
 }
 
 final class CastColumn[A: Typeable](col: Column[_]) extends Column[A] {
-  def exists(row: Int): Boolean = col.exists(row) && col.apply(row).cast[A].isDefined
-  def missing(row: Int): Missing = if (!col.exists(row)) col.missing(row) else NM
-  def value(row: Int): A = col.value(row).cast[A].get
+  def isValueAt(row: Int): Boolean = col.isValueAt(row) && col.apply(row).cast[A].isDefined
+  def nonValueAt(row: Int): NonValue = if (!col.isValueAt(row)) col.nonValueAt(row) else NM
+  def valueAt(row: Int): A = col.valueAt(row).cast[A].get
 }
 
 final class InfiniteColumn[A](f: Int => A) extends Column[A] {
-  def exists(row: Int): Boolean = true
-  def missing(row: Int): Missing = NA
-  def value(row: Int): A = f(row)
+  def isValueAt(row: Int): Boolean = true
+  def nonValueAt(row: Int): NonValue = NA
+  def valueAt(row: Int): A = f(row)
 }
 
 final class DenseColumn[A](naValues: BitSet, nmValues: BitSet, values: Array[A]) extends Column[A] {
   private final def valid(row: Int) = row >= 0 && row < values.length
-  def exists(row: Int): Boolean = valid(row) && !naValues(row) && !nmValues(row)
-  def missing(row: Int): Missing = if (nmValues(row)) NM else NA
-  def value(row: Int): A = values(row)
+  def isValueAt(row: Int): Boolean = valid(row) && !naValues(row) && !nmValues(row)
+  def nonValueAt(row: Int): NonValue = if (nmValues(row)) NM else NA
+  def valueAt(row: Int): A = values(row)
 }
 
 final class CellColumn[A](values: IndexedSeq[Cell[A]]) extends Column[A] {
   private final def valid(row: Int): Boolean = row >= 0 && row < values.size
-  def exists(row: Int): Boolean = valid(row) && !values(row).isMissing
-  def missing(row: Int): Missing = if (valid(row)) {
+  def isValueAt(row: Int): Boolean = valid(row) && values(row).isValue
+  def nonValueAt(row: Int): NonValue = if (valid(row)) {
     values(row) match {
       case Value(_) => throw new IllegalStateException()
-      case (ms: Missing) => ms
+      case (ms: NonValue) => ms
     }
   } else NA
-  def value(row: Int): A = values(row) match {
+  def valueAt(row: Int): A = values(row) match {
     case Value(x) => x
-    case (_: Missing) => throw new IllegalStateException()
+    case (_: NonValue) => throw new IllegalStateException()
   }
 }
 
 final class MapColumn[A](values: Map[Int,A]) extends Column[A] {
-  def exists(row: Int): Boolean = values contains row
-  def missing(row: Int): Missing = NA
-  def value(row: Int): A = values(row)
+  def isValueAt(row: Int): Boolean = values contains row
+  def nonValueAt(row: Int): NonValue = NA
+  def valueAt(row: Int): A = values(row)
 }
 
 final class MergedColumn[A](left: Column[A], right: Column[A]) extends Column[A] {
-  def exists(row: Int): Boolean = left.exists(row) || right.exists(row)
-  def missing(row: Int): Missing =
-    if (!right.exists(row) && right.missing(row) == NM) NM else left.missing(row)
-  def value(row: Int): A = if (right.exists(row)) right.value(row) else left.value(row)
+  def isValueAt(row: Int): Boolean = left.isValueAt(row) || right.isValueAt(row)
+  def nonValueAt(row: Int): NonValue =
+    if (!right.isValueAt(row) && right.nonValueAt(row) == NM) NM else left.nonValueAt(row)
+  def valueAt(row: Int): A = if (right.isValueAt(row)) right.valueAt(row) else left.valueAt(row)
 }
 
 final class WrappedColumn[A](f: Int => Cell[A]) extends Column[A] {
-  def exists(row: Int): Boolean = !f(row).isMissing
-  def missing(row: Int): Missing = f(row) match {
-    case Value(_) => throw new IllegalArgumentException(s"row:$row is not missing")
-    case (m: Missing) => m
+  def isValueAt(row: Int): Boolean = f(row).isValue
+  def nonValueAt(row: Int): NonValue = f(row) match {
+    case v @ Value(_) => throw new IllegalArgumentException(s"expected a non value at row:$row, found ($v)!")
+    case (m: NonValue) => m
   }
-  def value(row: Int): A = f(row) match {
+  def valueAt(row: Int): A = f(row) match {
     case Value(a) => a
-    case _ => throw new IllegalArgumentException(s"row:$row is missing (${missing(row)})")
+    case _ => throw new IllegalArgumentException(s"expected a value at row:$row, found (${nonValueAt(row)})")
   }
 }
 
 final class ZipMapColumn[A, B, C](f: (A, B) => C, lhs: Column[A], rhs: Column[B])
     extends Column[C] {
-  def exists(row: Int): Boolean = lhs.exists(row) && rhs.exists(row)
-  def missing(row: Int): Missing =
-    if (lhs.exists(row)) rhs.missing(row)
-    else if (rhs.exists(row)) lhs.missing(row)
-    else if (lhs.missing(row) == NM) NM
-    else rhs.missing(row)
-  def value(row: Int): C = f(lhs.value(row), rhs.value(row))
+  def isValueAt(row: Int): Boolean = lhs.isValueAt(row) && rhs.isValueAt(row)
+  def nonValueAt(row: Int): NonValue =
+    if (lhs.isValueAt(row)) rhs.nonValueAt(row)
+    else if (rhs.isValueAt(row)) lhs.nonValueAt(row)
+    else if (lhs.nonValueAt(row) == NM) NM
+    else rhs.nonValueAt(row)
+  def valueAt(row: Int): C = f(lhs.valueAt(row), rhs.valueAt(row))
 }
 
 final class ColumnBuilder[@spec(Int,Long,Float,Double) V: ClassTag] extends mutable.Builder[Cell[V], Column[V]] {
@@ -148,7 +148,7 @@ final class ColumnBuilder[@spec(Int,Long,Float,Double) V: ClassTag] extends muta
   def addNA(): Unit = { naValues.add(size); addValue(empty) }
   def addNM(): Unit = { nmValues.add(size); addValue(empty) }
 
-  def addMissing(m: Missing): Unit = m match {
+  def addNonValue(nonValue: NonValue): Unit = nonValue match {
     case NA => addNA()
     case NM => addNM()
   }
