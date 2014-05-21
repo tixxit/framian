@@ -7,7 +7,6 @@ import spire.algebra.{ Semigroup, Monoid }
 import spire.syntax.semigroup._
 
 class SemigroupReducer[A: Semigroup] extends Reducer[A, A] {
-  type Out = Cell[A]
 
   def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Cell[A] = {
     @tailrec def loop0(i: Int): Cell[A] = if (i < end) {
