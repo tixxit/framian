@@ -82,6 +82,7 @@ object ApplicationBuild extends Build {
 
   def pframeSettings =
     Defaults.defaultSettings ++ BuildSettings.buildSettings ++ Seq(
+      testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html", "junitxml", "console"),
       shellPrompt := ShellPrompt.buildShellPrompt,
       moreResolvers,
       initialCommands := """
