@@ -39,7 +39,7 @@ object BuildSettings {
     scalaVersion                  := buildScalaVersion,
     shellPrompt                   := ShellPrompt.buildShellPrompt,
     maxErrors                     := 5,
-    scalacOptions                ++= Seq("-deprecation"), //, "-Xlog-implicits"),
+    scalacOptions                ++= Seq("-deprecation", "-feature"), //, "-Xlog-implicits"),
     credentials                   += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     release                       := sys.props("data-api-release") == "true",
     gitHeadCommitSha in ThisBuild := Process("git rev-parse --short HEAD").lines.head,
@@ -82,14 +82,14 @@ object ApplicationBuild extends Build {
 
   def pframeSettings =
     Defaults.defaultSettings ++ BuildSettings.buildSettings ++ Seq(
+      testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html", "junitxml", "console"),
       shellPrompt := ShellPrompt.buildShellPrompt,
       moreResolvers,
       initialCommands := """
       | import pellucid.pframe._
       | import shapeless._
       | import spire.implicits._""".stripMargin('|'),
-      libraryDependencies ++= Dependencies.pframe,
-      addCompilerPlugin("org.scala-lang.plugins" % "macro-paradise_2.10.3" % "2.0.0-SNAPSHOT")
+      libraryDependencies ++= Dependencies.pframe
     ) ++ net.virtualvoid.sbt.graph.Plugin.graphSettings
 
   lazy val pframe = Project("pframe", file("modules/pframe")).
@@ -142,31 +142,21 @@ object Dependencies {
 object Dependency {
 
   object V {
-    val Slf4j              = "1.7.5"
-    val Logback            = "1.0.13"
     val Play               = play.core.PlayVersion.current
 
-    val Spire              = "0.7.1"
-    val Shapeless          = "2.0.0-M1"
-    val Discipline         = "0.2.1-SNAPSHOT"
+    val Spire              = "0.7.4"
+    val Shapeless          = "2.0.0"
+    val Discipline         = "0.2.1"
 
     val JodaTime           = "2.3"
-    val JodaConvert           = "1.5"
+    val JodaConvert        = "1.6"
 
     // Test libraries
-    val Mockito            = "1.9.5"
-    val ScalaMock          = "3.1.RC1"
-    val ScalaTest          = "2.0"
-    val JUnit              = "0.8"
-    val MockFtpServer      = "2.4"
-    val Specs2             = "2.3.2"
-    val ScalaCheck         = "1.10.1"
+    val Specs2             = "2.3.12"
+    val ScalaCheck         = "1.11.4"
   }
 
   // Compile
-  val slf4jApi           =   "org.slf4j"                             % "slf4j-api"               % V.Slf4j
-  val logback            =   "ch.qos.logback"                        % "logback-classic"         % V.Logback
-
   val playJson           =   "com.typesafe.play"                    %% "play-json"               % V.Play
 
   val spire              =   "org.spire-math"                       %% "spire"                   % V.Spire
@@ -177,12 +167,7 @@ object Dependency {
 
   // Test
   object Test {
-    val mockito          =   "org.mockito"                           % "mockito-all"             % V.Mockito       % "test"
-    val scalaTest        =   "org.scalatest"                        %% "scalatest"               % V.ScalaTest     % "test"
-    val scalaMock        =   "org.scalamock"                    %% "scalamock-scalatest-support" % V.ScalaMock     % "test"
-    val mockFTPServer    =   "org.mockftpserver"                     % "MockFtpServer"           % V.MockFtpServer % "test"
     val specs2           =   "org.specs2"                           %% "specs2"                  % V.Specs2        % "test"
-    val junit            =   "com.novocode"                          % "junit-interface"         % V.JUnit         % "test"
     val scalaCheck       =   "org.scalacheck"                       %% "scalacheck"              % V.ScalaCheck    % "test"
     val spireLaws        =   "org.spire-math"                       %% "spire-scalacheck-binding"% V.Spire
     val discipline       =   "org.typelevel"                        %% "discipline"              % V.Discipline
