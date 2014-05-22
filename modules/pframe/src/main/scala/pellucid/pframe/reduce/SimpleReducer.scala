@@ -13,8 +13,8 @@ abstract class SimpleReducer[A: ClassTag, B] extends Reducer[A, B] {
     val bldr = ArrayBuilder.make[A]
     cfor(start)(_ < end, _ + 1) { i =>
       val row = indices(i)
-      if (column.exists(row)) {
-        bldr += column.value(row)
+      if (column.isValueAt(row)) {
+        bldr += column.valueAt(row)
       }
     }
     reduce(bldr.result())

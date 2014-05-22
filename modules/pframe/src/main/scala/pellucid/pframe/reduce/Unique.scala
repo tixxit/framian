@@ -9,8 +9,8 @@ final class Unique[A] extends Reducer[A, Set[A]] {
     val bldr = Set.newBuilder[A]
     cfor(start)(_ < end, _ + 1) { i =>
       val row = indices(i)
-      if (column.exists(row)) {
-        bldr += column.value(row)
+      if (column.isValueAt(row)) {
+        bldr += column.valueAt(row)
       }
     }
     Value(bldr.result())

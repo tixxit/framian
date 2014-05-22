@@ -138,8 +138,8 @@ trait ColumnSelection[Row, Col, Sz <: Size] {
     frame.withRowIndex(filteredIndex)
   }
 
-  // TODO: Grouping should take a strategy so that we can deal with missing values.
-  private def groupBy0[A: RowExtractorAux, B: Order: ClassTag](f: A => B, g: Missing => Option[B]): Frame[B, Col] = {
+  // TODO: Grouping should take a strategy so that we can deal with non values.
+  private def groupBy0[A: RowExtractorAux, B: Order: ClassTag](f: A => B, g: NonValue => Option[B]): Frame[B, Col] = {
     import spire.compat._
 
     val extractor = RowExtractor[A, Col, Sz]
@@ -150,8 +150,8 @@ trait ColumnSelection[Row, Col, Sz <: Size] {
           case Value(group0) =>
             val group = f(group0)
             groups += (group -> (row :: groups.getOrElse(group, Nil)))
-          case (missing: Missing) =>
-            g(missing) foreach { group =>
+          case (nonValue: NonValue) =>
+            g(nonValue) foreach { group =>
               groups += (group -> (row :: groups.getOrElse(group, Nil)))
             }
         }
