@@ -30,7 +30,11 @@ package object reduce {
 
   def First[A]: Reducer[A, A] = new First[A]
 
+  def FirstN[A](n: Int): Reducer[A, List[A]] = new FirstN[A](n)
+
   def Last[A]: Reducer[A, A] = new Last[A]
+
+  def LastN[A](n: Int): Reducer[A, List[A]] = new LastN[A](n)
 
   def Current[A]: Reducer[(LocalDate, A), A] = new Current[A]
 

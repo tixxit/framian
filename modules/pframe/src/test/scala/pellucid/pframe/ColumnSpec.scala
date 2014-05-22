@@ -22,10 +22,10 @@ class ColumnSpec extends Specification {
 
     "default constructor" in {
       val col = Column(row => -row)
-      col.value(0) must_== 0
-      col.value(Int.MinValue) must_== Int.MinValue
-      col.value(Int.MaxValue) must_== -Int.MaxValue
-      col.value(5) must_== -5
+      col.valueAt(0) must_== 0
+      col.valueAt(Int.MinValue) must_== Int.MinValue
+      col.valueAt(Int.MaxValue) must_== -Int.MaxValue
+      col.valueAt(5) must_== -5
     }
 
     "empty is empty" in {
@@ -37,25 +37,25 @@ class ColumnSpec extends Specification {
   "Column" should {
     val col = Column.fromCells(Vector(NM, NA, Value("a")))
 
-    "know which rows exist" in {
-      col.exists(0) must beFalse
-      col.exists(1) must beFalse
-      col.exists(2) must beTrue
-      col.exists(3) must beFalse
+    "know which rows are values" in {
+      col.isValueAt(0) must beFalse
+      col.isValueAt(1) must beFalse
+      col.isValueAt(2) must beTrue
+      col.isValueAt(3) must beFalse
     }
 
-    "return correct missing value" in {
-      col.missing(-1) must_== NA
-      col.missing(0) must_== NM
-      col.missing(1) must_== NA
-      col.missing(3) must_== NA
+    "return correct non value" in {
+      col.nonValueAt(-1) must_== NA
+      col.nonValueAt(0) must_== NM
+      col.nonValueAt(1) must_== NA
+      col.nonValueAt(3) must_== NA
     }
 
     "filter filters values to NA" in {
       val col0 = Column.fromArray(Array.range(0, 40))
       val col1 = col0 filter (_ % 2 == 0)
-      (0 until 40 by 2) map (col1 exists _) must contain(beTrue).forall
-      (1 until 40 by 2) map (col1 missing _) must contain(be_==(NA)).forall
+      (0 until 40 by 2) map (col1 isValueAt _) must contain(beTrue).forall
+      (1 until 40 by 2) map (col1 nonValueAt _) must contain(be_==(NA)).forall
     }
 
     "map should map values" in {
@@ -76,8 +76,8 @@ class ColumnSpec extends Specification {
     "mask infinite column" in {
       val col0 = Column(_.toString)
       val col1 = col0 mask (_ != 42)
-      (-5 to 41) map (col1 exists _) must contain(beTrue).forall
-      (43 to 100) map (col1 exists _) must contain(beTrue).forall
+      (-5 to 41) map (col1 isValueAt _) must contain(beTrue).forall
+      (43 to 100) map (col1 isValueAt _) must contain(beTrue).forall
       col1(42) must_== NA
     }
 
@@ -104,13 +104,13 @@ class ColumnSpec extends Specification {
     "be right biased" in {
       val a = Column(row => row)
       val b = Column(row => -row)
-      (a |+| b).value(1) must_== -1
-      (a |+| b).value(2) must_== -2
-      (b |+| a).value(1) must_== 1
-      (b |+| a).value(2) must_== 2
+      (a |+| b).valueAt(1) must_== -1
+      (a |+| b).valueAt(2) must_== -2
+      (b |+| a).valueAt(1) must_== 1
+      (b |+| a).valueAt(2) must_== 2
     }
 
-    "ignore missing values" in {
+    "ignore non values" in {
       //                                     0,        1,  2,  3,  4,  5,        6,        7
       val a = Column.fromCells(Vector(Value(1), Value(2), NA, NA, NM, NM,       NA,       NM))
       val b = Column.fromCells(Vector(      NA,       NM, NA, NM, NA, NM, Value(1), Value(2)))

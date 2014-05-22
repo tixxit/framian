@@ -7,14 +7,13 @@ import spire.algebra.Field
 import spire.syntax.field._
 
 final class Mean[A: Field] extends Reducer[A, A] {
-  type Out = Cell[A]
 
   def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Cell[A] = {
     @tailrec def loop(i: Int, sum: A, count: Int): Cell[A] = if (i < end) {
       val row = indices(i)
-      if (column.exists(row)) {
-        loop(i + 1, sum + column.value(row), count + 1)
-      } else if (column.missing(row) == NA) {
+      if (column.isValueAt(row)) {
+        loop(i + 1, sum + column.valueAt(row), count + 1)
+      } else if (column.nonValueAt(row) == NA) {
         loop(i + 1, sum, count)
       } else {
         NM
