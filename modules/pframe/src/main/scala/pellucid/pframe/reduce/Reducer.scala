@@ -11,11 +11,6 @@ package reduce
  */
 trait Reducer[-A, +B] {
 
-  /** The result type of a reduction is any subtype of [[Cell]]
-    * of the ouput type ''B''.
-    */
-  type Out <: Cell[B]
-
   /** Reduce the given column of values to a cell using only the
     * indexes in given array slice.
     *
@@ -50,5 +45,5 @@ trait Reducer[-A, +B] {
     * @param end the end of the array slice on the indices
     * @return the result of the reduction as a [[Cell]]
     */
-  def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Out
+  def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Cell[B]
 }

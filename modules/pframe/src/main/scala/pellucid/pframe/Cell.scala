@@ -1,18 +1,24 @@
 package pellucid
 package pframe
 
+import scala.language.implicitConversions
+
 import spire.algebra.{ Eq, Order, Semigroup, Monoid }
 import spire.syntax.order._
 import spire.syntax.semigroup._
 
-/**
- * A `Cell` represents a single piece of data that may not be available or
- * meangingful in a given context. Essentially, a `Cell` is similar to
- * `Option`, except instead of `None` we have 2 different values to represent
- * missing data: `NA` (Not Available) and `NM` (Not Meaningful).
- */
+/** A [[Cell]] represents a single piece of data that may not be
+  * available or meangingful in a given context.
+  *
+  * Essentially, a [[Cell]] is similar to `Option`, except instead of
+  * `None` we have 2 representations of [[NonValue]], the absence of
+  * data: [[NA]] (Not Available) and [[NM]] (Not Meaningful).
+  *
+  * @tparam A the value type contain in the cell
+  * @see [[Value]] [[[NonValue]]] [[NA]] [[NM]]
+  */
 sealed trait Cell[+A] {
-  def isMissing: Boolean
+  def isValue: Boolean
 
   def value: Option[A]
   def valueString: String
@@ -53,22 +59,27 @@ sealed trait Cell[+A] {
 
 // TODO: there are currently issues where we get comparison between Value(NA) and NA and this should be true
 // the current tweaks to equality are just holdovers until we figure out some more details on the implementation
-// of missing values.
+// of non values.
 object Cell extends CellInstances {
   def value[A](x: A): Cell[A] = Value(x)
   def notAvailable[A]: Cell[A] = NA
   def notMeaningful[A]: Cell[A] = NM
 
-  def fromOption[A](opt: Option[A], missing: Missing = NA): Cell[A] = opt match {
+  def fromOption[A](opt: Option[A], nonValue: NonValue = NA): Cell[A] = opt match {
     case Some(a) => Value(a)
-    case None => missing
+    case None => nonValue
   }
 
   implicit def cell2Iterable[A](cell: Cell[A]): Iterable[A] = cell.value.toList
 }
 
-sealed trait Missing extends Cell[Nothing] {
-  def isMissing = true
+/** The supertype of non values, [[NA]] (''Not Available'') and
+  * [[NM]] (''Not Meaningful'')
+  *
+  * @see [[Cell]] [[NA]] [[NM]]
+  */
+sealed trait NonValue extends Cell[Nothing] {
+  def isValue = false
   def value = None
 
   override def equals(that: Any): Boolean = that match {
@@ -77,26 +88,38 @@ sealed trait Missing extends Cell[Nothing] {
   }
 }
 
-/**
- * Value is Not Available (NA). This indicates the value is simply missing.
- */
-final case object NA extends Missing { val valueString = "NA" }
 
-/**
- * Value is Not Meaningful (NM). This indicates that a values exist, but it is
- * not meaningful. For instance, if we divide by 0, then the value is not
- * meaningful, but we wouldn't necessarily say it is missing.
- */
-final case object NM extends Missing { val valueString = "NM" }
+/** A value is ''Not Available (NA)''
+  *
+  * This represents the absence of any data.
+  *
+  * @see [[Cell]] [[NonValue]] [[NM]] [[Value]]
+  */
+case object NA extends NonValue { val valueString = "NA" }
 
-/**
- * A value that exists and is meaningful.
- */
+
+/** The value is ''Not Meaningful (NM)''.
+  *
+  * This indicates that data exists, but that it is not meaningful.
+  * For instance, if we divide by 0, then the result is not
+  * meaningful, but we wouldn't necessarily say that data is
+  * unavailable.
+  *
+  * @see [[Cell]] [[NonValue]] [[NA]] [[Value]]
+  */
+case object NM extends NonValue { val valueString = "NM" }
+
+
+/** A value that is meaningful.
+  *
+  * @tparam A the type of the value contained
+  * @see [[Cell]] [[NonValue]] [[NA]] [[NM]]
+  */
 final case class Value[+A](get: A) extends Cell[A] {
   def value = Some(get)
   def valueString = get.toString
 
-  val isMissing = if (get == NA || get == NM) true else false
+  val isValue = if (get == NA || get == NM) false else true
 
   override def equals(that: Any): Boolean = that match {
     case Value(Value(NA)) => get == NA

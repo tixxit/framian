@@ -159,56 +159,143 @@ class ReducerSpec extends Specification {
     }
   }
 
-  "First/Last" should {
+  "First(N)/Last(N)" should {
     "not find the first/last value in empty series" in {
-      empty.reduce(First[Double]) must_== NA
-      empty.reduce(Last[Double]) must_== NA
+      empty.reduce(First [Double])    must_== NA
+      empty.reduce(Last  [Double])    must_== NA
+      empty.reduce(FirstN[Double](1)) must_== NA
+      empty.reduce(FirstN[Double](2)) must_== NA
+      empty.reduce(LastN [Double](1)) must_== NA
+      empty.reduce(LastN [Double](2)) must_== NA
     }
 
     "return NM if the first value encountered is NM" in {
-      unique.sparse.reduce(Last[Double]) must_== NM
+      unique.sparse.reduce(Last [Double])    must_== NM
+      unique.sparse.reduce(LastN[Double](1)) must_== NM
+      unique.sparse.reduce(LastN[Double](2)) must_== NM
     }
 
-    "get first element in dense series" in {
-      unique.dense.reduce(First[Double]) must_== Value(1D)
+    "get first value in dense series" in {
+      unique   .dense.reduce(First[Double]) must_== Value(1D)
       duplicate.dense.reduce(First[Double]) must_== Value(1D)
-      odd.dense.reduce(First[Double]) must_== Value(1D)
+      odd      .dense.reduce(First[Double]) must_== Value(1D)
+
+      unique   .dense.reduce(FirstN[Double](1)) must_== Value(List(1D))
+      duplicate.dense.reduce(FirstN[Double](1)) must_== Value(List(1D))
+      odd      .dense.reduce(FirstN[Double](1)) must_== Value(List(1D))
     }
 
-    "get last element in dense series" in {
+    "get first N values in dense series" in {
+      unique   .dense.reduce(FirstN[Double](3)) must_== Value(List(1D, 2D, 4D))
+      duplicate.dense.reduce(FirstN[Double](3)) must_== Value(List(1D, 2D, 3D))
+      odd      .dense.reduce(FirstN[Double](3)) must_== Value(List(1D, 2D, 3D))
+    }
+
+    "get last value in dense series" in {
       unique.dense.reduce(Last[Double]) must_== Value(5D)
       duplicate.dense.reduce(Last[Double]) must_== Value(6D)
       odd.dense.reduce(Last[Double]) must_== Value(3D)
+
+      unique   .dense.reduce(LastN[Double](1)) must_== Value(List(5D))
+      duplicate.dense.reduce(LastN[Double](1)) must_== Value(List(6D))
+      odd      .dense.reduce(LastN[Double](1)) must_== Value(List(3D))
+    }
+
+    "get last N values in dense series" in {
+      unique   .dense.reduce(LastN[Double](3)) must_== Value(List(2D, 4D, 5D))
+      duplicate.dense.reduce(LastN[Double](3)) must_== Value(List(4D, 5D, 6D))
+      odd      .dense.reduce(LastN[Double](3)) must_== Value(List(1D, 2D, 3D))
+    }
+
+    "return NA if fewer than N values are available in dense series" in {
+      odd.dense.reduce(FirstN[Double](4)) must_== NA
+      odd.dense.reduce(LastN[Double](4)) must_== NA
     }
 
     "get first value of sparse series" in {
       unique.sparse.reduce(First[Double]) must_== Value(2D)
       duplicate.sparse.reduce(First[Double]) must_== Value(2D)
       odd.sparse.reduce(First[Double]) must_== Value(2D)
+
+      unique   .sparse.reduce(FirstN[Double](1)) must_== Value(List(2D))
+      duplicate.sparse.reduce(FirstN[Double](1)) must_== Value(List(2D))
+      odd      .sparse.reduce(FirstN[Double](1)) must_== Value(List(2D))
+    }
+
+    "get first N values in sparse series" in {
+      odd.sparse.reduce(FirstN[Double](3)) must_== Value(List(2D, 4D, 5D))
     }
 
     "get last value of sparse series" in {
       unique.sparse.reduce(Last[Double]) must_== NM
       duplicate.sparse.reduce(Last[Double]) must_== Value(0D)
       odd.sparse.reduce(Last[Double]) must_== Value(5D)
+
+      unique   .sparse.reduce(LastN[Double](1)) must_== NM
+      duplicate.sparse.reduce(LastN[Double](1)) must_== Value(List(0D))
+      odd      .sparse.reduce(LastN[Double](1)) must_== Value(List(5D))
+    }
+
+    "get last N values in sparse series" in {
+      odd.sparse.reduce(LastN[Double](3)) must_== Value(List(2D, 4D, 5D))
     }
 
     "get first in dense series by key" in {
-      duplicate.dense.reduceByKey(First[Double]) must_== Series("a" -> 1D, "b" -> 3D, "c" -> 6D)
+      duplicate.dense.reduceByKey(First[Double]) must_==
+        Series("a" -> 1D, "b" -> 3D, "c" -> 6D)
+
+      duplicate.dense.reduceByKey(FirstN[Double](1)) must_==
+        Series("a" -> List(1D), "b" -> List(3D), "c" -> List(6D))
+    }
+
+    "get first N values in dense series by key" in {
+      duplicate.dense.reduceByKey(FirstN[Double](2)) must_==
+        Series.fromCells("a" -> Value(List(1D, 2D)), "b" -> Value(List(3D, 4D)), "c" -> NA)
+
+      duplicate.dense.reduceByKey(FirstN[Double](3)) must_==
+        Series.fromCells("a" -> NA, "b" -> Value(List(3D, 4D, 5D)), "c" -> NA)
     }
 
     "get last in dense series by key" in {
-      duplicate.dense.reduceByKey(Last[Double]) must_== Series("a" -> 2D, "b" -> 5D, "c" -> 6D)
+      duplicate.dense.reduceByKey(Last[Double]) must_==
+        Series("a" -> 2D, "b" -> 5D, "c" -> 6D)
+
+      duplicate.dense.reduceByKey(LastN[Double](1)) must_==
+        Series("a" -> List(2D), "b" -> List(5D), "c" -> List(6D))
+    }
+
+    "get last N values in dense series by key" in {
+      duplicate.dense.reduceByKey(LastN[Double](2)) must_==
+        Series.fromCells("a" -> Value(List(1D, 2D)), "b" -> Value(List(4D, 5D)), "c" -> NA)
+
+      duplicate.dense.reduceByKey(LastN[Double](3)) must_==
+        Series.fromCells("a" -> NA, "b" -> Value(List(3D, 4D, 5D)), "c" -> NA)
     }
 
     "get first in sparse series by key" in {
       duplicate.sparse.reduceByKey(First[Double]) must_==
         Series.fromCells("a" -> NA, "b" -> Value(2D), "c" -> Value(5D), "d" -> Value(0D))
+
+      duplicate.sparse.reduceByKey(FirstN[Double](1)) must_==
+        Series.fromCells("a" -> NA, "b" -> Value(List(2D)), "c" -> Value(List(5D)), "d" -> Value(List(0D)))
+    }
+
+    "get first N values in sparse series by key" in {
+      duplicate.sparse.reduceByKey(FirstN[Double](2)) must_==
+        Series.fromCells("a" -> NA, "b" -> NM, "c" -> Value(List(5D, 1D)), "d" -> NA)
     }
 
     "get last in sparse series by key" in {
       duplicate.sparse.reduceByKey(Last[Double]) must_==
         Series.fromCells("a" -> NA, "b" -> NM, "c" -> Value(1D), "d" -> Value(0D))
+
+      duplicate.sparse.reduceByKey(LastN[Double](1)) must_==
+        Series.fromCells("a" -> NA, "b" -> NM, "c" -> Value(List(1D)), "d" -> Value(List(0D)))
+    }
+
+    "get last N values in sparse series by key" in {
+      duplicate.sparse.reduceByKey(LastN[Double](2)) must_==
+        Series.fromCells("a" -> NA, "b" -> NM, "c" -> Value(List(5D, 1D)), "d" -> NA)
     }
   }
 

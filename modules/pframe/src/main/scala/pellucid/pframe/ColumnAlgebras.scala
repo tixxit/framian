@@ -53,21 +53,21 @@ final class ColumnFieldImpl[@spec(Int,Long,Float,Double) A](implicit val algebra
 private trait UnOpColumn[@spec(Int,Long,Float,Double) A] extends Column[A] {
   def arg: Column[A]
 
-  def exists(row: Int): Boolean = arg.exists(row)
-  def missing(row: Int): Missing = arg.missing(row)
+  def isValueAt(row: Int): Boolean = arg.isValueAt(row)
+  def nonValueAt(row: Int): NonValue = arg.nonValueAt(row)
 }
 
 private trait BinOpColumn[@spec(Int,Long,Float,Double) A] extends Column[A] {
   def lhs: Column[A]
   def rhs: Column[A]
 
-  def exists(row: Int): Boolean = lhs.exists(row) && rhs.exists(row)
-  def missing(row: Int): Missing = if (lhs.exists(row)) {
-    rhs.missing(row)
-  } else if (rhs.exists(row)) {
-    lhs.missing(row)
+  def isValueAt(row: Int): Boolean = lhs.isValueAt(row) && rhs.isValueAt(row)
+  def nonValueAt(row: Int): NonValue = if (lhs.isValueAt(row)) {
+    rhs.nonValueAt(row)
+  } else if (rhs.isValueAt(row)) {
+    lhs.nonValueAt(row)
   } else {
-    (lhs.missing(row), rhs.missing(row)) match {
+    (lhs.nonValueAt(row), rhs.nonValueAt(row)) match {
       case (NA, _) => NA
       case (_, NA) => NA
       case (NM, NM) => NM
@@ -83,13 +83,13 @@ trait ColumnSemiring[@spec(Int,Long,Float,Double) A] extends Semiring[Column[A]]
   def plus(x: Column[A], y: Column[A]): Column[A] = new BinOpColumn[A] {
     val lhs = x
     val rhs = y
-    def value(row: Int): A = lhs.value(row) + rhs.value(row)
+    def valueAt(row: Int): A = lhs.valueAt(row) + rhs.valueAt(row)
   }
 
   def times(x: Column[A], y: Column[A]): Column[A] = new BinOpColumn[A] {
     val lhs = x
     val rhs = y
-    def value(row: Int): A = lhs.value(row) * rhs.value(row)
+    def valueAt(row: Int): A = lhs.valueAt(row) * rhs.valueAt(row)
   }
 }
 
@@ -104,13 +104,13 @@ trait ColumnRng[@spec(Int,Long,Float,Double) A] extends ColumnSemiring[A] with R
 
   def negate(x: Column[A]): Column[A] = new UnOpColumn[A] {
     val arg = x
-    def value(row: Int): A = -arg.value(row)
+    def valueAt(row: Int): A = -arg.valueAt(row)
   }
 
   override def minus(x: Column[A], y: Column[A]): Column[A] = new BinOpColumn[A] {
     val lhs = x
     val rhs = y
-    def value(row: Int): A = lhs.value(row) - rhs.value(row)
+    def valueAt(row: Int): A = lhs.valueAt(row) - rhs.valueAt(row)
   }
 }
 
@@ -127,16 +127,16 @@ private trait DivOpColumn[@spec(Int,Long,Float,Double) A] extends Column[A] {
   def lhs: Column[A]
   def rhs: Column[A]
 
-  def exists(row: Int): Boolean =
-    lhs.exists(row) && rhs.exists(row) && (rhs.value(row) =!= algebra.zero)
+  def isValueAt(row: Int): Boolean =
+    lhs.isValueAt(row) && rhs.isValueAt(row) && (rhs.valueAt(row) =!= algebra.zero)
 
-  def missing(row: Int): Missing = {
-    val lExists = lhs.exists(row)
-    val rExists = rhs.exists(row)
-    if (lExists && rExists) NM
-    else if (lExists) rhs.missing(row)
-    else if (rExists) lhs.missing(row)
-    else (lhs.missing(row), rhs.missing(row)) match {
+  def nonValueAt(row: Int): NonValue = {
+    val lhsIsValue = lhs.isValueAt(row)
+    val rhsIsValue = rhs.isValueAt(row)
+    if (lhsIsValue && rhsIsValue) NM
+    else if (lhsIsValue) rhs.nonValueAt(row)
+    else if (rhsIsValue) lhs.nonValueAt(row)
+    else (lhs.nonValueAt(row), rhs.nonValueAt(row)) match {
       case (NA, _) => NA
       case (_, NA) => NA
       case _ => NM
@@ -154,7 +154,7 @@ trait ColumnEuclideanRing[@spec(Int,Long,Float,Double) A]
     val order = self.order
     val lhs = x
     val rhs = y
-    def value(row: Int): A = lhs.value(row) /~ rhs.value(row)
+    def valueAt(row: Int): A = lhs.valueAt(row) /~ rhs.valueAt(row)
   }
 
   def mod(x: Column[A], y: Column[A]): Column[A] = new DivOpColumn[A] {
@@ -162,13 +162,13 @@ trait ColumnEuclideanRing[@spec(Int,Long,Float,Double) A]
     val order = self.order
     val lhs = x
     val rhs = y
-    def value(row: Int): A = lhs.value(row) % rhs.value(row)
+    def valueAt(row: Int): A = lhs.valueAt(row) % rhs.valueAt(row)
   }
 
   def gcd(x: Column[A], y: Column[A]): Column[A] = new BinOpColumn[A] {
     val lhs = x
     val rhs = y
-    def value(row: Int): A = algebra.gcd(lhs.value(row), rhs.value(row))
+    def valueAt(row: Int): A = algebra.gcd(lhs.valueAt(row), rhs.valueAt(row))
   }
 }
 
@@ -181,7 +181,7 @@ trait ColumnField[@spec(Int,Long,Float,Double) A]
     val order = self.order
     val lhs = x
     val rhs = y
-    def value(row: Int): A = lhs.value(row) / rhs.value(row)
+    def valueAt(row: Int): A = lhs.valueAt(row) / rhs.valueAt(row)
   }
 
   override def fromDouble(x: Double) = Column.const(algebra.fromDouble(x))
