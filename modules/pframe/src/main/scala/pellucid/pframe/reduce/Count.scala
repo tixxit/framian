@@ -4,7 +4,6 @@ package reduce
 import scala.annotation.tailrec
 
 final object Count extends Reducer[Any, Int] {
-  type Out = Value[Int]
 
   def reduce(column: Column[Any], indices: Array[Int], start: Int, end: Int): Value[Int] = {
     @tailrec def count(i: Int, n: Int): Int = if (i < end) {

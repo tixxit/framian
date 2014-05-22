@@ -7,7 +7,5 @@ package reduce
  * TODO: All reducers should return Cell[B].
  */
 trait Reducer[-A, +B] {
-  type Out <: Cell[B]
-
-  def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Out
+  def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Cell[B]
 }

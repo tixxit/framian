@@ -6,7 +6,6 @@ import scala.annotation.tailrec
 import org.joda.time.LocalDate
 
 final class Current[A] extends Reducer[(LocalDate, A), A] {
-  type Out = Cell[A]
 
   def reduce(column: Column[(LocalDate, A)], indices: Array[Int], start: Int, end: Int): Cell[A] = {
     @tailrec def loop(i: Int, latestDate: LocalDate, latestIndex: Option[Int]): Cell[A] =
