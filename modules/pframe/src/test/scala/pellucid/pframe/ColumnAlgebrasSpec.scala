@@ -16,7 +16,7 @@ import spire.std.int._
 import spire.syntax.eq._
 import spire.implicits.IntAlgebra
 
-import org.typelevel.discipline.specs2.Discipline
+import org.typelevel.discipline.specs2.mutable.Discipline
 
 /* extends Properties("ColumnAlgebras")*/
 class ColumnAlgebrasSpec extends Specification with ScalaCheck with Discipline  {
