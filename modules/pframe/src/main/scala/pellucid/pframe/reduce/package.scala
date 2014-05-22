@@ -36,7 +36,5 @@ package object reduce {
 
   def LastN[A](n: Int): Reducer[A, List[A]] = new LastN[A](n)
 
-  def Current[A]: Reducer[(LocalDate, A), A] = new Current[A]
-
   def Unique[A]: Reducer[A, Set[A]] = new Unique[A]
 }
