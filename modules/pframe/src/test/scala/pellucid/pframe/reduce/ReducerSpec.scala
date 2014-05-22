@@ -90,13 +90,15 @@ class ReducerSpec extends Specification {
     }
 
     "count dense series" in {
-      unique.dense.reduce(Count) must_== Value(4)
+      unique   .dense.reduce(Count) must_== Value(4)
+      odd      .dense.reduce(Count) must_== Value(3)
       duplicate.dense.reduce(Count) must_== Value(6)
     }
 
     "count sparse series" in {
-      unique.sparse.reduce(Count) must_== Value(2)
-      duplicate.sparse.reduce(Count) must_== Value(5)
+      unique   .sparse.reduce(Count) must_== NM
+      odd      .sparse.reduce(Count) must_== Value(3)
+      duplicate.sparse.reduce(Count) must_== NM
     }
 
     "count dense series by key" in {
@@ -104,7 +106,8 @@ class ReducerSpec extends Specification {
     }
 
     "count sparse series by key" in {
-      duplicate.sparse.reduceByKey(Count) must_== Series("a" -> 0, "b" -> 2, "c" -> 2, "d" -> 1)
+      duplicate.sparse.reduceByKey(Count) must_==
+        Series.fromCells("a" -> Value(0), "b" -> NM, "c" -> Value(2), "d" -> Value(1))
     }
   }
 
@@ -114,13 +117,15 @@ class ReducerSpec extends Specification {
     }
 
     "find max in dense series" in {
-      unique.dense.reduce(Max[Double]) must_== Value(5D)
+      unique   .dense.reduce(Max[Double]) must_== Value(5D)
+      odd      .dense.reduce(Max[Double]) must_== Value(3D)
       duplicate.dense.reduce(Max[Double]) must_== Value(6D)
     }
 
     "find max in sparse series" in {
-      unique.sparse.reduce(Max[Double]) must_== Value(4D)
-      duplicate.sparse.reduce(Max[Double]) must_== Value(5D)
+      unique   .sparse.reduce(Max[Double]) must_== NM
+      odd      .sparse.reduce(Max[Double]) must_== Value(5D)
+      duplicate.sparse.reduce(Max[Double]) must_== NM
     }
 
     "find max in dense series by key" in {
@@ -129,7 +134,7 @@ class ReducerSpec extends Specification {
 
     "find max in sparse series by key" in {
       duplicate.sparse.reduceByKey(Max[Double]) must_==
-        Series.fromCells("a" -> NA, "b" -> Value(4D), "c" -> Value(5D), "d" -> Value(0D))
+        Series.fromCells("a" -> NA, "b" -> NM, "c" -> Value(5D), "d" -> Value(0D))
     }
   }
 
@@ -307,15 +312,31 @@ class ReducerSpec extends Specification {
     }
 
     "return unique elements from dense series" in {
+      unique   .dense.reduce(Unique[Double]) must_== Value(Set(1D, 2D, 4D, 5D))
+      odd      .dense.reduce(Unique[Double]) must_== Value(Set(1D, 2D, 3D))
+      duplicate.dense.reduce(Unique[Double]) must_== Value(Set(1D, 2D, 3D, 4D, 5D, 6D))
+
       Series(1 -> 1, 2 -> 1, 3 -> 2, 4 -> 1, 5 -> 3, 6 -> 2).reduce(Unique[Int]) must_== Value(Set(1, 2, 3))
     }
 
     "return unique elements in sparse series" in {
+      unique   .sparse.reduce(Unique[Double]) must_== NM
+      odd      .sparse.reduce(Unique[Double]) must_== Value(Set(2D, 4D, 5D))
+      duplicate.sparse.reduce(Unique[Double]) must_== NM
+
       val s = Series.fromCells(1 -> Value("a"), 2 -> NA, 1 -> Value("b"), 3 -> NA)
       s.reduce(Unique[String]) must_== Value(Set("a", "b"))
     }
 
-    "return unique elements by key" in {
+    "return unique elements from dense series by key" in {
+      duplicate.dense.reduceByKey(Unique[Double]) must_==
+        Series("a" -> Set(1D, 2D), "b" -> Set(3D, 4D, 5D), "c" -> Set(6D))
+    }
+
+    "return unique elements from sparse series by key" in {
+      duplicate.sparse.reduceByKey(Unique[Double]) must_==
+        Series.fromCells("a" -> Value(Set.empty), "b" -> NM, "c" -> Value(Set(1D, 5D)), "d" -> Value(Set(0D)))
+
       val s = Series.fromCells(
         1 -> Value("a"), 1 -> Value("b"),
         2 -> NA, 2 -> Value("c"),

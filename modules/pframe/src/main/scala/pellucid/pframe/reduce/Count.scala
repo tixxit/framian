@@ -5,12 +5,20 @@ import scala.annotation.tailrec
 
 final object Count extends Reducer[Any, Int] {
 
-  def reduce(column: Column[Any], indices: Array[Int], start: Int, end: Int): Value[Int] = {
-    @tailrec def count(i: Int, n: Int): Int = if (i < end) {
-      val m = if (column.isValueAt(indices(i))) n + 1 else n
-      count(i + 1, m)
-    } else n
+  def reduce(column: Column[Any], indices: Array[Int], start: Int, end: Int): Cell[Int] = {
+    @tailrec def loop(i: Int, n: Int): Cell[Int] = if (i < end) {
+      val row = indices(i)
+      if (column.isValueAt(row)) {
+        loop(i + 1, n + 1)
+      } else if (column.nonValueAt(row) == NA) {
+        loop(i + 1, n)
+      } else {
+        NM
+      }
+    } else {
+      Value(n)
+    }
 
-    Value(count(start, 0))
+    loop(start, 0)
   }
 }
