@@ -7,6 +7,7 @@ import spire.std.any._
 
 class ReducerSpec extends Specification {
   val empty = Series.empty[String, Double]
+  val emptyNA = Series.fromCells[String, Double]("a" -> NA)
 
   object unique {
     val dense = Series("a" -> 1D, "b" -> 2D, "c" -> 4D, "d" -> 5D)
@@ -338,6 +339,79 @@ class ReducerSpec extends Specification {
         4 -> NA, 4 -> NA)
       s.reduceByKey(SemigroupReducer[String]) must_==
         Series.fromCells(1 -> Value("ab"), 2 -> Value("c"), 3 -> Value("dee"), 4 -> NA)
+    }
+  }
+
+
+  "Exists" should {
+    "return false for an empty series" in {
+      empty  .reduce(Exists[Double](_ => true)) must_== Value(false)
+      emptyNA.reduce(Exists[Double](_ => true)) must_== Value(false)
+    }
+
+    "existentially quantify predicate over a dense series" in {
+      unique.dense.reduce(Exists[Double](_ => true))  must_== Value(true)
+      unique.dense.reduce(Exists[Double](_ => false)) must_== Value(false)
+      unique.dense.reduce(Exists[Double](d => d < 2D)) must_== Value(true)
+    }
+
+    "existentially quantify predicate over sparse series" in {
+      unique   .sparse.reduce(Exists[Double](d => d < 3D)) must_== Value(true)
+      odd      .sparse.reduce(Exists[Double](d => d < 3D)) must_== Value(true)
+      duplicate.sparse.reduce(Exists[Double](d => d < 3D)) must_== Value(true)
+    }
+
+    "existentially quantify predicate over a dense series by key" in {
+      duplicate.dense.reduceByKey(Exists[Double](d => d < 2D)) must_==
+        Series("a" -> true, "b" -> false, "c" -> false)
+    }
+
+    "existentially quantify predicate over sparse series by key" in {
+      duplicate.sparse.reduceByKey(Exists[Double](d => d < 2D)) must_==
+        Series("a" -> false, "b" -> false, "c" -> true, "d" -> true)
+    }
+  }
+
+
+  "ForAll" should {
+    "return true for an empty series" in {
+      empty  .reduce(ForAll[Double](_ => false)) must_== Value(true)
+      emptyNA.reduce(ForAll[Double](_ => false)) must_== Value(true)
+    }
+
+    "universally quantify predicate over a dense series" in {
+      unique.dense.reduce(ForAll[Double](_ => true))   must_== Value(true)
+      unique.dense.reduce(ForAll[Double](_ => false))  must_== Value(false)
+      unique.dense.reduce(ForAll[Double](d => d > 0D)) must_== Value(true)
+    }
+
+    "universally quantify predicate over a sparse series with only unavailablity" in {
+      odd.sparse.reduce(ForAll[Double](d => d > 0D)) must_== Value(true)
+    }
+
+    "universally quantify predicate over a sparse series with not meaningful values" in {
+      unique   .sparse.reduce(ForAll[Double](_ => true))  must_== Value(false)
+      unique   .sparse.reduce(ForAll[Double](_ => false)) must_== Value(false)
+      duplicate.sparse.reduce(ForAll[Double](_ => true))  must_== Value(false)
+      duplicate.sparse.reduce(ForAll[Double](_ => false)) must_== Value(false)
+    }
+
+    "universally quantify predicate over a dense series by key" in {
+      duplicate.dense.reduceByKey(ForAll[Double](_ => false)) must_==
+        Series("a" -> false, "b" -> false, "c" -> false)
+      duplicate.dense.reduceByKey(ForAll[Double](_ => true)) must_==
+        Series("a" -> true, "b" -> true, "c" -> true)
+      duplicate.dense.reduceByKey(ForAll[Double](d => d < 6D)) must_==
+        Series("a" -> true, "b" -> true, "c" -> false)
+    }
+
+    "universally quantify predicate over a sparse series by key" in {
+      duplicate.sparse.reduceByKey(ForAll[Double](_ => false)) must_==
+        Series("a" -> true, "b" -> false, "c" -> false, "d" -> false)
+      duplicate.sparse.reduceByKey(ForAll[Double](_ => true)) must_==
+        Series("a" -> true, "b" -> false, "c" -> true, "d" -> true)
+      duplicate.sparse.reduceByKey(ForAll[Double](d => d < 5D)) must_==
+        Series("a" -> true, "b" -> false, "c" -> false, "d" -> true)
     }
   }
 }
