@@ -95,38 +95,3 @@ trait AxisSelectionCompanion {
   def apply[K](c0: K, c1: K, c2: K, c3: K, c4: K, c5: K, c6: K, c7: K, c8: K, c9: K): Pick[K, Fixed[_10], Rec[K]] =
     sized(Sized[List](c0, c1, c2, c3, c4, c5, c6, c7, c8, c9))
 }
-
-// TODO: Auto-generate.
-trait SizedConstructor[SizedCC[_, _ <: Size, _]] {
-  import Nat._
-
-  def sized[K, N <: Nat](s: Sized[List[K], N]): SizedCC[K, Fixed[N], Rec[K]]
-
-  def apply[K](c0: K): SizedCC[K, Fixed[_1], Rec[K]] =
-    sized(Sized[List](c0))
-
-  def apply[K](c0: K, c1: K): SizedCC[K, Fixed[_2], Rec[K]] =
-    sized(Sized[List](c0, c1))
-
-  def apply[K](c0: K, c1: K, c2: K, c3: K): SizedCC[K, Fixed[_4], Rec[K]] =
-    sized(Sized[List](c0, c1, c2, c3))
-
-  def apply[K](c0: K, c1: K, c2: K, c3: K, c4: K): SizedCC[K, Fixed[_5], Rec[K]] =
-    sized(Sized[List](c0, c1, c2, c3, c4))
-
-  def apply[K](c0: K, c1: K, c2: K, c3: K, c4: K, c5: K): SizedCC[K, Fixed[_6], Rec[K]] =
-    sized(Sized[List](c0, c1, c2, c3, c4, c5))
-
-  def apply[K](c0: K, c1: K, c2: K, c3: K, c4: K, c5: K, c6: K): SizedCC[K, Fixed[_7], Rec[K]] =
-    sized(Sized[List](c0, c1, c2, c3, c4, c5, c6))
-
-  def apply[K](c0: K, c1: K, c2: K, c3: K, c4: K, c5: K, c6: K, c7: K): SizedCC[K, Fixed[_8], Rec[K]] =
-    sized(Sized[List](c0, c1, c2, c3, c4, c5, c6, c7))
-
-  def apply[K](c0: K, c1: K, c2: K, c3: K, c4: K, c5: K, c6: K, c7: K, c8: K): SizedCC[K, Fixed[_9], Rec[K]] =
-    sized(Sized[List](c0, c1, c2, c3, c4, c5, c6, c7, c8))
-
-  def apply[K](c0: K, c1: K, c2: K, c3: K, c4: K, c5: K, c6: K, c7: K, c8: K, c9: K): SizedCC[K, Fixed[_10], Rec[K]] =
-    sized(Sized[List](c0, c1, c2, c3, c4, c5, c6, c7, c8, c9))
-}
-
