@@ -1,5 +1,7 @@
 package pellucid.pframe
 
+import scala.language.implicitConversions
+
 import scala.reflect.ClassTag
 
 import spire.algebra.Order

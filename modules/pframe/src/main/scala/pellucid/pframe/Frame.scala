@@ -256,7 +256,7 @@ trait Frame[Row, Col] {
         extractor.extract(this, key, row, p) match {
           case Value(group) =>
             groups += (group -> (row :: groups.getOrElse(group, Nil)))
-          case (missing: Missing) =>
+          case (missing: NonValue) =>
             val missingValue = if (missing == NA) na else nm
             missingValue foreach { group =>
               groups += (group -> (row :: groups.getOrElse(group, Nil)))

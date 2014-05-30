@@ -1,9 +1,7 @@
 package pellucid.pframe
 
 sealed trait Rows[K, A] extends AxisSelectionLike[K, A, Rows]
-object Rows extends AxisSelectionCompanion {
-  type AxisSelection[K, A] = Rows[K, A]
-
+object Rows extends AxisSelectionCompanion[Rows] {
   case class All[K, A](extractor: RowExtractor[A, K, Variable]) extends Rows[K, A] with AllAxisSelection[K, A]
   object All extends AllCompanion
 

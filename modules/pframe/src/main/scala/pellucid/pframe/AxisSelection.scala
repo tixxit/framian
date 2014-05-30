@@ -19,9 +19,7 @@ trait AxisSelectionLike[K, A, +This[K, A] <: AxisSelectionLike[K, A, This]] {
   def map[B](f: A => B): This[K, B]
 }
 
-trait AxisSelectionCompanion {
-  type AxisSelection[K, A] <: AxisSelectionLike[K, A, AxisSelection]
-
+trait AxisSelectionCompanion[AxisSelection[K, A] <: AxisSelectionLike[K, A, AxisSelection]] {
   sealed trait SizedAxisSelection[K, Sz <: Size, A] extends AxisSelectionLike[K, A, AxisSelection] {
     val extractor: RowExtractor[A, K, Sz]
 
