@@ -244,7 +244,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   /**
    * Reduce all the values in this `Series` using the given reducer.
    */
-  def reduce[W: ClassTag](reducer: Reducer[V, W]): Cell[W] = {
+  def reduce[W](reducer: Reducer[V, W]): Cell[W] = {
     val indices = new Array[Int](index.size)
     cfor(0)(_ < indices.length, _ + 1) { i =>
       indices(i) = index.indexAt(i)
@@ -252,16 +252,291 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     reducer.reduce(column, indices, 0, index.size)
   }
 
+  /** Returns the [[reduce.Count]] reduction of this series.
+    * @return the [[reduce.Count]] reduction of this series.
+    * @see [[reduce.Count]]
+    */
+  def count: Cell[Int] =
+    this.reduce(pellucid.pframe.reduce.Count)
+
+  /** Returns the [[reduce.First]] reduction of this series.
+    * @return the [[reduce.First]] reduction of this series.
+    * @see [[reduce.First]]
+    * @see [[firstN]]
+    * @see [[last]]
+    */
+  def first: Cell[V] =
+    this.reduce(pellucid.pframe.reduce.First[V])
+
+  /** Returns the [[reduce.FirstN]] reduction of this series.
+    * @return the [[reduce.FirstN]] reduction of this series.
+    * @see [[reduce.FirstN]]
+    * @see [[first]]
+    * @see [[lastN]]
+    */
+  def firstN(n: Int): Cell[List[V]] =
+    this.reduce(pellucid.pframe.reduce.FirstN[V](n))
+
+  /** Returns the [[reduce.Last]] reduction of this series.
+    * @return the [[reduce.Last]] reduction of this series.
+    * @see [[reduce.Last]]
+    * @see [[lastN]]
+    * @see [[first]]
+    */
+  def last: Cell[V] =
+    this.reduce(pellucid.pframe.reduce.Last[V])
+
+  /** Returns the [[reduce.LastN]] reduction of this series.
+    * @return the [[reduce.LastN]] reduction of this series.
+    * @see [[reduce.LastN]]
+    * @see [[last]]
+    * @see [[firstN]]
+    */
+  def lastN(n: Int): Cell[List[V]] =
+    this.reduce(pellucid.pframe.reduce.LastN[V](n))
+
+  /** Returns the [[reduce.Max]] reduction of this series.
+    * @return the [[reduce.Max]] reduction of this series.
+    * @see [[reduce.Max]]
+    * @see [[min]]
+    */
+  def max(implicit ev0: Order[V]): Cell[V] =
+    this.reduce(pellucid.pframe.reduce.Max[V])
+
+  /** Returns the [[reduce.Min]] reduction of this series.
+    * @return the [[reduce.Min]] reduction of this series.
+    * @see [[reduce.Min]]
+    * @see [[max]]
+    */
+  def min(implicit ev0: Order[V]): Cell[V] =
+    this.reduce(pellucid.pframe.reduce.Min[V])
+
+  /** Returns the `AdditiveMonoid` reduction of this series.
+    * @return the `AdditiveMonoid` reduction of this series.
+    * @see [[reduce.MonoidReducer]]
+    * @see [[sumNonEmpty]]
+    * @see [[product]]
+    */
+  def sum(implicit ev0: AdditiveMonoid[V]): Cell[V] =
+    this.reduce(pellucid.pframe.reduce.MonoidReducer[V](ev0.additive))
+
+  /** Returns the `AdditiveSemigroup` reduction of this series.
+    * @return the `AdditiveSemigroup` reduction of this series.
+    * @see [[reduce.SemigroupReducer]]
+    * @see [[sum]]
+    * @see [[productNonEmpty]]
+    */
+  def sumNonEmpty(implicit ev0: AdditiveSemigroup[V]): Cell[V] =
+    this.reduce(pellucid.pframe.reduce.SemigroupReducer[V](ev0.additive))
+
+  /** Returns the `MultiplicativeMonoid` reduction of this series.
+    * @return the `MultiplicativeMonoid` reduction of this series.
+    * @see [[reduce.MonoidReducer]]
+    * @see [[productNonEmpty]]
+    * @see [[sum]]
+    */
+  def product(implicit ev0: MultiplicativeMonoid[V]): Cell[V] =
+    this.reduce(pellucid.pframe.reduce.MonoidReducer[V](ev0.multiplicative))
+
+  /** Returns the `MultiplicativeSemigroup` reduction of this series.
+    * @return the `MultiplicativeSemigroup` reduction of this series.
+    * @see [[reduce.SemigroupReducer]]
+    * @see [[product]]
+    * @see [[sumNonEmpty]]
+    */
+  def productNonEmpty(implicit ev0: MultiplicativeSemigroup[V]): Cell[V] =
+    this.reduce(pellucid.pframe.reduce.SemigroupReducer[V](ev0.multiplicative))
+
+  /** Returns the [[reduce.Mean]] reduction of this series.
+    * @return the [[reduce.Mean]] reduction of this series.
+    * @see [[reduce.Mean]]
+    * @see [[median]]
+    */
+  def mean(implicit ev0: Field[V]): Cell[V] =
+    this.reduce(pellucid.pframe.reduce.Mean[V])
+
+  /** Returns the [[reduce.Median]] reduction of this series.
+    * @return the [[reduce.Median]] reduction of this series.
+    * @see [[reduce.Median]]
+    * @see [[mean]]
+    */
+  def median(implicit ev0: ClassTag[V], ev1: Field[V], ev2: Order[V]): Cell[V] =
+    this.reduce(pellucid.pframe.reduce.Median[V])
+
+  /** Returns the [[reduce.Unique]] reduction of this series.
+    * @return the [[reduce.Unique]] reduction of this series.
+    * @see [[reduce.Unique]]
+    */
+  def unique: Cell[Set[V]] =
+    this.reduce(pellucid.pframe.reduce.Unique[V])
+
+  /** Returns the [[reduce.Exists]] reduction of this series.
+    * @return the [[reduce.Exists]] reduction of this series.
+    * @see [[reduce.Exists]]
+    * @see [[forall]]
+    */
+  def exists(p: V => Boolean): Boolean = {
+    val cell = this.reduce(pellucid.pframe.reduce.Exists(p))
+    assume(cell.isValue, "assumed that the Exists reducer always returns a value")
+    cell.get
+  }
+
+  /** Returns the [[reduce.ForAll]] reduction of this series.
+    * @return the [[reduce.ForAll]] reduction of this series.
+    * @see [[reduce.ForAll]]
+    * @see [[exists]]
+    */
+  def forall(p: V => Boolean): Boolean = {
+    val cell = this.reduce(pellucid.pframe.reduce.ForAll(p))
+    assume(cell.isValue, "assumed that the ForAll reducer always returns a value")
+    cell.get
+  }
+
   /**
    * For each unique key in this series, this reduces all the values for that
    * key and returns a series with only the unique keys and reduced values. The
    * new series will be in key order.
    */
-  def reduceByKey[W: ClassTag](reducer: Reducer[V, W]): Series[K, W] = {
+  def reduceByKey[W](reducer: Reducer[V, W]): Series[K, W] = {
     val reduction = new Reduction[K, V, W](column, reducer)
     val (keys, values) = Index.group(index)(reduction).result()
     Series(Index.ordered(keys), Column.fromCells(values))
   }
+
+  /** Returns the [[reduce.Count]] reduction of this series by key.
+    * @return the [[reduce.Count]] reduction of this series by key.
+    * @see [[reduce.Count]]
+    */
+  def countByKey: Series[K, Int] =
+    this.reduceByKey(pellucid.pframe.reduce.Count)
+
+  /** Returns the [[reduce.First]] reduction of this series by key.
+    * @return the [[reduce.First]] reduction of this series by key.
+    * @see [[reduce.First]]
+    * @see [[firstN]]
+    * @see [[last]]
+    */
+  def firstByKey: Series[K, V] =
+    this.reduceByKey(pellucid.pframe.reduce.First[V])
+
+  /** Returns the [[reduce.FirstN]] reduction of this series by key.
+    * @return the [[reduce.FirstN]] reduction of this series by key.
+    * @see [[reduce.FirstN]]
+    * @see [[first]]
+    * @see [[lastN]]
+    */
+  def firstNByKey(n: Int): Series[K, List[V]] =
+    this.reduceByKey(pellucid.pframe.reduce.FirstN[V](n))
+
+  /** Returns the [[reduce.Last]] reduction of this series by key.
+    * @return the [[reduce.Last]] reduction of this series by key.
+    * @see [[reduce.Last]]
+    * @see [[lastN]]
+    * @see [[first]]
+    */
+  def lastByKey: Series[K, V] =
+    this.reduceByKey(pellucid.pframe.reduce.Last[V])
+
+  /** Returns the [[reduce.LastN]] reduction of this series by key.
+    * @return the [[reduce.LastN]] reduction of this series by key.
+    * @see [[reduce.LastN]]
+    * @see [[last]]
+    * @see [[firstN]]
+    */
+  def lastNByKey(n: Int): Series[K, List[V]] =
+    this.reduceByKey(pellucid.pframe.reduce.LastN[V](n))
+
+  /** Returns the [[reduce.Max]] reduction of this series by key.
+    * @return the [[reduce.Max]] reduction of this series by key.
+    * @see [[reduce.Max]]
+    * @see [[min]]
+    */
+  def maxByKey(implicit ev0: Order[V]): Series[K, V] =
+    this.reduceByKey(pellucid.pframe.reduce.Max[V])
+
+  /** Returns the [[reduce.Min]] reduction of this series by key.
+    * @return the [[reduce.Min]] reduction of this series by key.
+    * @see [[reduce.Min]]
+    * @see [[max]]
+    */
+  def minByKey(implicit ev0: Order[V]): Series[K, V] =
+    this.reduceByKey(pellucid.pframe.reduce.Min[V])
+
+  /** Returns the `AdditiveMonoid` reduction of this series by key.
+    * @return the `AdditiveMonoid` reduction of this series by key.
+    * @see [[reduce.MonoidReducer]]
+    * @see [[sumNonEmpty]]
+    * @see [[product]]
+    */
+  def sumByKey(implicit ev0: AdditiveMonoid[V]): Series[K, V] =
+    this.reduceByKey(pellucid.pframe.reduce.MonoidReducer[V](ev0.additive))
+
+  /** Returns the `AdditiveSemigroup` reduction of this series by key.
+    * @return the `AdditiveSemigroup` reduction of this series by key.
+    * @see [[reduce.SemigroupReducer]]
+    * @see [[sum]]
+    * @see [[productNonEmpty]]
+    */
+  def sumNonEmptyByKey(implicit ev0: AdditiveSemigroup[V]): Series[K, V] =
+    this.reduceByKey(pellucid.pframe.reduce.SemigroupReducer[V](ev0.additive))
+
+  /** Returns the `MultiplicativeMonoid` reduction of this series by key.
+    * @return the `MultiplicativeMonoid` reduction of this series by key.
+    * @see [[reduce.MonoidReducer]]
+    * @see [[productNonEmpty]]
+    * @see [[sum]]
+    */
+  def productByKey(implicit ev0: MultiplicativeMonoid[V]): Series[K, V] =
+    this.reduceByKey(pellucid.pframe.reduce.MonoidReducer[V](ev0.multiplicative))
+
+  /** Returns the `MultiplicativeSemigroup` reduction of this series by key.
+    * @return the `MultiplicativeSemigroup` reduction of this series by key.
+    * @see [[reduce.SemigroupReducer]]
+    * @see [[product]]
+    * @see [[sumNonEmpty]]
+    */
+  def productNonEmptyByKey(implicit ev0: MultiplicativeSemigroup[V]): Series[K, V] =
+    this.reduceByKey(pellucid.pframe.reduce.SemigroupReducer[V](ev0.multiplicative))
+
+  /** Returns the [[reduce.Mean]] reduction of this series by key.
+    * @return the [[reduce.Mean]] reduction of this series by key.
+    * @see [[reduce.Mean]]
+    * @see [[median]]
+    */
+  def meanByKey(implicit ev0: Field[V]): Series[K, V] =
+    this.reduceByKey(pellucid.pframe.reduce.Mean[V])
+
+  /** Returns the [[reduce.Median]] reduction of this series by key.
+    * @return the [[reduce.Median]] reduction of this series by key.
+    * @see [[reduce.Median]]
+    * @see [[mean]]
+    */
+  def medianByKey(implicit ev0: ClassTag[V], ev1: Field[V], ev2: Order[V]): Series[K, V] =
+    this.reduceByKey(pellucid.pframe.reduce.Median[V])
+
+  /** Returns the [[reduce.Unique]] reduction of this series by key.
+    * @return the [[reduce.Unique]] reduction of this series by key.
+    * @see [[reduce.Unique]]
+    */
+  def uniqueByKey: Series[K, Set[V]] =
+    this.reduceByKey(pellucid.pframe.reduce.Unique[V])
+
+  /** Returns the [[reduce.Exists]] reduction of this series by key.
+    * @return the [[reduce.Exists]] reduction of this series by key.
+    * @see [[reduce.Exists]]
+    * @see [[forall]]
+    */
+  def existsByKey(p: V => Boolean): Series[K, Boolean] =
+    this.reduceByKey(pellucid.pframe.reduce.Exists(p))
+
+  /** Returns the [[reduce.ForAll]] reduction of this series by key.
+    * @return the [[reduce.ForAll]] reduction of this series by key.
+    * @see [[reduce.ForAll]]
+    * @see [[exists]]
+    */
+  def forallByKey(p: V => Boolean): Series[K, Boolean] =
+    this.reduceByKey(pellucid.pframe.reduce.ForAll(p))
+
 
   /**
    * Rolls values and `NM`s forward, over `NA`s. This is similar to
