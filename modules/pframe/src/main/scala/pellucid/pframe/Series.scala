@@ -48,13 +48,13 @@ final class Series[K, V](val index: Index[K], val column: Column[V])
    */
   def hasValues: Boolean = {
     var i = 0
-    var missing = true
-    while (i < index.size && missing) {
+    var seenValue = false
+    while (i < index.size && !seenValue) {
       val row = index.indexAt(i)
-      missing = missing & !column.exists(row)
+      seenValue = seenValue & column.isValueAt(row)
       i += 1
     }
-    !missing
+    seenValue
   }
 
   /**
@@ -71,18 +71,18 @@ final class Series[K, V](val index: Index[K], val column: Column[V])
     cfor(0)(_ < lIndices.length, _ + 1) { i =>
       val l = lIndices(i)
       val r = rIndices(i)
-      val lExists = lCol.exists(l)
-      val rExists = rCol.exists(r)
+      val lExists = lCol.isValueAt(l)
+      val rExists = rCol.isValueAt(r)
       if (lExists && rExists) {
-        bldr.addValue((lCol.value(l): VV) |+| rCol.value(r))
+        bldr.addValue((lCol.valueAt(l): VV) |+| rCol.valueAt(r))
       } else if (lExists) {
-        if (rCol.missing(r) == NM) bldr.addNM()
-        else bldr.addValue(lCol.value(l))
+        if (rCol.nonValueAt(r) == NM) bldr.addNM()
+        else bldr.addValue(lCol.valueAt(l))
       } else if (rExists) {
-        if (lCol.missing(l) == NM) bldr.addNM()
-        else bldr.addValue(rCol.value(r))
+        if (lCol.nonValueAt(l) == NM) bldr.addNM()
+        else bldr.addValue(rCol.valueAt(r))
       } else {
-        bldr.addMissing(if (lCol.missing(l) == NM) NM else rCol.missing(r))
+        bldr.addNonValue(if (lCol.nonValueAt(l) == NM) NM else rCol.nonValueAt(r))
       }
     }
 
@@ -103,16 +103,16 @@ final class Series[K, V](val index: Index[K], val column: Column[V])
     cfor(0)(_ < lIndices.length, _ + 1) { i =>
       val l = lIndices(i)
       val r = rIndices(i)
-      val lExists = lCol.exists(l)
-      val rExists = rCol.exists(r)
+      val lExists = lCol.isValueAt(l)
+      val rExists = rCol.isValueAt(r)
       if (lExists && rExists) {
-        bldr.addValue(lCol.value(l): VV)
+        bldr.addValue(lCol.valueAt(l): VV)
       } else if (lExists) {
-        bldr.addValue(lCol.value(l))
+        bldr.addValue(lCol.valueAt(l))
       } else if (rExists) {
-        bldr.addValue(rCol.value(r))
+        bldr.addValue(rCol.valueAt(r))
       } else {
-        bldr.addMissing(if (lCol.missing(l) == NM) NM else rCol.missing(r))
+        bldr.addNonValue(if (lCol.nonValueAt(l) == NM) NM else rCol.nonValueAt(r))
       }
     }
 
@@ -133,16 +133,16 @@ final class Series[K, V](val index: Index[K], val column: Column[V])
     cfor(0)(_ < lIndices.length, _ + 1) { i =>
       val l = lIndices(i)
       val r = rIndices(i)
-      val lExists = lCol.exists(l)
-      val rExists = rCol.exists(r)
+      val lExists = lCol.isValueAt(l)
+      val rExists = rCol.isValueAt(r)
       if (lExists && rExists) {
-        bldr.addValue(f(lCol.value(l), rCol.value(r)))
+        bldr.addValue(f(lCol.valueAt(l), rCol.valueAt(r)))
       } else if (lExists) {
-        bldr.addMissing(rCol.missing(r))
+        bldr.addNonValue(rCol.nonValueAt(r))
       } else if (rExists) {
-        bldr.addMissing(lCol.missing(l))
+        bldr.addNonValue(lCol.nonValueAt(l))
       } else {
-        bldr.addMissing(if (lCol.missing(l) == NM) NM else rCol.missing(r))
+        bldr.addNonValue(if (lCol.nonValueAt(l) == NM) NM else rCol.nonValueAt(r))
       }
     }
     Series(Index.ordered(keys), bldr.result())
@@ -199,8 +199,8 @@ final class Series[K, V](val index: Index[K], val column: Column[V])
     var i = 0
     while (i < index.size) {
       val row = index.indexAt(i)
-      if (column.exists(row))
-        return Some(index.keyAt(i) -> column.value(row))
+      if (column.isValueAt(row))
+        return Some(index.keyAt(i) -> column.valueAt(row))
       i += 1
     }
     None
@@ -210,8 +210,8 @@ final class Series[K, V](val index: Index[K], val column: Column[V])
     var i = index.size - 1
     while (i >= 0) {
       val row = index.indexAt(i)
-      if (column.exists(row))
-        return Some(index.keyAt(i) -> column.value(row))
+      if (column.isValueAt(row))
+        return Some(index.keyAt(i) -> column.valueAt(row))
       i -= 1
     }
     None
@@ -274,7 +274,7 @@ final class Series[K, V](val index: Index[K], val column: Column[V])
     @tailrec
     def loop(i: Int, lastValue: Int): Unit = if (i < index.size) {
       val row = index.indexAt(i)
-      if (!column.exists(row) && column.missing(row) == NA) {
+      if (!column.isValueAt(row) && column.nonValueAt(row) == NA) {
         if (K.distance(index.keyAt(i), index.keyAt(lastValue)) <= delta) {
           indices(i) = index.indexAt(lastValue)
         } else {

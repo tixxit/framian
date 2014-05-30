@@ -1,6 +1,7 @@
 package pellucid.pframe
 package reduce
 
+import scala.language.implicitConversions
 import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
@@ -24,7 +25,7 @@ final class Median[A: Field: Order: ClassTag] extends SimpleReducer[A, A] {
         if (s.size == k) findKMedian(arr, Right(a), Left(k2))
         else if (s.size == k2) findKMedian(arr, Left(k), Right(a))
         else if (s.isEmpty) {
-          val (s, b) = arr partition (a ==)
+          val (s, b) = arr partition (a == _)
           if (s.size > k && s.size > k2) (a, a)
           else if (s.size > k) findKMedian(arr, Right(a), Left(k2))
           else if (s.size > k2) findKMedian(arr, Left(k), Right(a))
@@ -38,7 +39,7 @@ final class Median[A: Field: Order: ClassTag] extends SimpleReducer[A, A] {
         val (s, b) = arr partition { x => a > x }
         if (s.size == k)  (a, v)
         else if (s.isEmpty) {
-          val (s, b) = arr partition (a ==)
+          val (s, b) = arr partition (a == _)
           if (s.size > k) (a, v)
           else findKMedian(b, Left(k - s.size), k2OrValue)
         } else if (s.size < k) findKMedian(b, Left(k - s.size), k2OrValue)
@@ -48,7 +49,7 @@ final class Median[A: Field: Order: ClassTag] extends SimpleReducer[A, A] {
         val (s, b) = arr partition { x => a > x }
         if (s.size == k)  (v, a)
         else if (s.isEmpty) {
-          val (s, b) = arr partition (a ==)
+          val (s, b) = arr partition (a == _)
           if (s.size > k) (v, a)
           else findKMedian(b, kOrValue, Left(k - s.size))
         } else if (s.size < k) findKMedian(b, kOrValue, Left(k - s.size))

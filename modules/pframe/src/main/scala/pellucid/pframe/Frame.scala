@@ -90,7 +90,7 @@ trait Frame[Row, Col] {
 
   def mapRowGroups[R1: ClassTag: Order, C1: ClassTag: Order](f: (Row, Frame[Row, Col]) => Frame[R1, C1]): Frame[R1, C1] = {
     val columns = columnsAsSeries.toList collect { case (key, Value(col)) => key -> col }
-    val grouper = new Index.Grouper[Row] {
+    object grouper extends Index.Grouper[Row] {
       case class State(rows: Int, keys: Vector[Array[R1]], cols: Series[C1, UntypedColumn]) {
         def result(): Frame[R1, C1] = Frame(
           Index(Array.concat(keys: _*)),
@@ -177,14 +177,14 @@ trait Frame[Row, Col] {
    * columns from the column index and does not modify the actual columns.
    */
   def dropColumns(cols: Col*): Frame[Row, Col] =
-    withColIndex(Index(colIndex filter { case (col, _) => !cols.contains(col) } toSeq: _*))
+    withColIndex(Index(colIndex.filter { case (col, _) => !cols.contains(col) } .toSeq: _*))
 
   /**
    * Drop the rows `rows` from the row index. This simply removes the rows
    * from the index and does not modify the actual columns.
    */
   def dropRows(rows: Row*): Frame[Row, Col] =
-    withRowIndex(Index(rowIndex filter { case (row, _) => !rows.contains(row) } toSeq: _*))
+    withRowIndex(Index(rowIndex.filter { case (row, _) => !rows.contains(row) } .toSeq: _*))
 
   def apply[A: ColumnTyper](rowKey: Row, colKey: Col): Cell[A] = for {
     col <- columnsAsSeries(colKey)
@@ -340,7 +340,7 @@ trait Frame[Row, Col] {
       val col = cell.getOrElse(UntypedColumn.empty).cast[Any]
       val values = Series(rowIndex, col).map {
         case (_, Value(value)) => value.toString
-        case (_, missing) => missing.toString
+        case (_, nonValue) => nonValue.toString
       }.toList
       justify(header :: values)
     }.toList
@@ -371,9 +371,9 @@ trait Frame[Row, Col] {
     genericJoin[Frame[Row, Col]](
       { frame: Frame[Row, Col] => frame.rowIndex },
       { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => frame: Frame[Row, Col] =>
-        frame.columnsAsSeries collect { case (key, Value(col)) =>
+        frame.columnsAsSeries.collect { case (key, Value(col)) =>
           (key, col.setNA(Skip).reindex(rIndex))
-        } toSeq }
+        } .toSeq }
     )(that)(Merger[Row](mergeStrategy)(rowIndex.classTag))
 
   def merge[T: ClassTag: ColumnTyper](that: Series[Row, T], columnKey: Col)(mergeStrategy: Merge): Frame[Row, Col] =
@@ -387,9 +387,9 @@ trait Frame[Row, Col] {
     genericJoin[Frame[Row, Col]](
       { frame: Frame[Row, Col] => frame.rowIndex },
       { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => frame: Frame[Row, Col] =>
-        frame.columnsAsSeries collect { case (key, Value(col)) =>
+        frame.columnsAsSeries.collect { case (key, Value(col)) =>
           (key, col.setNA(Skip).reindex(rIndex))
-        } toSeq }
+        } .toSeq }
     )(that)(Joiner[Row](joinStrategy)(rowIndex.classTag))
 
   def join[T: ClassTag: ColumnTyper](that: Series[Row, T], columnKey: Col)(joinStrategy: Join): Frame[Row, Col] =
