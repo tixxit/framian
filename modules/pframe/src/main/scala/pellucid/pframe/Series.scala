@@ -26,9 +26,36 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   private implicit def order = index.order
 
   def size: Int = index.size
+
+  /** Returns an iterator over the key-cell pairs of the series.
+    * @return an iterator over the key-cell pairs of the series.
+    * @see [[denseIterator]]
+    * @note If the series is known to be dense, or the non values
+    * can ignored, then one should use [[denseIterator]] instead.
+    */
   def iterator: Iterator[(K, Cell[V])] = index.iterator map { case (k, row) =>
     k -> column(row)
   }
+
+  /** Returns an iterator over the key-value pairs of the series.
+    *
+    * This iterator assumes that the series is dense, so it will
+    * skip over any non value cells if, in fact, the series is sparse.
+    *
+    * @return an iterator over the key-value pairs of the series.
+    * @see [[iterator]]
+    * @note The `Iterator` returned by this method is related to
+    * the `Iterator` returned by [[iterator]]
+    * {{{
+    * series.iterator.collect { case (k, Value(v)) => k -> v} == series.denseIterator
+    * }}}
+    * however, this method uses a more efficient access pattern
+    * to the underlying data.
+    */
+  def denseIterator: Iterator[(K, V)] =
+    index.iterator collect { case (k, ix) if column.isValueAt(ix) =>
+      k -> column.valueAt(ix)
+    }
 
   def keys: Vector[K] = index.map(_._1)(collection.breakOut)
   def values: Vector[Cell[V]] = index.map({ case (_, i) => column(i) })(collection.breakOut)

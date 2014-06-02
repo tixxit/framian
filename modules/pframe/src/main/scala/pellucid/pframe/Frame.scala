@@ -71,12 +71,12 @@ trait Frame[Row, Col] {
     * column.
     */
   def reduceFrame[V: ClassTag: ColumnTyper, R: ClassTag: ColumnTyper](reducer: Reducer[V, R]): Series[Col, R] =
-    Series.fromCells(columnsAsSeries.iterator.collect { case (key, Value(col)) =>
+    Series.fromCells(columnsAsSeries.denseIterator.map { case (key, col) =>
       (key, Series(rowIndex, col.cast[V]).reduce(reducer))
     })
 
   def reduceFrameByKey[V: ClassTag: ColumnTyper, R: ClassTag: ColumnTyper](reducer: Reducer[V, R]): Frame[Row, Col] =
-    Frame.fromSeries(columnsAsSeries.iterator.collect { case (key, Value(col)) =>
+    Frame.fromSeries(columnsAsSeries.denseIterator.map { case (key, col) =>
       (key, Series(rowIndex, col.cast[V]).reduceByKey(reducer))
     }.toSeq: _*)
 
@@ -87,12 +87,12 @@ trait Frame[Row, Col] {
     withRowIndex(rowIndex.getAll(row))
 
   def mapRowGroups[R1: ClassTag: Order, C1: ClassTag: Order](f: (Row, Frame[Row, Col]) => Frame[R1, C1]): Frame[R1, C1] = {
-    val columns = columnsAsSeries.iterator.collect { case (key, Value(col)) => key -> col }.toSeq
+    val columns = columnsAsSeries.denseIterator.toSeq
     object grouper extends Index.Grouper[Row] {
       case class State(rows: Int, keys: Vector[Array[R1]], cols: Series[C1, UntypedColumn]) {
         def result(): Frame[R1, C1] = Frame(
           Index(Array.concat(keys: _*)),
-          cols.iterator.collect { case (key, Value(col)) => key -> col }.toSeq: _*)
+          cols.denseIterator.toSeq: _*)
       }
 
       def init = State(0, Vector.empty, Series.empty)
@@ -266,7 +266,7 @@ trait Frame[Row, Col] {
     val res: genericJoiner.State = Index.cogroup(this.rowIndex, getIndex(that))(genericJoiner)
     val (keys, lIndex, rIndex) = res.result()
     val newRowIndex = Index.ordered(keys)
-    val cols0 = this.columnsAsSeries.iterator.collect { case (key, Value(col)) =>
+    val cols0 = this.columnsAsSeries.denseIterator.map { case (key, col) =>
       (key, col.setNA(Skip).reindex(lIndex))
     } .toSeq
     val cols1 = reindexColumns(keys, lIndex, rIndex)(that)
@@ -279,7 +279,7 @@ trait Frame[Row, Col] {
     genericJoin[Frame[Row, Col]](
       { frame: Frame[Row, Col] => frame.rowIndex },
       { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => frame: Frame[Row, Col] =>
-        frame.columnsAsSeries.iterator.collect { case (key, Value(col)) =>
+        frame.columnsAsSeries.denseIterator.map { case (key, col) =>
           (key, col.setNA(Skip).reindex(rIndex))
         } .toSeq }
     )(that)(Merger[Row](mergeStrategy)(rowIndex.classTag))
@@ -295,7 +295,7 @@ trait Frame[Row, Col] {
     genericJoin[Frame[Row, Col]](
       { frame: Frame[Row, Col] => frame.rowIndex },
       { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => frame: Frame[Row, Col] =>
-        frame.columnsAsSeries.iterator.collect { case (key, Value(col)) =>
+        frame.columnsAsSeries.denseIterator.map { case (key, col) =>
           (key, col.setNA(Skip).reindex(rIndex))
         } .toSeq }
     )(that)(Joiner[Row](joinStrategy)(rowIndex.classTag))
