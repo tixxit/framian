@@ -349,7 +349,7 @@ class FrameSpec extends Specification {
 
     "reduce groups" in {
       dups.mapRowGroups { (row, f) =>
-        val reduced = f.reduceFrame(reduce.Sum[Double]).toList
+        val reduced = f.reduceFrame(reduce.Sum[Double]).iterator.toList
         Frame(Index.fromKeys(row), reduced map { case (key, value) =>
           key -> TypedColumn(Column.fromCells(Vector(value)))
         }: _*)

@@ -31,5 +31,5 @@ trait JsonExtractor extends JsonModule {
   }
 
   def frameToJson(frame: Frame[_, JsonPath]): JsonValue =
-    JsonValue.jsonArray(frame.columns.as[JsonValue].toVector flatMap (_._2.value))
+    JsonValue.jsonArray(frame.columns.as[JsonValue].iterator.toVector flatMap (_._2.value))
 }

@@ -20,19 +20,15 @@ import spire.compat._
 import pellucid.pframe.reduce.Reducer
 import pellucid.pframe.util.TrivialMetricSpace
 
-final class Series[K,V](val index: Index[K], val column: Column[V])
-    extends Iterable[(K, Cell[V])] with IterableLike[(K, Cell[V]), Series[K, V]] {
+final class Series[K,V](val index: Index[K], val column: Column[V]) {
 
   private implicit def classTag = index.classTag
   private implicit def order = index.order
 
-  def empty: Series[K, V] = Series(Index.empty[K], Column.empty[V])
-  override def size: Int = index.size
+  def size: Int = index.size
   def iterator: Iterator[(K, Cell[V])] = index.iterator map { case (k, row) =>
     k -> column(row)
   }
-  override protected def newBuilder: Builder[(K, Cell[V]), Series[K, V]] =
-    new SeriesBuilder
 
   def keys: Vector[K] = index.map(_._1)(collection.breakOut)
   def values: Vector[Cell[V]] = index.map({ case (_, i) => column(i) })(collection.breakOut)
@@ -188,12 +184,31 @@ final class Series[K,V](val index: Index[K], val column: Column[V])
   /**
    * Filter the this series by its keys.
    */
-  def filterKeys(f: K => Boolean): Series[K, V] = this.filter { case (index, value) => f(index) }
+  def filterKeys(p: K => Boolean): Series[K, V] = {
+    val b = new SeriesBuilder[K, V]
+    b.sizeHint(this.size)
+    for ((k, ix) <- index.iterator) {
+      if (p(k)) {
+        b += (k -> column(ix))
+      }
+    }
+    b.result()
+  }
 
   /**
    * Filter the values of this series only.
    */
-  def filterValues(f: Cell[V] => Boolean): Series[K, V] = this.filter { case (index, value) => f(value) }
+  def filterValues(p: Cell[V] => Boolean): Series[K, V] = {
+    val b = new SeriesBuilder[K, V]
+    b.sizeHint(this.size)
+    for ((k, ix) <- index.iterator) {
+      val cell = column(ix)
+      if (p(cell)) {
+        b += (k -> cell)
+      }
+    }
+    b.result()
+  }
 
   def firstValue: Option[(K, V)] = {
     var i = 0
@@ -328,11 +343,14 @@ object Series {
     Series(Index(keys), Column.fromArray(values.toArray))
   }
 
-  def fromCells[K: Order: ClassTag, V: ClassTag](kvs: (K, Cell[V])*): Series[K, V] = {
+  def fromCells[K: Order: ClassTag, V: ClassTag](col: TraversableOnce[(K, Cell[V])]): Series[K, V] = {
     val bldr = new SeriesBuilder[K ,V]
-    bldr ++= kvs
+    bldr ++= col
     bldr.result()
   }
+
+  def fromCells[K: Order: ClassTag, V: ClassTag](kvs: (K, Cell[V])*): Series[K, V] =
+    fromCells(kvs)
 
   def fromMap[K: Order: ClassTag, V: ClassTag](kvMap: Map[K, V]): Series[K, V] =
     Series(Index(kvMap.keys.toArray), Column.fromArray(kvMap.values.toArray))
@@ -360,4 +378,9 @@ private final class SeriesBuilder[K: Order: ClassTag, V] extends Builder[(K, Cel
   }
 
   def result(): Series[K, V] = Series(Index.unordered(keys.result()), Column.fromCells(values.result()))
+
+  override def sizeHint(size: Int): Unit = {
+    keys.sizeHint(size)
+    values.sizeHint(size)
+  }
 }
