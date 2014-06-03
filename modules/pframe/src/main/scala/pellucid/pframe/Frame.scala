@@ -29,6 +29,7 @@ trait Frame[Row, Col] {
 
   def columnsAsSeries: Series[Col, UntypedColumn]
   def rowsAsSeries: Series[Row, UntypedColumn]
+  def transpose: Frame[Col, Row] = TransposedFrame(this)
 
   def isEmpty =
     columnsAsSeries.collectFirst {
@@ -194,6 +195,9 @@ trait Frame[Row, Col] {
 
   def column[T: ColumnTyper](c: Col): Series[Row, T] = get(Cols(c).as[T])
 
+  def get[A](rows: Rows[Row, A]): Series[Col, A] =
+    transpose.get(rows.toCols)
+
   def get[A](cols: Cols[Col, A]): Series[Row, A] = {
     val keys = cols getOrElse columnsAsSeries.index.keys.toList
     val column = cols.extractor.prepare(this, keys).fold(Column.empty[A]) { p =>
@@ -221,6 +225,9 @@ trait Frame[Row, Col] {
     val untypedColumn: UntypedColumn = TypedColumn[B](column)
     Frame.fromColumns(rowIndex, columnsAsSeries ++ Series(to -> untypedColumn))
   }
+
+  def map[A, B: ClassTag](rows: Rows[Row, A], to: Row)(f: A => B): Frame[Row, Col] =
+    transpose.map(rows.toCols, to)(f).transpose
 
   def map[A, B: ClassTag](cols: Cols[Col, A], to: Col)(f: A => B): Frame[Row, Col] = {
     val extractor = cols.extractor
@@ -422,6 +429,16 @@ trait Frame[Row, Col] {
 
     them.foldLeft(columnIndices.toList.asInstanceOf[List[Col]], this)(joinSeries)._2
   }
+}
+
+case class TransposedFrame[Row, Col](frame: Frame[Col, Row]) extends Frame[Row, Col] {
+  override def transpose: Frame[Col, Row] = frame
+  def rowIndex: Index[Row] = frame.colIndex
+  def colIndex: Index[Col] = frame.rowIndex
+  def columnsAsSeries: Series[Col, UntypedColumn] = frame.rowsAsSeries
+  def rowsAsSeries: Series[Row, UntypedColumn] = frame.columnsAsSeries
+  def withColIndex[C1](ci: Index[C1]): Frame[Row, C1] = TransposedFrame(frame.withRowIndex(ci))
+  def withRowIndex[R1](ri: Index[R1]): Frame[R1, Col] = TransposedFrame(frame.withColIndex(ri))
 }
 
 case class ColOrientedFrame[Row, Col](
