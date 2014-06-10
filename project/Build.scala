@@ -4,7 +4,7 @@ import Keys._
 
 object BuildSettings {
 
-  val buildOrganization = "pellucid.content"
+  val buildOrganization = "com.pellucid"
   val buildVersion      = "0.0.1"
 
   val buildSettings = Defaults.defaultSettings ++ Seq(
@@ -36,20 +36,20 @@ object build extends Build {
   lazy val root = Project(
     id = "root",
     base = file("."),
-    aggregate = Seq(pframe, pframeJsonBase, pframeJsonPlay),
+    aggregate = Seq(framian, framianJsonBase, framianJsonPlay),
     settings = sharedSettings
   )
 
-  def pframeSettings =
+  def framianSettings =
     sharedSettings ++
     Seq(
       testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html", "junitxml", "console"),
       resolvers ++= repositories,
       initialCommands := """
-      | import pellucid.pframe._
+      | import framian._
       | import shapeless._
       | import spire.implicits._""".stripMargin('|'),
-      libraryDependencies ++= Dependencies.pframe,
+      libraryDependencies ++= Dependencies.framian,
       libraryDependencies += (
         if (isScala11orLater(scalaVersion.value)) Dependency.shapeless_11 else Dependency.shapeless_10
       )
@@ -61,24 +61,24 @@ object build extends Build {
         case _ => false
       }
 
-  lazy val pframe = Project(
-    id = "pframe",
-    base = file("modules/pframe"),
-    settings = pframeSettings
+  lazy val framian = Project(
+    id = "framian",
+    base = file("modules/framian"),
+    settings = framianSettings
   )
 
-  lazy val pframeJsonBase = Project(
-    id = "pframe-json-base",
-    base = file("modules/pframe-json-base"),
-    dependencies = Seq(pframe),
-    settings = pframeSettings
+  lazy val framianJsonBase = Project(
+    id = "framian-json-base",
+    base = file("modules/framian-json-base"),
+    dependencies = Seq(framian),
+    settings = framianSettings
   )
 
-  lazy val pframeJsonPlay = Project(
-    id = "pframe-json-play",
-    base = file("modules/pframe-json-play"),
-    dependencies = Seq(pframeJsonBase),
-    settings = pframeSettings ++ Seq(
+  lazy val framianJsonPlay = Project(
+    id = "framian-json-play",
+    base = file("modules/framian-json-play"),
+    dependencies = Seq(framianJsonBase),
+    settings = framianSettings ++ Seq(
       libraryDependencies += (
         if (isScala11orLater(scalaVersion.value)) Dependency.playJson_23 else Dependency.playJson_22
       )
@@ -90,7 +90,7 @@ object build extends Build {
 
 object Dependencies {
   import Dependency._
-  val pframe = Seq(spire, jodaTime, jodaConvert, Test.discipline, Test.specs2, Test.scalaCheck, Test.spireLaws)
+  val framian = Seq(spire, jodaTime, jodaConvert, Test.discipline, Test.specs2, Test.scalaCheck, Test.spireLaws)
 }
 
 object Dependency {
