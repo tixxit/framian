@@ -101,9 +101,9 @@ final case class Csv(header: Option[List[String]], rows: List[CsvRow]) {
 object Csv {
   def fromFrame(frame: Frame[_, String]): Csv = {
     val header = frame.colIndex.toList map (_._1)
-    val rows = frame.columns.as[CsvRow].toList collect {
-      case (_, Value(row)) => row
-    }
+    val rows = frame.columns.as[CsvRow].denseIterator.map {
+      case (_, row) => row
+    } .toList
     Csv(Some(header), rows)
   }
 }
