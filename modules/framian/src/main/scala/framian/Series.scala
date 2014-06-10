@@ -257,27 +257,118 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     b.result()
   }
 
-  def firstValue: Option[(K, V)] = {
+
+  /** Returns the first defined result of `f` when scanning the series in acending order.
+    *
+    * The parameter `f` is predicate on the key-values pairs of the
+    * series; however, it also returns a value when satisfied, hence
+    * the return type of `Option[B]`.
+
+    * To ensure efficient access to the values of the series, the
+    * predicate is supplied with the column and the index into the
+    * column, rather than the cell. (Contrast `(K, Cell[V])` to
+    * `(K, Column[V], Int)`).
+    *
+    * @example [[findFirstValue]] is defined as, {{{
+    * findAsc((key, col, row) =>
+    *   if (col.isValueAt(row))
+    *     Some(key -> column.valueAt(row))
+    *   else
+    *     None
+    * )
+    * }}}
+    *
+    * @tparam  B  the return type of the predicate
+    * @param  f  a predicate on key–value pairs in the series that returns a value when satisfied
+    * @return the first defined result of `f` when scanning the series in acending order.
+    * @see [[findDesc]]
+    */
+  def findAsc[B](f: (K, Column[V], Int) => Option[B]): Option[B] = {
     var i = 0
     while (i < index.size) {
       val row = index.indexAt(i)
-      if (column.isValueAt(row))
-        return Some(index.keyAt(i) -> column.valueAt(row))
+      val res = f(index.keyAt(i), column, row)
+      if (res.isDefined)
+        return res
       i += 1
     }
     None
   }
 
-  def lastValue: Option[(K, V)] = {
+
+  /** Returns the first key-value in the series.
+    *
+    * The returned key-value pair is the first in the series where
+    * the value is both available and meaningful.
+    *
+    * @return the first key-value in the series.
+    * @see [[findLastValue]]
+    * @see [[findAsc]]
+    */
+  def findFirstValue: Option[(K, V)] =
+    findAsc((key, col, row) =>
+      if (col.isValueAt(row))
+        Some(key -> col.valueAt(row))
+      else
+        None
+    )
+
+
+  /** Returns the first defined result of `f` when scanning the series in descending order.
+    *
+    * The parameter `f` is predicate on the key-values pairs of the
+    * series; however, it also returns a value when satisfied, hence
+    * the return type of `Option[B]`.
+
+    * To ensure efficient access to the values of the series, the
+    * predicate is supplied with the column and the index into the
+    * column, rather than the cell. (Contrast `(K, Cell[V])` to
+    * `(K, Column[V], Int)`).
+    *
+    * @example [[findLastValue]] is defined as, {{{
+    * findDesc((key, col, row) =>
+    *   if (col.isValueAt(row))
+    *     Some(key -> col.valueAt(row))
+    *   else
+    *     None
+    * )
+    * }}}
+    *
+    * @tparam  B  the return type of the predicate
+    * @param  f  a predicate on key–value pairs in the series that returns a value when satisfied
+    * @return the first defined result of `f` when scanning the series in descending order.
+    * @see [[findAsc]]
+    */
+  def findDesc[B](f: (K, Column[V], Int) => Option[B]): Option[B] = {
     var i = index.size - 1
     while (i >= 0) {
       val row = index.indexAt(i)
-      if (column.isValueAt(row))
-        return Some(index.keyAt(i) -> column.valueAt(row))
+      val res = f(index.keyAt(i), column, row)
+      if (res.isDefined)
+        return res
       i -= 1
     }
     None
   }
+
+
+  /** Returns the last key-value in the series.
+    *
+    * The returned key-value pair is the last in the series where
+    * the value is both available and meaningful.
+    *
+    * @return the last key-value in the series.
+    * @see [[findFirstValue]]
+    * @see [[findDesc]]
+    */
+  def findLastValue: Option[(K, V)] =
+    findDesc((key, col, row) =>
+      if (col.isValueAt(row))
+        Some(key -> col.valueAt(row))
+      else
+        None
+    )
+
 
   /**
    * Returns a compacted version of this `Series`. The new series will be equal
