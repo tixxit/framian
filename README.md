@@ -9,6 +9,8 @@
 
 ---
 
+[![Build Status](https://travis-ci.org/pellucidanalytics/framian.svg?branch=master)](https://travis-ci.org/pellucidanalytics/framian)
+
 ### License
 
 This software is licensed under the Apache 2 license, quoted below.
