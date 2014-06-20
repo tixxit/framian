@@ -405,6 +405,15 @@ object Frame {
     ColOrientedFrame(rowIndex, Index(colKeys.toArray), Column.fromArray(cols.toArray))
   }
 
+  def fill[A: Order: ClassTag, B: Order: ClassTag, C: ClassTag](rows: Iterable[A], cols: Iterable[B])(f: (A, B) => Cell[C]): Frame[A, B] = {
+    val rows0 = rows.toVector
+    val cols0 = cols.toVector
+    val columns = Column.fromArray(cols0.map { b =>
+      TypedColumn(Column.fromCells(rows0.map { a => f(a, b) })): UntypedColumn
+    }.toArray)
+    fromColumns(Index.fromKeys(rows0: _*), Index.fromKeys(cols0: _*), columns)
+  }
+
   def fromRows[A, Col: ClassTag](rows: A*)(implicit pop: RowPopulator[A, Int, Col]): Frame[Int, Col] =
     pop.frame(rows.zipWithIndex.foldLeft(pop.init) { case (state, (data, row)) =>
       pop.populate(state, row, data)
