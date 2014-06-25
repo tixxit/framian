@@ -30,14 +30,17 @@ object build extends Build {
   )
 
   lazy val sharedSettings =
-    BuildSettings.buildSettings
+    BuildSettings.buildSettings ++ bintray.Plugin.bintrayPublishSettings ++ Seq(
+      licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")),
+      bintray.Keys.bintrayOrganization in bintray.Keys.bintray := Some("pellucid")
+    )
 
   // CORE PROJECT
   lazy val root = Project(
     id = "root",
     base = file("."),
     aggregate = Seq(framian, framianJsonBase, framianJsonPlay),
-    settings = sharedSettings
+    settings = sharedSettings ++ Seq(publish := (), publishLocal := ())
   )
 
   def framianSettings =
