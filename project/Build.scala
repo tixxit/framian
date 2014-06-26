@@ -5,7 +5,7 @@ import Keys._
 object BuildSettings {
 
   val buildOrganization = "com.pellucid"
-  val buildVersion      = "0.1.0"
+  val buildVersion      = "0.1.1"
 
   val buildSettings = Defaults.defaultSettings ++ Seq(
     organization                  := buildOrganization,

@@ -11,6 +11,16 @@
 
 [![Build Status](https://travis-ci.org/pellucidanalytics/framian.svg?branch=master)](https://travis-ci.org/pellucidanalytics/framian)
 
+### Set Up
+
+Framian is available for Scala 2.10.4 or 2.11.x.
+
+If you are using SBT, simply add the following to your `build.sbt`:
+
+    resolvers += "Pellucid Bintray" at "http://dl.bintray.com/pellucid/maven"
+    
+    libraryDependencies += "com.pellucid" % "framian" %% "0.1.1"
+
 ### License
 
 This software is licensed under the Apache 2 license, quoted below.
