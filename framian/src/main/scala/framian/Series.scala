@@ -177,7 +177,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
    *
    * Equivalent to calling `lhs.zipMap(rhs)((_, _))`.
    */
-  def zip[W](that: Series[K, (V, W)]): Series[K, (V, W)] =
+  def zip[W](that: Series[K, W]): Series[K, (V, W)] =
     zipMap(that)((_, _))
 
   /**

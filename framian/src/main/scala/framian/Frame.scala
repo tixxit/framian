@@ -100,12 +100,13 @@ trait Frame[Row, Col] {
       (key, Series(rowIndex, col.cast[V]).reduceByKey(reducer))
     }.toSeq: _*)
 
-  def reduceFrameWithCol[A: ColumnTyper, B: ColumnTyper, R: ClassTag](col: Col)(reducer: Reducer[V, R]) = {
+  def reduceFrameWithCol[A: ColumnTyper, B: ColumnTyper, C: ClassTag](col: Col)(reducer: Reducer[(A, B), C]): Series[Col, C] = {
     val fixed = column[A](col)
-    columnsAsSeries.filterKeys(_ != col).mapValues { untyped =>
-      val series = Series(rowIndex, untyped.cast[B])
-      (fixed zip series).reduce(reducer)
-    }
+    Series.fromCells(columnsAsSeries.to[List].collect {
+      case (k, Value(untyped)) if k != col =>
+        val series = Series(rowIndex, untyped.cast[B])
+        k -> (fixed zip series).reduce(reducer)
+    }: _*)
   }
 
   def getColumnGroup(col: Col): Frame[Row, Col] =

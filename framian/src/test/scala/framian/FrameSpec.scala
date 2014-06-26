@@ -423,7 +423,7 @@ class FrameSpec extends Specification {
 
   "reduceFrameWithCol" should {
     "reduce with last" in {
-      f0.reduceFrameWithCol[String, Int, (String, Int)](0)(reducer.Last) must_==
+      f0.reduceFrameWithCol[String, Int, (String, Int)](0)(reduce.Last) must_==
         Series(1 -> ("c", 3))
     }
   }
