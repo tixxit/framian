@@ -15,7 +15,7 @@ object summary {
 
   // TODO: Provide way to choose "optimal" field type for frame row/col.
 
-  def frame[Row, Col](f: Frame[Row, Col]): Frame[Col, String] = {
+  def apply[Row, Col](f: Frame[Row, Col]): Frame[Col, String] = {
     import f.{ colClassTag, colOrder }
 
     Frame.fromSeries(
@@ -25,7 +25,7 @@ object summary {
       Min -> f.reduceFrame(reduce.Min[Number]))
   }
 
-  def series[K, V: Field: Order: ClassTag](s: Series[K, V]): Series[String, V] =
+  def apply[K, V: Field: Order: ClassTag](s: Series[K, V]): Series[String, V] =
     Series.fromCells(
       Mean -> s.reduce(reduce.Mean[V]),
       Median -> s.reduce(reduce.Median[V]),
