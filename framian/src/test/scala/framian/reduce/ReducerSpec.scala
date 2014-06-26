@@ -35,7 +35,7 @@ class ReducerSpec extends Specification {
 
   "Mean" should {
     "find mean of empty series" in {
-      empty.reduce(Mean[Double]) must_== NM
+      empty.reduce(Mean[Double]) must_== NA
     }
 
     "find mean of dense series" in {
@@ -56,7 +56,7 @@ class ReducerSpec extends Specification {
 
     "find mean of sparse series by key" in {
       duplicate.sparse.reduceByKey(Mean[Double]) must_==
-        Series.fromCells("a" -> NM, "b" -> NM, "c" -> Value(3D), "d" -> Value(0D))
+        Series.fromCells("a" -> NA, "b" -> NM, "c" -> Value(3D), "d" -> Value(0D))
     }
   }
 
