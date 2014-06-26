@@ -13,7 +13,7 @@ import shapeless._
 import java.io.{File, BufferedReader, FileReader}
 
 class CsvSpec extends Specification {
-  val csvRoot = "modules/framian/src/test/resources/csvs/"
+  val csvRoot = "framian/src/test/resources/csvs/"
 
   val airPassengers = csvRoot +"AirPassengers-test.csv"
   val airPassengersBadComma = csvRoot +"AirPassengers-badcomma.csv"

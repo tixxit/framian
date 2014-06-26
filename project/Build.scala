@@ -66,20 +66,20 @@ object build extends Build {
 
   lazy val framian = Project(
     id = "framian",
-    base = file("modules/framian"),
+    base = file("framian"),
     settings = framianSettings
   )
 
   lazy val framianJsonBase = Project(
     id = "framian-json-base",
-    base = file("modules/framian-json-base"),
+    base = file("framian-json-base"),
     dependencies = Seq(framian),
     settings = framianSettings
   )
 
   lazy val framianJsonPlay = Project(
     id = "framian-json-play",
-    base = file("modules/framian-json-play"),
+    base = file("framian-json-play"),
     dependencies = Seq(framianJsonBase),
     settings = framianSettings ++ Seq(
       libraryDependencies += (
