@@ -230,6 +230,16 @@ sealed trait Cell[+A] {
     */
   @inline final def toList: List[A] =
     if (isValue) List(this.get) else List.empty
+
+  /** If both `this` and `that` are values, then this returns a value derived
+    * by applying `f` to the values of them. Otherwise, if either `this` or
+    * `that` is `NM`, then `NM` is returned, otherwise `NA` is returned.
+    */
+  @inline def zipMap[B, C](that: Cell[B])(f: (A, B) => C): Cell[C] = (this, that) match {
+    case (Value(a), Value(b)) => Value(f(a, b))
+    case (NM, _) | (_, NM) => NM
+    case _ => NA
+  }
 }
 
 // TODO: there are currently issues where we get comparison between Value(NA) and NA and this should be true

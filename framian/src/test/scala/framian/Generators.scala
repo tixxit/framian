@@ -19,6 +19,7 @@ trait ColumnGenerators extends CellGenerators {
   def genSparseColumn[A](gen: Gen[A]): Gen[Column[A]] = for {
     cells <- Gen.listOf(genCell(gen))
   } yield Column.fromCells(cells.toVector)
+
 }
 
 object ColumnGenerators extends ColumnGenerators

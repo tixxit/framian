@@ -283,10 +283,10 @@ class ReducerPropSpec extends Specification with ScalaCheck {
 
   "Mean" should {
 
-    "return NM for an empty series" in {
+    "return NA for an empty series" in {
       forAll (emptySeriesGen[Double]) { l =>
         collect(l.length) {
-          mkSeries(l).reduce(Mean[Double]) must_== NM
+          mkSeries(l).reduce(Mean[Double]) must_== NA
         }
       } .set(minTestsOk = 10)
     }

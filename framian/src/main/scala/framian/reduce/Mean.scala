@@ -42,7 +42,7 @@ final class Mean[A: Field] extends Reducer[A, A] {
     } else if (count > 0) {
       Value(sum / count)
     } else {
-      NM
+      NA
     }
 
     loop(start, Field[A].zero, 0)

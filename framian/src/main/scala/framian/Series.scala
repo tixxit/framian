@@ -21,6 +21,8 @@
 
 package framian
 
+import language.higherKinds
+
 import scala.annotation.tailrec
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable.{ ArrayBuilder, Builder }
@@ -46,6 +48,14 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   private implicit def order = index.order
 
   def size: Int = index.size
+
+  /** Returns this series as a collection of key/value pairs. */
+  def to[CC[_]](implicit cbf: CanBuildFrom[Nothing, (K, Cell[V]), CC[(K, Cell[V])]]): CC[(K, Cell[V])] = {
+    val bldr = cbf()
+    bldr.sizeHint(size)
+    iterator.foreach { bldr += _ }
+    bldr.result()
+  }
 
   /** Returns an iterator over the key-cell pairs of the series.
     * @return an iterator over the key-cell pairs of the series.
@@ -163,6 +173,14 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   }
 
   /**
+   * Perform an inner join with `that` and group the values in tuples.
+   *
+   * Equivalent to calling `lhs.zipMap(rhs)((_, _))`.
+   */
+  def zip[W](that: Series[K, W]): Series[K, (V, W)] =
+    zipMap(that)((_, _))
+
+  /**
    * Performs an inner join on this `Series` with `that`. Each pair of values
    * for a matching key is passed to `f`.
    */
@@ -219,6 +237,13 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
           }
         possibleDates.headOption
     }
+
+  /**
+   * Map the keys of this series. This will maintain the same iteration order
+   * as the old series.
+   */
+  def mapKeys[L: Order: ClassTag](f: K => L): Series[L, V] =
+    Series(index.map { case (k, i) => f(k) -> i }, column)
 
   /**
    * Map the values of this series only. Note that the function `f` will be

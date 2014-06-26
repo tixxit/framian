@@ -72,5 +72,26 @@ class CellSpec extends Specification {
       NA filter (_ == 2) must_== NA
       NM filter (_ == 2) must_== NM
     }
+
+    "zipMap values" in {
+      Value(1).zipMap(Value(3D))(_ + _) must_== Value(4D)
+    }
+
+    "zipMap NAs" in {
+      (NA: Cell[Int]).zipMap(NA: Cell[Int])(_ + _) must_== NA
+
+      Value(2).zipMap(NA: Cell[Int])(_ + _) must_== NA
+      (NA: Cell[Int]).zipMap(Value(2))(_ + _) must_== NA
+    }
+
+    "zipMap NMs" in {
+      (NM: Cell[Int]).zipMap(NM: Cell[Int])(_ + _) must_== NM
+
+      Value(2).zipMap(NM: Cell[Int])(_ + _) must_== NM
+      (NM: Cell[Int]).zipMap(Value(2))(_ + _) must_== NM
+
+      (NA: Cell[Int]).zipMap(NM: Cell[Int])(_ + _) must_== NM
+      (NM: Cell[Int]).zipMap(NA: Cell[Int])(_ + _) must_== NM
+    }
   }
 }
