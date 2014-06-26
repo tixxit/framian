@@ -163,6 +163,14 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   }
 
   /**
+   * Perform an inner join with `that` and group the values in tuples.
+   *
+   * Equivalent to calling `lhs.zipMap(rhs)((_, _))`.
+   */
+  def zip[W](that: Series[K, (V, W)]): Series[K, (V, W)] =
+    zipMap(that)((_, _))
+
+  /**
    * Performs an inner join on this `Series` with `that`. Each pair of values
    * for a matching key is passed to `f`.
    */

@@ -408,5 +408,12 @@ class FrameSpec extends Specification {
       f2.columns(0).groupBy { (x: String) => x } must_== f2.withRowIndex(Index(("a",0), ("b",2), ("b",1)))
     }
   }
+
+  "reduceFrameWithCol" should {
+    "reduce with last" in {
+      f0.reduceFrameWithCol[String, Int, (String, Int)](0)(reducer.Last) must_==
+        Series(1 -> ("c", 3))
+    }
+  }
 }
 

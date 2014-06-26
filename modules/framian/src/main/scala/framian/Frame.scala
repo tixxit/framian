@@ -100,6 +100,14 @@ trait Frame[Row, Col] {
       (key, Series(rowIndex, col.cast[V]).reduceByKey(reducer))
     }.toSeq: _*)
 
+  def reduceFrameWithCol[A: ColumnTyper, B: ColumnTyper, R: ClassTag](col: Col)(reducer: Reducer[V, R]) = {
+    val fixed = column[A](col)
+    columnsAsSeries.filterKeys(_ != col).mapValues { untyped =>
+      val series = Series(rowIndex, untyped.cast[B])
+      (fixed zip series).reduce(reducer)
+    }
+  }
+
   def getColumnGroup(col: Col): Frame[Row, Col] =
     withColIndex(colIndex.getAll(col))
 
