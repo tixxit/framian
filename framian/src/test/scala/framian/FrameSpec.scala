@@ -66,6 +66,18 @@ class FrameSpec extends Specification {
     .withRowIndex(Index.fromKeys("Bob", "Alice", "Charlie"))
 
   "Frame" should {
+    "be fill-able" in {
+      val f = Frame.fill(1 to 3, 4 to 5) { (i, j) =>
+        val k = i + j
+        if (k % 2 == 0) NA else Value(k)
+      }
+
+      f must_== Frame.fromSeries(
+        4 -> Series.fromCells(1 -> Value(5), 2 ->       NA, 3 -> Value(7)),
+        5 -> Series.fromCells(1 ->       NA, 2 -> Value(7), 3 ->       NA)
+      )
+    }
+
     "have sane equality" in {
       f0 must_== f0
       f0 must_!= f1
