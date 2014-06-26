@@ -41,10 +41,10 @@ trait Frame[Row, Col] {
   def rowIndex: Index[Row]
   def colIndex: Index[Col]
 
-  private implicit def rowClassTag = rowIndex.classTag
-  private implicit def rowOrder = rowIndex.order
-  private implicit def colClassTag = colIndex.classTag
-  private implicit def colOrder = colIndex.order
+  implicit def rowClassTag = rowIndex.classTag
+  implicit def rowOrder = rowIndex.order
+  implicit def colClassTag = colIndex.classTag
+  implicit def colOrder = colIndex.order
 
   def apply[T: ColumnTyper](r: Row, c: Col): Cell[T] = columns(c).get[T](r)
   def column[T: ColumnTyper](c: Col): Series[Row, T] =
