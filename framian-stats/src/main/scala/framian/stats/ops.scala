@@ -4,6 +4,7 @@ package stats
 import scala.reflect.ClassTag
 
 import spire.algebra._
+import spire.math._
 import spire.std.double._
 import spire.std.string._
 
@@ -27,8 +28,15 @@ object ops {
   implicit class FrameStatsOps[Row, Col](self: Frame[Row, Col]) {
     import self.{ rowClassTag, colClassTag, rowOrder, colOrder }
 
-    def summary: Frame[Col, String] =
-      framian.stats.summary(self)
+    def summary: Frame[Col, Statistic] = {
+      val s = self.reduceFrame(Summary.reducer[Number])
+      Frame.fromSeries[Col, Statistic, Number](
+        Statistic.mean -> s.mapValues(_.mean),
+        Statistic.median -> s.mapValues(_.median),
+        Statistic.min -> s.mapValues(_.min),
+        Statistic.max -> s.mapValues(_.max)
+      )
+    }
 
     def stdDev: Frame[Col, Statistic] = {
       val s = self.reduceFrame(StdDev.reducer[Double])
@@ -45,11 +53,13 @@ object ops {
 
     def variance: Series[Col, Double] =
       self.reduceFrame(StdDev.reducer[Double].map(_.variance))
+
+    // def slr(dependent: Col, independent0: Col, extraIndependent: Col*)
   }
 
   implicit class SeriesStatsOps[K, V](self: Series[K, V]) {
-    def summary(implicit V0: Order[V], V1: Field[V], ct: ClassTag[V]): Series[String, V] =
-      framian.stats.summary(self)
+    def summary(implicit V0: Order[V], V1: Field[V], ct: ClassTag[V]): Cell[Summary[V]] =
+      self.reduce(Summary.reducer)
 
     def stdDev(implicit V0: Field[V], V1: NRoot[V], ct: ClassTag[V]): Cell[StdDev[V]] =
       self.reduce(StdDev.reducer)

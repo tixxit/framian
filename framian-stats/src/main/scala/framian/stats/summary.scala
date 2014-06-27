@@ -6,29 +6,33 @@ import scala.reflect.ClassTag
 import spire.algebra._
 import spire.math.Number
 import spire.std.string._
+import spire.syntax.std.array._
+import spire.syntax.field._
 
-object summary {
-  val Mean: String = "Mean"
-  val Median: String = "Median"
-  val Max: String = "Max"
-  val Min: String = "Min"
+import framian.reduce.Reducer
 
-  // TODO: Provide way to choose "optimal" field type for frame row/col.
+case class Summary[A](
+  mean: A,
+  median: A,
+  min: A,
+  max: A)
 
-  def apply[Row, Col](f: Frame[Row, Col]): Frame[Col, String] = {
-    import f.{ colClassTag, colOrder }
+object Summary {
+  def apply[A: Field: Order: ClassTag](data: Array[A]): Option[Summary[A]] =
+    if (data.size > 0) {
+      val mid = data.size / 2
+      data.qselect(mid)
+      val median0 = data(mid)
+      val median = if (data.size % 2 == 0) {
+        data.qselect(mid - 1)
+        (median0 + data(mid - 1)) / 2
+      } else median0
+      Some(Summary(data.qmean, median, data.qmin, data.qmax))
+    } else {
+      None
+    }
 
-    Frame.fromSeries(
-      Mean -> f.reduceFrame(reduce.Mean[Number]),
-      Median -> f.reduceFrame(reduce.Median[Number]),
-      Max -> f.reduceFrame(reduce.Max[Number]),
-      Min -> f.reduceFrame(reduce.Min[Number]))
+  def reducer[A: Field: Order: ClassTag] = Reducer[A, Summary[A]] { data =>
+    Cell.fromOption(Summary(data))
   }
-
-  def apply[K, V: Field: Order: ClassTag](s: Series[K, V]): Series[String, V] =
-    Series.fromCells(
-      Mean -> s.reduce(reduce.Mean[V]),
-      Median -> s.reduce(reduce.Median[V]),
-      Max -> s.reduce(reduce.Max[V]),
-      Min -> s.reduce(reduce.Min[V]))
 }
