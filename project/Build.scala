@@ -70,6 +70,13 @@ object build extends Build {
     settings = framianSettings
   )
 
+  lazy val framianStats = Project(
+    id = "framian-stats",
+    base = file("framian-stats"),
+    dependencies = Seq(framian),
+    settings = framianSettings
+  )
+
   lazy val framianJsonBase = Project(
     id = "framian-json-base",
     base = file("framian-json-base"),
