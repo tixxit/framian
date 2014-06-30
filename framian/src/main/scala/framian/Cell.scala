@@ -22,6 +22,9 @@
 package framian
 
 import scala.language.implicitConversions
+import scala.language.higherKinds
+
+import scala.collection.generic.CanBuildFrom
 
 import spire.algebra.{ Eq, Order, Semigroup, Monoid }
 import spire.syntax.order._
@@ -256,6 +259,26 @@ object Cell extends CellInstances {
   }
 
   implicit def cell2Iterable[A](cell: Cell[A]): Iterable[A] = cell.toList
+
+  def traverse[CC[T] <: Iterable[T], A, B](col: CC[A])(f: A => Cell[B])(implicit cbf: CanBuildFrom[CC[A], B, CC[B]]): Cell[CC[B]] = {
+    val bldr = cbf()
+    val iter = col.iterator
+    while (iter.hasNext) {
+      f(iter.next()) match {
+        case Value(b) =>
+          bldr += b
+        case NA =>
+          while (iter.hasNext) {
+            if (f(iter.next()) == NM)
+              return NM
+          }
+          return NA
+        case NM =>
+          return NM
+      }
+    }
+    Value(bldr.result())
+  }
 }
 
 /** The supertype of non values, [[NA]] (''Not Available'') and

@@ -96,6 +96,14 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   def apply(key: K): Cell[V] = index.get(key) map (column(_)) getOrElse NA
 
   /**
+   * Returns the values associated with keys `ks`. This will only return a
+   * dense collection. If there is an `NM` in the values, then `NM` is
+   * returned, otherwise if a value is `NA`, then `NA` is returned.
+   */
+  def select[CC[A] <: Iterable[A]](ks: CC[K])(implicit cbf: CanBuildFrom[CC[K], V, CC[V]]): Cell[CC[V]] =
+    Cell.traverse(ks) { k => apply(k) }
+
+  /**
    * Returns `true` if at least 1 value exists in this series. A series with
    * only `NA`s and/or `NM`s will return `false`.
    */

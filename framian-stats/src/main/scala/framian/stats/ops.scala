@@ -54,7 +54,8 @@ object ops {
     def variance: Series[Col, Double] =
       self.reduceFrame(StdDev.reducer[Double].map(_.variance))
 
-    // def slr(dependent: Col, independent0: Col, extraIndependent: Col*)
+    def ols(dependent: Col, independent0: Col, extraIndependent: Col*): OLS[Col] =
+      OLS(self, dependent, independent0 +: extraIndependent: _*)
   }
 
   implicit class SeriesStatsOps[K, V](self: Series[K, V]) {
