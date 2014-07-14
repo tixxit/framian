@@ -87,8 +87,46 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
       k -> column.valueAt(ix)
     }
 
-  def keys: Vector[K] = index.map(_._1)(collection.breakOut)
-  def values: Vector[Cell[V]] = index.map({ case (_, i) => column(i) })(collection.breakOut)
+  /** Returns the keys of this series as a vector in index order.
+    *
+    * @return a vector of the keys of the series.
+    * @see [[values]]
+    */
+  def keys: Vector[K] =
+    index.map(_._1)(collection.breakOut)
+
+  /** Return the values of this series as a vector in index order.
+    *
+    * The series may be sparse, so the vector contains [[Cell]]s
+    * rather than just plain values.
+    *
+    * @return a sparse vector of the values of the series.
+    * @see [[denseValues]]
+    */
+
+  def values: Vector[Cell[V]] =
+    index.map { case (_, i) => column(i) }(collection.breakOut)
+
+  /** Returns the values of this series as a vector in index order.
+    *
+    * If the series is dense, this returns the values directly,
+    * rather than wrapped in [[Cell]]. If the series is infact sparse,
+    * the [[NonValue]]s are ignored.
+    *
+    * @return a dense vector of the values of the series.
+    * @see [[values]]
+    * @note The `Vector` returned by this method is related to
+    * the `Vector` returned by [[values]]
+    * {{{
+    * series.values.collect { case Value(v) => v } == series.denseValues
+    * }}}
+    * however, this method uses a more efficient access pattern
+    * to the underlying data.
+    */
+  def denseValues: Vector[V] =
+    index.collect { case (_, ix) if column.isValueAt(ix) =>
+      column.valueAt(ix)
+    }(collection.breakOut)
 
   def keyAt(i: Int): K = index.keyAt(i)
   def valueAt(i: Int): Cell[V] = column(index.indexAt(i))
