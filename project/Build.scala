@@ -82,12 +82,22 @@ object build extends Build {
     base = file("framian-json-play"),
     dependencies = Seq(framianJsonBase),
     settings = framianSettings ++ Seq(
-      libraryDependencies += (
-        if (isScala11orLater(scalaVersion.value)) Dependency.playJson_23 else Dependency.playJson_22
-      )
+      libraryDependencies += Dependency.playJson_23
     )
   )
 
+  lazy val framianJsonPlay22 = Project(
+    id = "framian-json-play22",
+    base = file("framian-json-play22"),
+    dependencies = Seq(framianJsonBase),
+    settings = framianSettings ++ Seq(
+      name := "framian-json-play22",
+      scalaVersion := "2.10.4",
+      crossScalaVersions := Seq("2.10.4"),
+      libraryDependencies += Dependency.playJson_22,
+      sourceDirectory <<= sourceDirectory in framianJsonPlay
+    )
+  )
 }
 
 
@@ -100,7 +110,7 @@ object Dependency {
 
   object V {
     val Play_22            = "2.2.3"
-    val Play_23            = "2.3.0"
+    val Play_23            = "2.3.1"
 
     val Spire              = "0.7.4"
     val Shapeless          = "2.0.0"
