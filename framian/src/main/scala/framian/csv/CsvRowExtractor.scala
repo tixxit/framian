@@ -25,48 +25,6 @@ package csv
 import spire.syntax.monoid._
 import org.joda.time._
 
-sealed abstract class CsvRowDelim(val value: String)
-object CsvRowDelim {
-  case object Unix extends CsvRowDelim("\n")
-  case object Windows extends CsvRowDelim("\r\n")
-}
-
-case class CsvFormat(
-  separator: String,
-  quote: String = "\"",
-  quoteEscape: String = "\"",
-  empty: String = "NA",
-  invalid: String = "NM",
-  header: Boolean = true,
-  rowDelim: CsvRowDelim = CsvRowDelim.Windows
-) {
-  val escapedQuote = quoteEscape + quote
-
-  /**
-   * Replaces all instances of \r\n with \n, then escapes all quotes and wraps
-   * the string in quotes.
-   */
-  def escape(text: String): String = {
-    val text0 = text.replace("\r\n", "\n").replace(quote, escapedQuote)
-    s"${quote}$text0${quote}"
-  }
-
-  /**
-   * Renders a single cell of data, escaping the value if necessary.
-   */
-  def render(text: String): String = {
-    if ((text contains '\n') ||
-        (text contains separator) ||
-        (text contains quote)) escape(text)
-    else text
-  }
-}
-
-object CsvFormat {
-  val CSV = CsvFormat(",")
-  val TSV = CsvFormat("\t")
-}
-
 sealed abstract class CsvCell(val render: CsvFormat => String)
 
 object CsvCell {
