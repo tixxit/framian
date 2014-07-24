@@ -99,6 +99,9 @@ trait AxisSelectionCompanion[AxisSelection[K, A] <: AxisSelectionLike[K, A, Axis
   def apply[K](c0: K, c1: K): Pick[K, Fixed[_2], Rec[K]] =
     sized(Sized[List](c0, c1))
 
+  def apply[K](c0: K, c1: K, c2: K): Pick[K, Fixed[_3], Rec[K]] =
+    sized(Sized[List](c0, c1, c2))
+
   def apply[K](c0: K, c1: K, c2: K, c3: K): Pick[K, Fixed[_4], Rec[K]] =
     sized(Sized[List](c0, c1, c2, c3))
 
