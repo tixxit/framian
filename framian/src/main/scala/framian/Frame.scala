@@ -235,7 +235,7 @@ trait Frame[Row, Col] {
       }
       Column.fromCells(cells.toVector)
     }
-    Series(rowIndex, column)
+    Series(rowIndex.resetIndices, column)
   }
 
   def getRow(key: Row): Option[Rec[Col]] = rowIndex.get(key) map Rec.fromRow(this)

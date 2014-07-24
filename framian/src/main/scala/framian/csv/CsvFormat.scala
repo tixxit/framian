@@ -15,7 +15,7 @@ case class CsvFormat(
   quoteEscape: String = "\"",
   empty: String = "NA",
   invalid: String = "NM",
-  header: Boolean = true,
+  header: Boolean = false,
   rowDelim: CsvRowDelim = CsvRowDelim.Both
 ) {
   val escapedQuote = quoteEscape + quote
@@ -41,8 +41,6 @@ case class CsvFormat(
 }
 
 object CsvFormat {
-  val BufferSize = 32 * 1024
-
   val CSV = CsvFormat(",")
   val TSV = CsvFormat("\t")
 
@@ -53,8 +51,8 @@ object CsvFormat {
    * returned reader will contain all the original reader's data.
    */
   def guess(reader: Reader): (CsvFormat, Reader) = {
-    val reader0 = new PushbackReader(reader, BufferSize)
-    val buffer = new Array[Char](BufferSize)
+    val reader0 = new PushbackReader(reader, Csv.BufferSize)
+    val buffer = new Array[Char](Csv.BufferSize)
     val len = reader0.read(buffer)
     reader0.unread(buffer, 0, len)
 
@@ -103,9 +101,25 @@ object CsvFormat {
       )
     val quote = choose("\"" -> 1.2, "\'" -> 1)
     val quoteEscape = choose(s"$quote$quote" -> 1.1, s"\\$quote" -> 1).dropRight(quote.length)
-    val empty = choose("-" -> 1.5, "N/A" -> 2, "NA" -> 1)
+    val empty = choose("?" -> 1.5, "-" -> 1.5, "N/A" -> 2, "NA" -> 1)
     val invalid = choose("N/M" -> 2, "NaN" -> 1)
 
-    CsvFormat(separator, quote, quoteEscape, empty, invalid, true, rowDelim)
+    val headerEnd = str.indexOf(rowDelim.value)
+    val header = if (headerEnd > 0) {
+      import spire.std.map._
+      import spire.std.double._
+      import spire.syntax.all._
+
+      val (hdr, rows) = str.replace(separator, "").splitAt(headerEnd)
+      def mkVec(s: String): Map[Char, Double] =
+        s.groupBy(c => c).map { case (k, v) => k -> v.length.toDouble }.normalize
+      def similarity[K](x: Map[K, Double], y: Map[K, Double]): Double = (x dot y) / (x.norm * y.norm)
+
+      similarity(mkVec(hdr), mkVec(rows)) < 0.5
+    } else {
+      false
+    }
+
+    CsvFormat(separator, quote, quoteEscape, empty, invalid, header, rowDelim)
   }
 }
