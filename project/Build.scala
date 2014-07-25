@@ -70,6 +70,15 @@ object build extends Build {
     settings = framianSettings
   )
 
+  lazy val framianStats = Project(
+    id = "framian-stats",
+    base = file("framian-stats"),
+    dependencies = Seq(framian),
+    settings = framianSettings ++ Seq(
+      libraryDependencies += Dependency.commonsMath3
+    )
+  )
+
   lazy val framianJsonBase = Project(
     id = "framian-json-base",
     base = file("framian-json-base"),
@@ -119,6 +128,8 @@ object Dependency {
     val JodaTime           = "2.3"
     val JodaConvert        = "1.6"
 
+    val CommonsMath3       = "3.3"
+
     // Test libraries
     val Specs2             = "2.3.12"
     val ScalaCheck         = "1.11.4"
@@ -134,6 +145,8 @@ object Dependency {
 
   val jodaTime           =  "joda-time"                              % "joda-time"               % V.JodaTime
   val jodaConvert        =  "org.joda"                               % "joda-convert"            % V.JodaConvert
+
+  val commonsMath3       =  "org.apache.commons"                     % "commons-math3"           % V.CommonsMath3
 
   // Test
   object Test {
