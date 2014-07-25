@@ -46,12 +46,6 @@ trait AxisSelectionCompanion[AxisSelection[K, A] <: AxisSelectionLike[K, A, Axis
 
     def fold[B](all: => B)(f: List[K] => B): B
     def as[B](implicit extractor0: RowExtractor[B, K, Sz]): SizedAxisSelection[K, Sz, B]
-    def asListOf[B](implicit extractor0: RowExtractor[B, K, Fixed[Nat._1]]): All[K, List[Cell[B]]] =
-      All(RowExtractor.collectionOf)
-    def asVectorOf[B](implicit extractor0: RowExtractor[B, K, Fixed[Nat._1]]): All[K, Vector[Cell[B]]] =
-      All(RowExtractor.collectionOf)
-    def asArrayOf[B: ClassTag](implicit extractor0: RowExtractor[B, K, Fixed[Nat._1]]): All[K, Array[B]] =
-      All(RowExtractor.denseCollectionOf[Array, B, K])
   }
 
   type All[K, A] <: AllAxisSelection[K, A] with AxisSelection[K, A]
@@ -73,6 +67,13 @@ trait AxisSelectionCompanion[AxisSelection[K, A] <: AxisSelectionLike[K, A, Axis
       All(extractor0)
     def map[B](f: A => B): All[K, B] =
       All(extractor map f)
+
+    def asListOf[B](implicit extractor0: RowExtractor[B, K, Fixed[Nat._1]]): All[K, List[Cell[B]]] =
+      as(RowExtractor.collectionOf)
+    def asVectorOf[B](implicit extractor0: RowExtractor[B, K, Fixed[Nat._1]]): All[K, Vector[Cell[B]]] =
+      as(RowExtractor.collectionOf)
+    def asArrayOf[B: ClassTag](implicit extractor0: RowExtractor[B, K, Fixed[Nat._1]]): All[K, Array[B]] =
+      as(RowExtractor.denseCollectionOf)
   }
 
   trait PickAxisSelection[K, S <: Size, A] extends SizedAxisSelection[K, S, A] {
@@ -84,11 +85,22 @@ trait AxisSelectionCompanion[AxisSelection[K, A] <: AxisSelectionLike[K, A, Axis
       Pick(keys, extractor0)
     def map[B](f: A => B): Pick[K, S, B] =
       Pick(keys, extractor map f)
+    def variable: Pick[K, Variable, A] = this.asInstanceOf[Pick[K, Variable, A]]
+
+    def asListOf[B](implicit extractor0: RowExtractor[B, K, Fixed[Nat._1]]): Pick[K, Variable, List[Cell[B]]] =
+      variable.as(RowExtractor.collectionOf)
+    def asVectorOf[B](implicit extractor0: RowExtractor[B, K, Fixed[Nat._1]]): Pick[K, Variable, Vector[Cell[B]]] =
+      variable.as(RowExtractor.collectionOf)
+    def asArrayOf[B: ClassTag](implicit extractor0: RowExtractor[B, K, Fixed[Nat._1]]): Pick[K, Variable, Array[B]] =
+      variable.as(RowExtractor.denseCollectionOf)
   }
 
   import Nat._
 
   def all[K] = All[K, Rec[K]](RowExtractor[Rec[K], K, Variable])
+
+  def unsized[K](cols: Seq[K]) =
+    Pick(cols.toList, RowExtractor[Rec[K], K, Variable])
 
   def sized[K, N <: Nat](s: Sized[List[K], N]): Pick[K, Fixed[N], Rec[K]] =
     Pick(s.unsized, RowExtractor[Rec[K], K, Fixed[N]])
