@@ -72,22 +72,25 @@ object Csv {
   import java.nio.charset.{ Charset, StandardCharsets }
   import java.io.File
   import java.io.{ InputStream, FileInputStream }
-  import java.io.{ Reader, InputStreamReader }
+  import java.io.{ Reader, InputStreamReader, StringReader }
 
-  def parseString(input: String): Csv =
-    CsvParser(CsvFormat.guess(input)).parseString(input)
-
-  def parseReader(reader: Reader): Csv = {
-    val (format, reader0) = CsvFormat.guess(reader)
-    CsvParser(format).parseReader(reader0)
+  def parseReader(reader: Reader, format: CsvFormatStrategy = CsvFormat.Guess): Csv = {
+    val (format0, reader0) = format match {
+      case (guess: GuessCsvFormat) => guess(reader)
+      case (fmt: CsvFormat) => (fmt, reader)
+    }
+    CsvParser(format0).parseReader(reader0)
   }
 
-  def parseInputStream(is: InputStream, charset: Charset = StandardCharsets.UTF_8): Csv =
-    parseReader(new InputStreamReader(is, charset))
+  def parseString(input: String, format: CsvFormatStrategy = CsvFormat.Guess): Csv =
+    parseReader(new StringReader(input), format)
 
-  def parseFile(file: File, charset: Charset = StandardCharsets.UTF_8): Csv =
-    parseInputStream(new FileInputStream(file), charset)
+  def parseInputStream(is: InputStream, format: CsvFormatStrategy = CsvFormat.Guess, charset: Charset = StandardCharsets.UTF_8): Csv =
+    parseReader(new InputStreamReader(is, charset), format)
 
-  def parse(filename: String, charset: Charset = StandardCharsets.UTF_8): Csv =
-    parseFile(new File(filename), charset)
+  def parseFile(file: File, format: CsvFormatStrategy = CsvFormat.Guess, charset: Charset = StandardCharsets.UTF_8): Csv =
+    parseInputStream(new FileInputStream(file), format, charset)
+
+  def parsePath(filename: String, format: CsvFormatStrategy = CsvFormat.Guess, charset: Charset = StandardCharsets.UTF_8): Csv =
+    parseFile(new File(filename), format, charset)
 }
