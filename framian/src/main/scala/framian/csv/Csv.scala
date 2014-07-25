@@ -4,10 +4,68 @@ package csv
 import spire.std.int._
 import spire.std.string._
 
-final case class Csv(format: CsvFormat, header: Option[Vector[String]], rows: Vector[Either[CsvError, CsvRow]]) {
-  def toFrame: Frame[Int, Int] = {
-    val validRows = rows.collect { case Right(row) => row }
-    val cols = validRows.foldLeft(Map.empty[Int,(ColumnBuilder[BigDecimal],ColumnBuilder[String])]) { (acc0, row) =>
+sealed abstract class Csv {
+  val format: CsvFormat
+  val rows: Vector[Either[CsvError, CsvRow]]
+
+  lazy val data: Vector[CsvRow] =
+    rows.collect { case Right(row) => row }
+  lazy val errors: Vector[CsvError] =
+    rows.collect { case Left(error) => error }
+  def hasErrors: Boolean = !errors.isEmpty
+
+  def unlabeled: UnlabeledCsv = this match {
+    case csv @ UnlabeledCsv(_, _) =>
+      csv
+    case LabeledCsv(format, _, rows) =>
+      UnlabeledCsv(format.copy(header = false), rows)
+  }
+
+  def labeled: LabeledCsv = this match {
+    case csv @ LabeledCsv(_, _, _) =>
+      csv
+    case UnlabeledCsv(format, rows) =>
+      val format0 = format.copy(header = true)
+      rows.headOption.flatMap(_.right.toOption).map { hdr =>
+        LabeledCsv(format0, hdr.text(format), rows.tail)
+      }.getOrElse {
+        LabeledCsv(format0, Vector.empty, Vector.empty)
+      }
+  }
+
+  override def toString: String = {
+    val full = this match {
+      case LabeledCsv(_, header, _) =>
+        CsvRow(header map (CsvCell.Data(_))) +: data
+      case UnlabeledCsv(_, _) =>
+        data
+    }
+
+    full.iterator.
+      map(_ render format).
+      mkString(format.rowDelim.value)
+  }
+}
+
+case class LabeledCsv(format: CsvFormat, header: Vector[String], rows: Vector[Either[CsvError, CsvRow]]) extends Csv {
+  def toFrame: Frame[Int, String] =
+    Csv.toFrame(data).withColIndex(Index.fromKeys(header: _*))
+}
+
+case class UnlabeledCsv(format: CsvFormat, rows: Vector[Either[CsvError, CsvRow]]) extends Csv {
+  def toFrame: Frame[Int, Int] =
+    Csv.toFrame(data)
+}
+
+object Csv {
+  val BufferSize = 32 * 1024
+
+  def empty(format: CsvFormat): Csv =
+    if (format.header) LabeledCsv(format, Vector.empty, Vector.empty)
+    else UnlabeledCsv(format, Vector.empty)
+
+  private[csv] def toFrame(rows: Vector[CsvRow]): Frame[Int, Int] = {
+    val cols = rows.foldLeft(Map.empty[Int,(ColumnBuilder[BigDecimal],ColumnBuilder[String])]) { (acc0, row) =>
         row.cells.zipWithIndex.foldLeft(acc0) { case (acc, (cell, colIdx)) =>
           val (numCol, strCol) = acc.getOrElse(colIdx, (new ColumnBuilder[BigDecimal], new ColumnBuilder[String]))
           cell match {
@@ -30,43 +88,23 @@ final case class Csv(format: CsvFormat, header: Option[Vector[String]], rows: Ve
     })
 
     Frame.fromColumns(
-      Index(Array.range(0, validRows.size)),
+      Index(Array.range(0, rows.size)),
       Index(Array.range(0, cols.size)),
       columns
     )
   }
 
-  def toLabeledFrame: Frame[Int, String] = header map { header =>
-    toFrame.withColIndex(Index.fromKeys(header: _*))
-  } getOrElse ???
-
-  override def toString: String = {
-    val full = header filter (_ => format.header) map { headings =>
-      Right(CsvRow(headings map (CsvCell.Data(_)))) +: rows
-    } getOrElse rows
-
-    full.iterator.
-      collect { case Right(row) => row }.
-      map(_ render format).
-      mkString(format.rowDelim.value)
-  }
-}
-
-object Csv {
-  val BufferSize = 32 * 1024
-
-  def empty(format: CsvFormat): Csv = Csv(format, None, Vector.empty)
-
   def fromFrame[Col](format: CsvFormat)(frame: Frame[_, Col]): Csv = {
-    val header = if (format.header) {
-      Some(frame.colIndex.toVector map (_._1.toString))
-    } else {
-      None
-    }
     val rows = frame.get(Cols.all[Col].as[CsvRow]).denseIterator.map {
       case (_, row) => Right(row)
     }.toVector
-    Csv(format, header, rows)
+
+    if (format.header) {
+      val header = frame.colIndex.toVector.map(_._1.toString)
+      LabeledCsv(format, header, rows)
+    } else {
+      UnlabeledCsv(format, rows)
+    }
   }
 
   import java.nio.charset.{ Charset, StandardCharsets }

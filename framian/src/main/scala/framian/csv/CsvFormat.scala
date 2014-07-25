@@ -5,6 +5,7 @@ import java.util.regex.Pattern
 
 sealed abstract class CsvRowDelim(val value: String, val alternate: Option[String] = None)
 object CsvRowDelim {
+  case class Custom(delim: String) extends CsvRowDelim(delim)
   case object Unix extends CsvRowDelim("\n")
   case object Windows extends CsvRowDelim("\r\n")
   case object Both extends CsvRowDelim("\n", Some("\r\n"))
@@ -75,7 +76,7 @@ object CsvFormat {
   val CSV = CsvFormat(",")
   val TSV = CsvFormat("\t")
 
-  val Guess = Partial()
+  val Guess = Partial(header = Some(false))
 
   case class Partial(
       separator: Option[String] = None,
@@ -86,6 +87,15 @@ object CsvFormat {
       header: Option[Boolean] = None,
       rowDelim: Option[CsvRowDelim] = None
     ) extends GuessCsvFormat {
+
+    def withSeparator(separator: String): Partial = copy(separator = Some(separator))
+    def withQuote(quote: String): Partial = copy(quote = Some(quote))
+    def withQuoteEscape(quoteEscape: String): Partial = copy(quoteEscape = Some(quoteEscape))
+    def withEmpty(empty: String): Partial = copy(empty = Some(empty))
+    def withInvalid(invalid: String): Partial = copy(invalid = Some(invalid))
+    def withHeader(header: Boolean): Partial = copy(header = Some(header))
+    def withRowDelim(rowDelim: CsvRowDelim): Partial = copy(rowDelim = Some(rowDelim))
+    def withRowDelim(rowDelim: String): Partial = copy(rowDelim = Some(CsvRowDelim.Custom(rowDelim)))
 
     /**
      * Performs a very naive guess of the CsvFormat. This uses weighted
@@ -160,6 +170,7 @@ object CsvFormat {
       val headerEnd = chunk.indexOf(rowDelim)
       if (headerEnd > 0) {
         val (hdr, rows) = chunk.replace(separator, "").replace(quote, "").splitAt(headerEnd)
+        println(s"header = ${similarity(mkVec(hdr), mkVec(rows))}")
         similarity(mkVec(hdr), mkVec(rows)) < 0.5
       } else {
         false

@@ -33,13 +33,8 @@ case class CsvParser(format: CsvFormat) {
               loop(s1.mapInput(_.finished), row, acc)
           }
         case Done =>
-          val (hdr, rows) = if (format.header) {
-            acc.headOption match {
-              case Some(Right(row)) => (Some(row.text(format)), acc.tail)
-              case _ => (None, acc)
-            }
-          } else (None, acc)
-          Csv(format, hdr, rows)
+          val csv = UnlabeledCsv(format, acc)
+          if (format.header) csv.labeled else csv
       }
     }
 
