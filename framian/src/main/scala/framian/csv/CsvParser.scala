@@ -9,29 +9,46 @@ case class CsvParser(format: CsvFormat) {
   import ParserState._
   import Instr._
 
-  def mkError(input: Input, s0: ParserState, s1: ParserState, row: Long, msg: String, pos: Long): CsvError = {
-    val context = input.substring(s0.input.mark, s1.input.mark)
-    CsvError(msg, pos, context, row, pos - s0.input.mark + 1)
+  private def removeRowDelim(context: String): String = {
+    def dropTail(tail: String): Option[String] =
+      if (context.endsWith(tail)) Some(context.dropRight(tail.length))
+      else None
+
+    dropTail(format.rowDelim.value).
+      orElse(format.rowDelim.alternate.flatMap(dropTail)).
+      getOrElse(context)
   }
 
   def parseResource[A](a: A, close: A => Unit)(read: A => Option[String]): Csv = {
-    def loop(s0: ParserState, row: Long, acc: Vector[Either[CsvError, CsvRow]]): Csv = {
+    def loop(s0: ParserState, fail: Option[Fail], row: Long, acc: Vector[Either[CsvError, CsvRow]]): Csv = {
       val (s1, instr) = parse(s0)
 
       instr match {
         case Emit(cells) =>
-          loop(s1, row + 1, acc :+ Right(cells))
-        case Fail(msg, pos) =>
-          loop(s1, row + 1, acc :+ Left(mkError(s1.input, s0, s1, row, msg, pos)))
+          loop(s1, fail, row + 1, acc :+ Right(cells))
+
+        case f @ Fail(_, _) =>
+          loop(s1, Some(f), row, acc)
+
         case Resume =>
-          loop(s1, row, acc)
+          fail match {
+            case Some(Fail(msg, pos)) =>
+              val context = removeRowDelim(s1.input.substring(s0.rowStart, s1.rowStart))
+              val error = CsvError(msg, s0.rowStart, pos, context, row, pos - s0.rowStart + 1)
+              loop(s1, None, row + 1, acc :+ Left(error))
+
+            case None =>
+              loop(s1, None, row, acc)
+          }
+
         case NeedInput =>
           read(a) match {
             case Some(chunk) =>
-              loop(s1.mapInput(_.append(chunk)), row, acc)
+              loop(s1.mapInput(_.append(chunk)), fail, row, acc)
             case None =>
-              loop(s1.mapInput(_.finished), row, acc)
+              loop(s1.mapInput(_.finished), fail, row, acc)
           }
+
         case Done =>
           val csv = UnlabeledCsv(format, acc)
           if (format.header) csv.labeled else csv
@@ -40,7 +57,7 @@ case class CsvParser(format: CsvFormat) {
 
     try {
       read(a).map { input0 =>
-        loop(ParseRow(Input.init(input0)), 1L, Vector.empty)
+        loop(ParseRow(0L, 0L, Input.init(input0)), None, 1L, Vector.empty)
       }.getOrElse {
         Csv.empty(format)
       }
@@ -82,7 +99,7 @@ case class CsvParser(format: CsvFormat) {
     import format._
 
     val input: Input = state.input
-    var pos: Long = input.mark
+    var pos: Long = state.readFrom
     def ch: Char = input.charAt(pos)
     def endOfInput: Boolean = pos >= input.length
     def endOfFile: Boolean = endOfInput && input.isLast
@@ -204,12 +221,12 @@ case class CsvParser(format: CsvFormat) {
 
     def skipToNextRow(): Boolean = {
       val d = isRowDelim()
-      if (d == 0) {
-        advance(1)
-        skipToNextRow()
-      } else if (d > 0) {
+      if (d > 0 || endOfFile) {
         advance(d)
         true
+      } else if (d == 0) {
+        advance(1)
+        skipToNextRow()
       } else {
         if (input.isLast)
           advance(input.length - pos)
@@ -217,18 +234,18 @@ case class CsvParser(format: CsvFormat) {
       }
     }
 
-    def row(cells: Vector[CsvCell]): (ParserState, Instr[CsvRow]) = {
+    def row(rowStart: Long, cells: Vector[CsvCell]): (ParserState, Instr[CsvRow]) = {
       val start = pos
-      def needInput() = (ContinueRow(cells, input.marked(start)), NeedInput)
+      def needInput() = (ContinueRow(rowStart, start, cells, input), NeedInput)
 
       val s = isSeparator()
       if (s == 0) {
         val r = isRowDelim()
         if (r > 0 || endOfFile) {
           advance(r)
-          (ParseRow(input.marked(pos)), Emit(new CsvRow(cells)))
+          (ParseRow(pos, pos, input.marked(pos)), Emit(new CsvRow(cells)))
         } else if (r == 0) {
-          (SkipRow(input.marked(pos)), Fail("Expected separator, row delimiter, or end of file", pos))
+          (SkipRow(rowStart, pos, input), Fail("Expected separator, row delimiter, or end of file", pos))
         } else {
           needInput()
         }
@@ -236,9 +253,9 @@ case class CsvParser(format: CsvFormat) {
         advance(s)
         cell() match {
           case Emit(c) =>
-            row(cells :+ c)
+            row(rowStart, cells :+ c)
           case f @ Fail(_, _) =>
-            (SkipRow(input.marked(pos)), f)
+            (SkipRow(rowStart, pos, input), f)
           case NeedInput =>
             needInput()
         }
@@ -248,28 +265,28 @@ case class CsvParser(format: CsvFormat) {
     }
 
     state match {
-      case ContinueRow(partial, _) =>
-        row(partial)
+      case ContinueRow(rowStart, readFrom, partial, _) =>
+        row(rowStart, partial)
 
-      case instr @ ParseRow(_) =>
+      case instr @ ParseRow(rowStart, readFrom, _) =>
         if (endOfFile) {
           (instr, Done)
         } else {
           cell() match {
             case Emit(csvCell) =>
-              row(Vector(csvCell))
+              row(rowStart, Vector(csvCell))
             case f @ Fail(_, _) =>
-              (SkipRow(input.marked(pos)), f)
+              (SkipRow(rowStart, pos, input), f)
             case NeedInput =>
               (instr, NeedInput)
           }
         }
 
-      case SkipRow(_) =>
+      case SkipRow(rowStart, readFrom, _) =>
         if (skipToNextRow()) {
-          (ParseRow(input.marked(pos)), Resume)
+          (ParseRow(pos, pos, input.marked(pos)), Resume)
         } else {
-          (SkipRow(input.marked(pos)), NeedInput)
+          (SkipRow(rowStart, pos, input), NeedInput)
         }
     }
   }
