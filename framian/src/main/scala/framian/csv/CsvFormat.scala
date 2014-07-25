@@ -119,7 +119,23 @@ object CsvFormat {
     /**
      * Performs a very naive guess of the CsvFormat. This uses weighted
      * frequencies of occurences of common separators, row-delimiters, quotes,
-     * quote escapes, etc. and simply selects the max for each.
+     * quote escapes, etc. and simply selects the max for each. For empty
+     * values, it uses the frequency of the the possible empty values within
+     * the cells.
+     *
+     * This supports:
+     *
+     *   * \r\n and \n as row delimiters,
+     *   * ',', '\t', ';', and '|' as field delimiters,
+     *   * '"', and ''' as quote delimiter,
+     *   * the quote delimiter or \ for quote escapes,
+     *   * '', '?', '-', 'N/A', and 'NA' as empty values, and
+     *   * 'N/M' and 'NM' as invalid values.
+     *
+     * Headers are guessed by using the cosine similarity of the frequency of
+     * characters (except quotes/field delimiters) between the first row and
+     * all subsequent rows. Values below 0.5 will result in a header being
+     * inferred.
      */
     def apply(str: String): CsvFormat = {
       def count(ndl: String): Int = {
@@ -173,7 +189,7 @@ object CsvFormat {
 
       val header0 = header.getOrElse(hasHeader(str, rowDelim0.value, separator0, quote0))
 
-      CsvFormat(separator0, quote0, quoteEscape0, empty0, invalid0, header0, rowDelim0)
+      CsvFormat(separator0, quote0, quoteEscape0, empty0, invalid0, header0, rowDelim0, allowRowDelimInQuotes)
     }
 
     def hasHeader(chunk: String, rowDelim: String, separator: String, quote: String): Boolean = {
