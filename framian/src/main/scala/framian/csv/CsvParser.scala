@@ -182,7 +182,7 @@ case class CsvParser(format: CsvFormat) {
             NeedInput
           }
         } else {
-          val d = isRowDelim()
+          val d = if (allowRowDelimInQuotes) 0 else isRowDelim()
           val e = isEscapedQuote()
           val q = isQuote()
 

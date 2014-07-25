@@ -39,13 +39,31 @@ trait GuessCsvFormat extends CsvFormatStrategy {
 }
 
 case class CsvFormat(
+  /** The delimiter that separates fields within the rows. */
   separator: String,
+
+  /** The character/string that indicates the beginning/end of a quoted value. */
   quote: String = "\"",
+
+  /** The string that is used to escape a quote character, within a quote. */
   quoteEscape: String = "\"",
+
+  /** The value of an empty field (common values are - or ?). */
   empty: String = "",
+
+  /** The value of an invalid field. Empty values take precedence, so setting
+   *  this to the same value as `empty` essentially disabled invalid values. */
   invalid: String = "",
+
+  /** Indicates whether or not the CSV's first row is actually a header. */
   header: Boolean = false,
-  rowDelim: CsvRowDelim = CsvRowDelim.Both
+
+  /** The delimiter used to separate row. */
+  rowDelim: CsvRowDelim = CsvRowDelim.Both,
+
+  /** If true, allow row delimiters within quotes, otherwise they are treated
+   *  as an error. */
+  allowRowDelimInQuotes: Boolean = true
 ) extends CsvFormatStrategy {
   val escapedQuote = quoteEscape + quote
 
@@ -85,7 +103,8 @@ object CsvFormat {
       empty: Option[String] = None,
       invalid: Option[String] = None,
       header: Option[Boolean] = None,
-      rowDelim: Option[CsvRowDelim] = None
+      rowDelim: Option[CsvRowDelim] = None,
+      allowRowDelimInQuotes: Boolean = true
     ) extends GuessCsvFormat {
 
     def withSeparator(separator: String): Partial = copy(separator = Some(separator))
