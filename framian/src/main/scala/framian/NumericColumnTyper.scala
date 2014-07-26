@@ -115,7 +115,6 @@ object NumericColumnTyper {
           if (x.isExact) rational(x.toRational)
           else bigFloat(x.toBigDecimal)
         }
-      case (x: String) => string(x)
       case _ => z
     }
   }
@@ -142,7 +141,6 @@ object NumericColumnTyper {
       case Classes.BigDecimal => bigFloat(column.asInstanceOf[Column[BigDecimal]])
       case Classes.JavaBigDecimal => bigFloat(column.asInstanceOf[Column[java.math.BigDecimal]] map (BigDecimal(_)))
       case cls if Classes.Rational isAssignableFrom cls => rational(column.asInstanceOf[Column[Rational]])
-      case Classes.String => string(column.asInstanceOf[Column[String]])
       case _ => z
     }
   }
