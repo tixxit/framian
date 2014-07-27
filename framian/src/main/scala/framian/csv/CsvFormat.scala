@@ -11,7 +11,16 @@ object CsvRowDelim {
   case object Both extends CsvRowDelim("\n", Some("\r\n"))
 }
 
-sealed trait CsvFormatStrategy
+sealed trait CsvFormatStrategy {
+  def withSeparator(separator: String): CsvFormatStrategy
+  def withQuote(quote: String): CsvFormatStrategy
+  def withQuoteEscape(quoteEscape: String): CsvFormatStrategy
+  def withEmpty(empty: String): CsvFormatStrategy
+  def withInvalid(invalid: String): CsvFormatStrategy
+  def withHeader(header: Boolean): CsvFormatStrategy
+  def withRowDelim(rowDelim: CsvRowDelim): CsvFormatStrategy
+  def withRowDelim(rowDelim: String): CsvFormatStrategy
+}
 
 trait GuessCsvFormat extends CsvFormatStrategy {
 
@@ -68,7 +77,7 @@ case class CsvFormat(
   val escapedQuote = quoteEscape + quote
 
   override def toString: String =
-    s"""CsvFormat(separator = "$separator", quote = "$quote", quoteEscape = "$quoteEscape", empty = "$empty", invalid = "$invalid", header = $header, rowDelim = $rowDelim)"""
+    s"""CsvFormat(separator = "$separator", quote = "$quote", quoteEscape = "$quoteEscape", empty = "$empty", invalid = "$invalid", header = $header, rowDelim = $rowDelim, allowRowDelimInQuotes = $allowRowDelimInQuotes)"""
 
   /**
    * Replaces all instances of \r\n with \n, then escapes all quotes and wraps
@@ -88,6 +97,15 @@ case class CsvFormat(
         (text contains quote)) escape(text)
     else text
   }
+
+  def withSeparator(separator: String): CsvFormat = copy(separator = separator)
+  def withQuote(quote: String): CsvFormat = copy(quote = quote)
+  def withQuoteEscape(quoteEscape: String): CsvFormat = copy(quoteEscape = quoteEscape)
+  def withEmpty(empty: String): CsvFormat = copy(empty = empty)
+  def withInvalid(invalid: String): CsvFormat = copy(invalid = invalid)
+  def withHeader(header: Boolean): CsvFormat = copy(header = header)
+  def withRowDelim(rowDelim: CsvRowDelim): CsvFormat = copy(rowDelim = rowDelim)
+  def withRowDelim(rowDelim: String): CsvFormat = copy(rowDelim = CsvRowDelim.Custom(rowDelim))
 }
 
 object CsvFormat {
@@ -167,7 +185,7 @@ object CsvFormat {
         else CsvRowDelim.Windows
       }
       val separator0 = separator.getOrElse {
-        choose(","  -> 1.0, "\t" -> 3.0, ";"  -> 2.0, "|"  -> 3.0)(count)
+        choose(","  -> 2.0, "\t" -> 3.0, ";"  -> 2.0, "|"  -> 1.0)(count)
       }
       val quote0 = quote.getOrElse(choose("\"" -> 1.2, "\'" -> 1)(count))
       val quoteEscape0 = choose(s"$quote0$quote0" -> 1.1, s"\\$quote0" -> 1)(count).dropRight(quote0.length)
