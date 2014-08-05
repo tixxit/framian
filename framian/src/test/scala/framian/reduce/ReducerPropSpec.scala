@@ -506,8 +506,6 @@ class ReducerPropSpec extends Specification with ScalaCheck {
     "percentiles split at appropriate mark" in {
       def genRational = arbitrary[Double].map(Rational(_))
       forAll(Gen.nonEmptyListOf(genRational)) { xs =>
-        val min = xs.min
-        val max = xs.max
         val percentiles = Series(xs: _*).reduce(Quantile[Rational](quantiles))
         percentiles.value.get forall { case (p, q) =>
           val below = math.ceil(xs.size * p)
