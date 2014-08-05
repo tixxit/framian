@@ -45,7 +45,7 @@ final class Quantile[A: Field: Order: ClassTag](percentiles: Seq[Double]) extend
       val i = p * (as.length - 1)
       val lb = i.toInt
       val ub = math.ceil(i).toInt
-      val w = i - lb
+      val w = Field[A].fromDouble(i - lb)
       val value = as(lb) * (1 - w) + as(ub) * w
       p -> value
     })(collection.breakOut)

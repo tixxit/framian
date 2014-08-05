@@ -3,6 +3,7 @@ package reduce
 
 import scala.reflect.ClassTag
 
+import spire.math.Rational
 import spire.std.int._
 import spire.std.double._
 
@@ -498,6 +499,18 @@ class ReducerPropSpec extends Specification with ScalaCheck {
         val percentiles = Series(xs: _*).reduce(Quantile[Double](quantiles))
         percentiles.value.get forall { case (_, q) =>
           q >= min && q <= max
+        }
+      }
+    }
+
+    "percentiles split at appropriate mark" in {
+      def genRational = arbitrary[Double].map(Rational(_))
+      forAll(Gen.nonEmptyListOf(genRational)) { xs =>
+        val percentiles = Series(xs: _*).reduce(Quantile[Rational](quantiles))
+        percentiles.value.get forall { case (p, q) =>
+          val below = math.ceil(xs.size * p)
+          val above = math.ceil(xs.size * (1 - p))
+          xs.filter(_ < q).size <= below && xs.filter(_ > q).size <= above
         }
       }
     }
