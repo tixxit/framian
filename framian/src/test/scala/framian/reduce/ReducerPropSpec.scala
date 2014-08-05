@@ -466,6 +466,42 @@ class ReducerPropSpec extends Specification with ScalaCheck {
     }
   }
 
+  "Quantile" should {
+    "return NA for empty series" in {
+      forAll(emptySeriesGen[Double]) { l =>
+        collect(l.length) {
+          mkSeries(l).reduce(Quantile[Double](List(0.25, 0.5, 0.75))) must_== NA
+        }
+      }.set(minTestsOk = 10)
+    }
+
+    "return min value for 0p" in {
+      forAll(Gen.nonEmptyListOf(arbitrary[Double])) { xs =>
+        val min = xs.min
+        Series(xs: _*).reduce(Quantile[Double](List(0.0))) must_== Value(List(0.0 -> min))
+      }
+    }
+
+    "return max value for 1p" in {
+      forAll(Gen.nonEmptyListOf(arbitrary[Double])) { xs =>
+        val max = xs.max
+        Series(xs: _*).reduce(Quantile[Double](List(1.0))) must_== Value(List(1.0 -> max))
+      }
+    }
+
+    val quantiles = List(0.01, 0.1, 0.25, 0.5, 0.75, 0.9, 0.99)
+
+    "never return percentile below min or above max" in {
+      forAll(Gen.nonEmptyListOf(arbitrary[Double])) { xs =>
+        val min = xs.min
+        val max = xs.max
+        val percentiles = Series(xs: _*).reduce(Quantile[Double](quantiles))
+        percentiles.value.get forall { case (_, q) =>
+          q >= min && q <= max
+        }
+      }
+    }
+  }
 
   "ForAll" should {
 
