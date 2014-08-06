@@ -254,8 +254,6 @@ object Cell extends CellInstances {
     case Some(a) => Value(a)
     case None => nonValue
   }
-
-  implicit def cell2Iterable[A](cell: Cell[A]): Iterable[A] = cell.toList
 }
 
 /** The supertype of non values, [[NA]] (''Not Available'') and
