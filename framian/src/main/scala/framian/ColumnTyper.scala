@@ -24,7 +24,11 @@ package framian
 import scala.reflect.{ ClassTag, classTag }
 import scala.{ specialized => spec }
 
+import spire.math._
+
 import shapeless._
+
+import framian.columns.CastColumn
 
 trait ColumnTyper[@spec(Int,Long,Float,Double) A] {
   def cast(col: TypedColumn[_]): Column[A]
@@ -47,14 +51,14 @@ trait ColumnTyper2 extends ColumnTyper1 {
 }
 
 trait ColumnTyper3 extends ColumnTyper2 {
-  implicit val int = new IntColumnTyper
-  implicit val long = new LongColumnTyper
-  implicit val float = new FloatColumnTyper
-  implicit val double = new DoubleColumnTyper
-  implicit val bigInt = new BigIntTyper
-  implicit val bigDecimal = new BigDecimalTyper
-  implicit val rational = new RationalTyper
-  implicit val number = new NumberTyper
+  implicit val int: ColumnTyper[Int] = new IntColumnTyper
+  implicit val long: ColumnTyper[Long] = new LongColumnTyper
+  implicit val float: ColumnTyper[Float] = new FloatColumnTyper
+  implicit val double: ColumnTyper[Double] = new DoubleColumnTyper
+  implicit val bigInt: ColumnTyper[BigInt] = new BigIntTyper
+  implicit val bigDecimal: ColumnTyper[BigDecimal] = new BigDecimalTyper
+  implicit val rational: ColumnTyper[Rational] = new RationalTyper
+  implicit val number: ColumnTyper[Number] = new NumberTyper
 }
 
 trait ColumnTyperInstances extends ColumnTyper3

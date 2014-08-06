@@ -28,48 +28,48 @@ import spire.algebra._
 import spire.syntax.all._
 
 trait ColumnAlgebras0 {
-  implicit def semiring[@spec(Int,Long,Float,Double) A: Semiring] = new ColumnSemiringImpl[A]
+  implicit def semiring[@spec(Int,Long,Float,Double) A: Semiring]: Semiring[Column[A]] = new ColumnSemiringImpl[A]
 }
 
 trait ColumnAlgebras1 extends ColumnAlgebras0 {
-  implicit def rig[@spec(Int,Long,Float,Double) A: Rig] = new ColumnRigImpl[A]
+  implicit def rig[@spec(Int,Long,Float,Double) A: Rig]: Rig[Column[A]] = new ColumnRigImpl[A]
 }
 
 trait ColumnAlgebras2 extends ColumnAlgebras1 {
-  implicit def rng[@spec(Int,Long,Float,Double) A: Rng] = new ColumnRngImpl[A]
+  implicit def rng[@spec(Int,Long,Float,Double) A: Rng]: Rng[Column[A]] = new ColumnRngImpl[A]
 }
 
 trait ColumnAlgebras3 extends ColumnAlgebras2 {
-  implicit def ring[@spec(Int,Long,Float,Double) A: Ring] = new ColumnRingImpl[A]
+  implicit def ring[@spec(Int,Long,Float,Double) A: Ring]: Ring[Column[A]] = new ColumnRingImpl[A]
 }
 
 trait ColumnAlgebras4 extends ColumnAlgebras3 {
-  implicit def euclideanRing[@spec(Int,Long,Float,Double) A: EuclideanRing: Eq] = new ColumnEuclideanRingImpl[A]
+  implicit def euclideanRing[@spec(Int,Long,Float,Double) A: EuclideanRing: Eq]: EuclideanRing[Column[A]] = new ColumnEuclideanRingImpl[A]
 }
 
 trait ColumnAlgebras5 extends ColumnAlgebras4 {
-  implicit def field[@spec(Int,Long,Float,Double) A: Field: Eq] = new ColumnFieldImpl[A]
+  implicit def field[@spec(Int,Long,Float,Double) A: Field: Eq]: Field[Column[A]] = new ColumnFieldImpl[A]
 }
 
 trait ColumnAlgebras extends ColumnAlgebras5
 
 @SerialVersionUID(0L)
-final class ColumnSemiringImpl[@spec(Int,Long,Float,Double) A](implicit val algebra: Semiring[A]) extends ColumnSemiring[A]
+private final class ColumnSemiringImpl[@spec(Int,Long,Float,Double) A](implicit val algebra: Semiring[A]) extends ColumnSemiring[A]
 
 @SerialVersionUID(0L)
-final class ColumnRigImpl[@spec(Int,Long,Float,Double) A](implicit val algebra: Rig[A]) extends ColumnRig[A]
+private final class ColumnRigImpl[@spec(Int,Long,Float,Double) A](implicit val algebra: Rig[A]) extends ColumnRig[A]
 
 @SerialVersionUID(0L)
-final class ColumnRngImpl[@spec(Int,Long,Float,Double) A](implicit val algebra: Rng[A]) extends ColumnRng[A]
+private final class ColumnRngImpl[@spec(Int,Long,Float,Double) A](implicit val algebra: Rng[A]) extends ColumnRng[A]
 
 @SerialVersionUID(0L)
-final class ColumnRingImpl[@spec(Int,Long,Float,Double) A](implicit val algebra: Ring[A]) extends ColumnRing[A]
+private final class ColumnRingImpl[@spec(Int,Long,Float,Double) A](implicit val algebra: Ring[A]) extends ColumnRing[A]
 
 @SerialVersionUID(0L)
-final class ColumnEuclideanRingImpl[@spec(Int,Long,Float,Double) A](implicit val algebra: EuclideanRing[A], val order: Eq[A]) extends ColumnEuclideanRing[A]
+private final class ColumnEuclideanRingImpl[@spec(Int,Long,Float,Double) A](implicit val algebra: EuclideanRing[A], val order: Eq[A]) extends ColumnEuclideanRing[A]
 
 @SerialVersionUID(0L)
-final class ColumnFieldImpl[@spec(Int,Long,Float,Double) A](implicit val algebra: Field[A], val order: Eq[A]) extends ColumnField[A]
+private final class ColumnFieldImpl[@spec(Int,Long,Float,Double) A](implicit val algebra: Field[A], val order: Eq[A]) extends ColumnField[A]
 
 private trait UnOpColumn[@spec(Int,Long,Float,Double) A] extends Column[A] {
   def arg: Column[A]
@@ -96,7 +96,7 @@ private trait BinOpColumn[@spec(Int,Long,Float,Double) A] extends Column[A] {
   }
 }
 
-trait ColumnSemiring[@spec(Int,Long,Float,Double) A] extends Semiring[Column[A]] {
+private trait ColumnSemiring[@spec(Int,Long,Float,Double) A] extends Semiring[Column[A]] {
   implicit def algebra: Semiring[A]
 
   def zero: Column[A] = Column.const(algebra.zero)
@@ -114,13 +114,13 @@ trait ColumnSemiring[@spec(Int,Long,Float,Double) A] extends Semiring[Column[A]]
   }
 }
 
-trait ColumnRig[@spec(Int,Long,Float,Double) A] extends ColumnSemiring[A] with Rig[Column[A]] {
+private trait ColumnRig[@spec(Int,Long,Float,Double) A] extends ColumnSemiring[A] with Rig[Column[A]] {
   implicit def algebra: Rig[A]
 
   def one: Column[A] = Column.const(algebra.one)
 }
 
-trait ColumnRng[@spec(Int,Long,Float,Double) A] extends ColumnSemiring[A] with Rng[Column[A]] {
+private trait ColumnRng[@spec(Int,Long,Float,Double) A] extends ColumnSemiring[A] with Rng[Column[A]] {
   implicit def algebra: Rng[A]
 
   def negate(x: Column[A]): Column[A] = new UnOpColumn[A] {
@@ -135,7 +135,7 @@ trait ColumnRng[@spec(Int,Long,Float,Double) A] extends ColumnSemiring[A] with R
   }
 }
 
-trait ColumnRing[@spec(Int,Long,Float,Double) A]
+private trait ColumnRing[@spec(Int,Long,Float,Double) A]
     extends ColumnRig[A] with ColumnRng[A] with Ring[Column[A]] {
   override def algebra: Ring[A]
   override def zero: Column[A] = Column.const(algebra.zero)
@@ -165,7 +165,7 @@ private trait DivOpColumn[@spec(Int,Long,Float,Double) A] extends Column[A] {
   }
 }
 
-trait ColumnEuclideanRing[@spec(Int,Long,Float,Double) A]
+private trait ColumnEuclideanRing[@spec(Int,Long,Float,Double) A]
     extends ColumnRing[A] with EuclideanRing[Column[A]] { self =>
   override implicit def algebra: EuclideanRing[A]
   implicit def order: Eq[A]
@@ -193,7 +193,7 @@ trait ColumnEuclideanRing[@spec(Int,Long,Float,Double) A]
   }
 }
 
-trait ColumnField[@spec(Int,Long,Float,Double) A]
+private trait ColumnField[@spec(Int,Long,Float,Double) A]
     extends ColumnEuclideanRing[A] with Field[Column[A]] { self =>
   override implicit def algebra: Field[A]
 

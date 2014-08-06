@@ -39,6 +39,7 @@ import spire.syntax.cfor._
 
 import spire.compat._
 
+import framian.columns.MappedColumn
 import framian.reduce.Reducer
 import framian.util.TrivialMetricSpace
 
