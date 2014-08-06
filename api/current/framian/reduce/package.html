@@ -1,0 +1,778 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>reduce - framian.reduce</title>
+          <meta name="description" content="reduce - framian.reduce" />
+          <meta name="keywords" content="reduce framian.reduce" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../lib/template.js"></script>
+      <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../index.html';
+            var hash = 'framian.reduce.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img src="../../lib/package_big.png" />
+        <p id="owner"><a href="../package.html" class="extype" name="framian">framian</a></p>
+        <h1>reduce</h1> <span class="permalink">
+      <a href="../../index.html#framian.reduce.package" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">reduce</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.1.1/framian/src/main/scala/framian/reduce/package.scala" target="_blank">package.scala</a></dd></dl><div class="toggleContainer block">
+          <span class="toggle">Linear Supertypes</span>
+          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+        </div></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        <div id="order">
+              <span class="filtertype">Ordering</span>
+              <ol>
+                
+                <li class="alpha in"><span>Alphabetic</span></li>
+                <li class="inherit out"><span>By inheritance</span></li>
+              </ol>
+            </div>
+        <div id="ancestors">
+                <span class="filtertype">Inherited<br />
+                </span>
+                <ol id="linearization">
+                  <li class="in" name="framian.reduce"><span>reduce</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                </ol>
+              </div><div id="ancestors">
+            <span class="filtertype"></span>
+            <ol>
+              <li class="hideall out"><span>Hide All</span></li>
+              <li class="showall in"><span>Show all</span></li>
+            </ol>
+            <a href="http://docs.scala-lang.org/overviews/scaladoc/usage.html#members" target="_blank">Learn more about member selection</a>
+          </div>
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="framian.reduce.Exists" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="Exists[A]extendsReducer[A,Boolean]"></a>
+      <a id="Exists[A]:Exists[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Exists.html"><span class="name">Exists</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.Exists.A">A</span>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@Exists[A]extendsReducer[A,Boolean]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a> that exististentially quantifies a predicate
+as a reduction over a collection of <a href="../Cell.html" class="extype" name="framian.Cell">Cell</a>s.</p><div class="fullcomment"><div class="comment cmt"><p>A <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a> that exististentially quantifies a predicate
+as a reduction over a collection of <a href="../Cell.html" class="extype" name="framian.Cell">Cell</a>s.</p><p>This reducer will return true upon encountering the first value
+that is available and meaningful <i>and</i> applying the predicate
+<code>p</code> to that value returns true. Otherwise, returns false.</p><p>This reducer is unusual in that it will ignore <a href="../NonValue.html" class="extype" name="framian.NonValue">NonValue</a>s, in
+particular, it will not propogate <a href="../NM$.html" class="extype" name="framian.NM">NM</a>. If the predicate can be
+satisfied by a value that is available and meaningful elsewhere in
+the collection, then this reduction should still return true.</p><p>This reducer will only traverse the entire collection if it never
+encounters an available and meaningful value that satisfies the
+predicate <code>p</code>.
+</p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>the value type of the column to reduce.
+</p></dd></dl><dl class="attributes block"> <div class="block">Example:
+               <ol><li class="cmt"><p></p><pre>Series.empty[<span class="std">Int</span>, <span class="std">Int</span>].reduce(<span class="kw">new</span> Exists[<span class="std">Int</span>](i <span class="kw">=&gt;</span> <span class="kw">true</span>)) == Value(<span class="kw">false</span>)
+
+Series(<span class="num">1</span> -&gt; <span class="num">1</span>, <span class="num">2</span> -&gt; <span class="num">2</span>).reduce(<span class="kw">new</span> Exists[<span class="std">Int</span>](i <span class="kw">=&gt;</span> i &lt; <span class="num">2</span>)) == Value(<span class="kw">true</span>)
+
+Series.fromCells[<span class="std">Int</span>, <span class="std">Int</span>](<span class="num">1</span> -&gt; NA, <span class="num">2</span> -&gt; <span class="num">1</span>).reduce(<span class="kw">new</span> Exists[<span class="std">Int</span>](i <span class="kw">=&gt;</span> i &lt; <span class="num">2</span>)) == Value(<span class="kw">true</span>)
+Series.fromCells[<span class="std">Int</span>, <span class="std">Int</span>](<span class="num">1</span> -&gt; NM, <span class="num">2</span> -&gt; <span class="num">1</span>).reduce(<span class="kw">new</span> Exists[<span class="std">Int</span>](i <span class="kw">=&gt;</span> i &lt; <span class="num">2</span>)) == Value(<span class="kw">true</span>)</pre></li></ol>
+            </div><dt>Note</dt><dd><span class="cmt"><p>This reducer will always return precisely <code>Value[Boolean]</code>,
+  rather than <code>Cell[Boolean]</code>. This in constrast to most reducers
+  that will also return <a href="../NonValue.html" class="extype" name="framian.NonValue">NonValue</a>s.
+</p></span></dd><dt>See also</dt><dd><span class="cmt"><p><a href="ForAll.html" class="extype" name="framian.reduce.ForAll">ForAll</a>
+</p></span></dd></dl></div>
+    </li><li name="framian.reduce.First" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="First[A]extendsReducer[A,A]"></a>
+      <a id="First[A]:First[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="First.html"><span class="name">First</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.First.A">A</span>, <span class="extype" name="framian.reduce.First.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@First[A]extendsReducer[A,A]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce.FirstN" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="FirstN[A]extendsReducer[A,List[A]]"></a>
+      <a id="FirstN[A]:FirstN[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="FirstN.html"><span class="name">FirstN</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.FirstN.A">A</span>, <span class="extype" name="scala.List">List</span>[<span class="extype" name="framian.reduce.FirstN.A">A</span>]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@FirstN[A]extendsReducer[A,List[A]]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce.ForAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ForAll[A]extendsReducer[A,Boolean]"></a>
+      <a id="ForAll[A]:ForAll[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="ForAll.html"><span class="name">ForAll</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.ForAll.A">A</span>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@ForAll[A]extendsReducer[A,Boolean]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a> that universally quantifies a predicate
+as a reduction over a collection of <a href="../Cell.html" class="extype" name="framian.Cell">Cell</a>s.</p><div class="fullcomment"><div class="comment cmt"><p>A <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a> that universally quantifies a predicate
+as a reduction over a collection of <a href="../Cell.html" class="extype" name="framian.Cell">Cell</a>s.</p><p>This reducer will return false upon encountering the first value
+that is not meaningful, or the first value that is available and
+meaningful <i>and</i> applying the predicate <code>p</code> to that value
+returns false. Otherwise, returns true.</p><p>This reducer does propogate <a href="../NM$.html" class="extype" name="framian.NM">NM</a>, in a sense, but the result is
+<code>Value(false)</code> rather than <code>NM</code>. Unavailable values (<a href="../NA$.html" class="extype" name="framian.NA">NA</a>) are
+treated as the vaccuous case, so they will in count as a counter
+example to the quantification.</p><p>This reducer will only traverse the entire collection if it never
+encounters a not meaningful value or a meaningful value that does
+not satisfy the predicate <code>p</code>.
+</p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>the value type of the column to reduce.
+</p></dd></dl><dl class="attributes block"> <div class="block">Example:
+               <ol><li class="cmt"><p></p><pre>Series.empty[<span class="std">Int</span>, <span class="std">Int</span>].reduce(<span class="kw">new</span> ForAll[<span class="std">Int</span>](i <span class="kw">=&gt;</span> <span class="kw">false</span>)) == Value(<span class="kw">true</span>)
+
+Series(<span class="num">1</span> -&gt; <span class="num">1</span>, <span class="num">2</span> -&gt; <span class="num">2</span>).reduce(<span class="kw">new</span> ForAll[<span class="std">Int</span>](i <span class="kw">=&gt;</span> i &lt; <span class="num">3</span>)) == Value(<span class="kw">true</span>)
+Series(<span class="num">1</span> -&gt; <span class="num">1</span>, <span class="num">2</span> -&gt; <span class="num">2</span>).reduce(<span class="kw">new</span> ForAll[<span class="std">Int</span>](i <span class="kw">=&gt;</span> i &lt; <span class="num">2</span>)) == Value(<span class="kw">false</span>)
+
+Series.fromCells[<span class="std">Int</span>, <span class="std">Int</span>](<span class="num">1</span> -&gt; NA)        .reduce(<span class="kw">new</span> ForAll[<span class="std">Int</span>](i <span class="kw">=&gt;</span> <span class="kw">false</span>)) == Value(<span class="kw">true</span>)
+Series.fromCells[<span class="std">Int</span>, <span class="std">Int</span>](<span class="num">1</span> -&gt; <span class="num">1</span>, <span class="num">2</span> -&gt; NM).reduce(<span class="kw">new</span> ForAll[<span class="std">Int</span>](i <span class="kw">=&gt;</span> i &lt; <span class="num">2</span>)) == Value(<span class="kw">false</span>)</pre></li></ol>
+            </div><dt>Note</dt><dd><span class="cmt"><p>This reducer will always return precisely <code>Value[Boolean]</code>,
+  rather than <code>Cell[Boolean]</code>. This in constrast to most reducers
+  that will also return <a href="../NonValue.html" class="extype" name="framian.NonValue">NonValue</a>s.
+</p></span></dd><dt>See also</dt><dd><span class="cmt"><p><a href="Exists.html" class="extype" name="framian.reduce.Exists">Exists</a>
+</p></span></dd></dl></div>
+    </li><li name="framian.reduce.Last" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Last[A]extendsReducer[A,A]"></a>
+      <a id="Last[A]:Last[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Last.html"><span class="name">Last</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.Last.A">A</span>, <span class="extype" name="framian.reduce.Last.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@Last[A]extendsReducer[A,A]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce.LastN" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="LastN[A]extendsReducer[A,List[A]]"></a>
+      <a id="LastN[A]:LastN[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="LastN.html"><span class="name">LastN</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.LastN.A">A</span>, <span class="extype" name="scala.List">List</span>[<span class="extype" name="framian.reduce.LastN.A">A</span>]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@LastN[A]extendsReducer[A,List[A]]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce.Max" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Max[A]extendsReducer[A,A]"></a>
+      <a id="Max[A]:Max[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Max.html"><span class="name">Max</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.Max.A">A</span>, <span class="extype" name="framian.reduce.Max.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@Max[A]extendsReducer[A,A]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce.Mean" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Mean[A]extendsReducer[A,A]"></a>
+      <a id="Mean[A]:Mean[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Mean.html"><span class="name">Mean</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.Mean.A">A</span>, <span class="extype" name="framian.reduce.Mean.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@Mean[A]extendsReducer[A,A]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce.Median" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Median[A]extendsSimpleReducer[A,A]"></a>
+      <a id="Median[A]:Median[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Median.html"><span class="name">Median</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="SimpleReducer.html" class="extype" name="framian.reduce.SimpleReducer">SimpleReducer</a>[<span class="extype" name="framian.reduce.Median.A">A</span>, <span class="extype" name="framian.reduce.Median.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@Median[A]extendsSimpleReducer[A,A]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce.MonoidReducer" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="MonoidReducer[A]extendsReducer[A,A]"></a>
+      <a id="MonoidReducer[A]:MonoidReducer[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="MonoidReducer.html"><span class="name">MonoidReducer</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.MonoidReducer.A">A</span>, <span class="extype" name="framian.reduce.MonoidReducer.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@MonoidReducer[A]extendsReducer[A,A]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce.Outliers" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Outliers[A]extendsSimpleReducer[A,(Option[A],Option[A])]"></a>
+      <a id="Outliers[A]:Outliers[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Outliers.html"><span class="name">Outliers</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="SimpleReducer.html" class="extype" name="framian.reduce.SimpleReducer">SimpleReducer</a>[<span class="extype" name="framian.reduce.Outliers.A">A</span>, (<a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="framian.reduce.Outliers.A">A</span>], <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="framian.reduce.Outliers.A">A</span>])]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@Outliers[A]extendsSimpleReducer[A,(Option[A],Option[A])]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce.Quantile" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Quantile[A]extendsSimpleReducer[A,List[(Double,A)]]"></a>
+      <a id="Quantile[A]:Quantile[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Quantile.html"><span class="name">Quantile</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="SimpleReducer.html" class="extype" name="framian.reduce.SimpleReducer">SimpleReducer</a>[<span class="extype" name="framian.reduce.Quantile.A">A</span>, <span class="extype" name="scala.List">List</span>[(<a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Double" class="extype" target="_top">Double</a>, <span class="extype" name="framian.reduce.Quantile.A">A</span>)]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@Quantile[A]extendsSimpleReducer[A,List[(Double,A)]]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce.Reducer" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="Reducer[-A,+B]extendsAnyRef"></a>
+      <a id="Reducer[-A,+B]:Reducer[A,B]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="Reducer.html"><span class="name">Reducer</span></a><span class="tparams">[<span name="A">-A</span>, <span name="B">+B</span>]</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@Reducer[-A,+B]extendsAnyRef" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A low level trait for implementing reductions.</p><div class="fullcomment"><div class="comment cmt"><p>A low level trait for implementing reductions.</p><p>TODO: All reducers should return Cell[B].
+</p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>the input type of the reducer, which is the value type of the input <a href="../Column.html" class="extype" name="framian.Column">Column</a></p></dd><dt class="tparam">B</dt><dd class="cmt"><p>the ouput type of the reducer, which is the value type of the output <a href="../Cell.html" class="extype" name="framian.Cell">Cell</a>
+</p></dd></dl></div>
+    </li><li name="framian.reduce.SemigroupReducer" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="SemigroupReducer[A]extendsReducer[A,A]"></a>
+      <a id="SemigroupReducer[A]:SemigroupReducer[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="SemigroupReducer.html"><span class="name">SemigroupReducer</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.SemigroupReducer.A">A</span>, <span class="extype" name="framian.reduce.SemigroupReducer.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@SemigroupReducer[A]extendsReducer[A,A]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce.SimpleReducer" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="SimpleReducer[A,B]extendsReducer[A,B]"></a>
+      <a id="SimpleReducer[A,B]:SimpleReducer[A,B]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="SimpleReducer.html"><span class="name">SimpleReducer</span></a><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="result"> extends <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.SimpleReducer.A">A</span>, <span class="extype" name="framian.reduce.SimpleReducer.B">B</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@SimpleReducer[A,B]extendsReducer[A,B]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce.Unique" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Unique[A]extendsReducer[A,Set[A]]"></a>
+      <a id="Unique[A]:Unique[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Unique.html"><span class="name">Unique</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.Unique.A">A</span>, <span class="extype" name="scala.Predef.Set">Set</span>[<span class="extype" name="framian.reduce.Unique.A">A</span>]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@Unique[A]extendsReducer[A,Set[A]]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="framian.reduce.Count" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Count"></a>
+      <a id="Count:Count"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Count$.html"><span class="name">Count</span></a><span class="result"> extends <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@Count" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce#Exists" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="Exists[A](p:A=&gt;Boolean):framian.reduce.Reducer[A,Boolean]"></a>
+      <a id="Exists[A]((A)⇒Boolean):Reducer[A,Boolean]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Exists</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="p">p: (<span class="extype" name="framian.reduce.Exists.A">A</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.Exists.A">A</span>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@Exists[A](p:A=&gt;Boolean):framian.reduce.Reducer[A,Boolean]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns a <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a> that exististentially quantifies a predicate
+as a reduction over a collection of <a href="../Cell.html" class="extype" name="framian.Cell">Cell</a>s.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a> that exististentially quantifies a predicate
+as a reduction over a collection of <a href="../Cell.html" class="extype" name="framian.Cell">Cell</a>s.</p><p>This reducer will return true upon encountering the first value
+that is available and meaningful <i>and</i> applying the predicate
+<code>p</code> to that value returns true. Otherwise, returns false.</p><p>This reducer is unusual in that it will ignore <a href="../NonValue.html" class="extype" name="framian.NonValue">NonValue</a>s, in
+particular, it will not propogate <a href="../NM$.html" class="extype" name="framian.NM">NM</a>. If the predicate can be
+satisfied by a value that is available and meaningful elsewhere in
+the collection, then this reduction should still return true.</p><p>This reducer will only traverse the entire collection if it never
+encounters an available and meaningful value that satisfies the
+predicate <code>p</code>.
+</p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>the value type of the column to reduce.</p></dd><dt class="param">p</dt><dd class="cmt"><p>the predicate to apply to the values of the column.</p></dd><dt>returns</dt><dd class="cmt"><p>a <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a> that exististentially quantifies a predicate.</p></dd></dl><dl class="attributes block"> <div class="block">Example:
+               <ol><li class="cmt"><p></p><pre>Series.empty[<span class="std">Int</span>, <span class="std">Int</span>].reduce(Exists[<span class="std">Int</span>](i <span class="kw">=&gt;</span> <span class="kw">true</span>)) == Value(<span class="kw">false</span>)
+
+Series(<span class="num">1</span> -&gt; <span class="num">1</span>, <span class="num">2</span> -&gt; <span class="num">2</span>).reduce(Exists[<span class="std">Int</span>](i <span class="kw">=&gt;</span> i &lt; <span class="num">2</span>)) == Value(<span class="kw">true</span>)
+
+Series.fromCells[<span class="std">Int</span>, <span class="std">Int</span>](<span class="num">1</span> -&gt; NA, <span class="num">2</span> -&gt; <span class="num">1</span>).reduce(Exists[<span class="std">Int</span>](i <span class="kw">=&gt;</span> i &lt; <span class="num">2</span>)) == Value(<span class="kw">true</span>)
+Series.fromCells[<span class="std">Int</span>, <span class="std">Int</span>](<span class="num">1</span> -&gt; NM, <span class="num">2</span> -&gt; <span class="num">1</span>).reduce(Exists[<span class="std">Int</span>](i <span class="kw">=&gt;</span> i &lt; <span class="num">2</span>)) == Value(<span class="kw">true</span>)</pre></li></ol>
+            </div><dt>See also</dt><dd><span class="cmt"><p><a href="ForAll.html" class="extype" name="framian.reduce.ForAll">ForAll</a>
+</p></span></dd></dl></div>
+    </li><li name="framian.reduce#First" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="First[A]:framian.reduce.Reducer[A,A]"></a>
+      <a id="First[A]:Reducer[A,A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">First</span><span class="tparams">[<span name="A">A</span>]</span><span class="result">: <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.First.A">A</span>, <span class="extype" name="framian.reduce.First.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@First[A]:framian.reduce.Reducer[A,A]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce#FirstN" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="FirstN[A](n:Int):framian.reduce.Reducer[A,List[A]]"></a>
+      <a id="FirstN[A](Int):Reducer[A,List[A]]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">FirstN</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="n">n: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.FirstN.A">A</span>, <span class="extype" name="scala.List">List</span>[<span class="extype" name="framian.reduce.FirstN.A">A</span>]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@FirstN[A](n:Int):framian.reduce.Reducer[A,List[A]]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce#ForAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ForAll[A](p:A=&gt;Boolean):framian.reduce.Reducer[A,Boolean]"></a>
+      <a id="ForAll[A]((A)⇒Boolean):Reducer[A,Boolean]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ForAll</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="p">p: (<span class="extype" name="framian.reduce.ForAll.A">A</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.ForAll.A">A</span>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@ForAll[A](p:A=&gt;Boolean):framian.reduce.Reducer[A,Boolean]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns a <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a> that universally quantifies a predicate
+as a reduction over a collection of <a href="../Cell.html" class="extype" name="framian.Cell">Cell</a>s.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a> that universally quantifies a predicate
+as a reduction over a collection of <a href="../Cell.html" class="extype" name="framian.Cell">Cell</a>s.</p><p>This reducer will return false upon encountering the first value
+that is not meaningful, or the first value that is available and
+meaningful <i>and</i> applying the predicate <code>p</code> to that value
+returns false. Otherwise, returns true.</p><p>This reducer does propogate <a href="../NM$.html" class="extype" name="framian.NM">NM</a>, in a sense, but the result is
+<code>Value(false)</code> rather than <code>NM</code>. Unavailable values (<a href="../NA$.html" class="extype" name="framian.NA">NA</a>) are
+treated as the vaccuous case, so they will in count as a counter
+example to the quantification.</p><p>This reducer will only traverse the entire collection if it never
+encounters a not meaningful value or a meaningful value that does
+not satisfy the predicate <code>p</code>.
+</p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>the value type of the column to reduce.</p></dd><dt class="param">p</dt><dd class="cmt"><p>the predicate to apply to the values of the column.</p></dd><dt>returns</dt><dd class="cmt"><p>a <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a> that universally quantifies a predicate.</p></dd></dl><dl class="attributes block"> <div class="block">Example:
+               <ol><li class="cmt"><p></p><pre>Series.empty[<span class="std">Int</span>, <span class="std">Int</span>].reduce(ForAll[<span class="std">Int</span>](i <span class="kw">=&gt;</span> <span class="kw">false</span>)) == Value(<span class="kw">true</span>)
+
+Series(<span class="num">1</span> -&gt; <span class="num">1</span>, <span class="num">2</span> -&gt; <span class="num">2</span>).reduce(ForAll[<span class="std">Int</span>](i <span class="kw">=&gt;</span> i &lt; <span class="num">3</span>)) == Value(<span class="kw">true</span>)
+Series(<span class="num">1</span> -&gt; <span class="num">1</span>, <span class="num">2</span> -&gt; <span class="num">2</span>).reduce(ForAll[<span class="std">Int</span>](i <span class="kw">=&gt;</span> i &lt; <span class="num">2</span>)) == Value(<span class="kw">false</span>)
+
+Series.fromCells[<span class="std">Int</span>, <span class="std">Int</span>](<span class="num">1</span> -&gt; NA)        .reduce(ForAll[<span class="std">Int</span>](i <span class="kw">=&gt;</span> <span class="kw">false</span>)) == Value(<span class="kw">true</span>)
+Series.fromCells[<span class="std">Int</span>, <span class="std">Int</span>](<span class="num">1</span> -&gt; <span class="num">1</span>, <span class="num">2</span> -&gt; NM).reduce(ForAll[<span class="std">Int</span>](i <span class="kw">=&gt;</span> i &lt; <span class="num">2</span>)) == Value(<span class="kw">false</span>)</pre></li></ol>
+            </div><dt>See also</dt><dd><span class="cmt"><p><a href="Exists.html" class="extype" name="framian.reduce.Exists">Exists</a>
+</p></span></dd></dl></div>
+    </li><li name="framian.reduce#Last" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Last[A]:framian.reduce.Reducer[A,A]"></a>
+      <a id="Last[A]:Reducer[A,A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Last</span><span class="tparams">[<span name="A">A</span>]</span><span class="result">: <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.Last.A">A</span>, <span class="extype" name="framian.reduce.Last.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@Last[A]:framian.reduce.Reducer[A,A]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce#LastN" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="LastN[A](n:Int):framian.reduce.Reducer[A,List[A]]"></a>
+      <a id="LastN[A](Int):Reducer[A,List[A]]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">LastN</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="n">n: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.LastN.A">A</span>, <span class="extype" name="scala.List">List</span>[<span class="extype" name="framian.reduce.LastN.A">A</span>]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@LastN[A](n:Int):framian.reduce.Reducer[A,List[A]]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce#Max" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Max[A](implicitevidence$14:spire.algebra.Order[A]):framian.reduce.Reducer[A,A]"></a>
+      <a id="Max[A](Order[A]):Reducer[A,A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Max</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Order">Order</span>[<span class="extype" name="framian.reduce.Max.A">A</span>]</span>)</span><span class="result">: <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.Max.A">A</span>, <span class="extype" name="framian.reduce.Max.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@Max[A](implicitevidence$14:spire.algebra.Order[A]):framian.reduce.Reducer[A,A]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce#Mean" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Mean[A](implicitevidence$3:spire.algebra.Field[A]):framian.reduce.Reducer[A,A]"></a>
+      <a id="Mean[A](Field[A]):Reducer[A,A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Mean</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Field">Field</span>[<span class="extype" name="framian.reduce.Mean.A">A</span>]</span>)</span><span class="result">: <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.Mean.A">A</span>, <span class="extype" name="framian.reduce.Mean.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@Mean[A](implicitevidence$3:spire.algebra.Field[A]):framian.reduce.Reducer[A,A]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce#Median" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Median[A](implicitevidence$5:spire.algebra.Field[A],implicitevidence$6:spire.algebra.Order[A],implicitevidence$7:scala.reflect.ClassTag[A]):framian.reduce.Reducer[A,A]"></a>
+      <a id="Median[A](Field[A],Order[A],ClassTag[A]):Reducer[A,A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Median</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Field">Field</span>[<span class="extype" name="framian.reduce.Median.A">A</span>]</span>, <span name="arg1">arg1: <span class="extype" name="spire.algebra.Order">Order</span>[<span class="extype" name="framian.reduce.Median.A">A</span>]</span>, <span name="arg2">arg2: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.reduce.Median.A">A</span>]</span>)</span><span class="result">: <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.Median.A">A</span>, <span class="extype" name="framian.reduce.Median.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@Median[A](implicitevidence$5:spire.algebra.Field[A],implicitevidence$6:spire.algebra.Order[A],implicitevidence$7:scala.reflect.ClassTag[A]):framian.reduce.Reducer[A,A]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce#Min" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Min[A](implicitevidence$15:spire.algebra.Order[A]):framian.reduce.Reducer[A,A]"></a>
+      <a id="Min[A](Order[A]):Reducer[A,A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Min</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Order">Order</span>[<span class="extype" name="framian.reduce.Min.A">A</span>]</span>)</span><span class="result">: <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.Min.A">A</span>, <span class="extype" name="framian.reduce.Min.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@Min[A](implicitevidence$15:spire.algebra.Order[A]):framian.reduce.Reducer[A,A]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce#MonoidReducer" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="MonoidReducer[A](implicitevidence$1:spire.algebra.Monoid[A]):framian.reduce.Reducer[A,A]"></a>
+      <a id="MonoidReducer[A](Monoid[A]):Reducer[A,A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">MonoidReducer</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Monoid">Monoid</span>[<span class="extype" name="framian.reduce.MonoidReducer.A">A</span>]</span>)</span><span class="result">: <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.MonoidReducer.A">A</span>, <span class="extype" name="framian.reduce.MonoidReducer.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@MonoidReducer[A](implicitevidence$1:spire.algebra.Monoid[A]):framian.reduce.Reducer[A,A]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce#Outliers" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Outliers[A](k:Double)(implicitevidence$11:spire.algebra.Field[A],implicitevidence$12:spire.algebra.Order[A],implicitevidence$13:scala.reflect.ClassTag[A]):framian.reduce.Reducer[A,(Option[A],Option[A])]"></a>
+      <a id="Outliers[A](Double)(Field[A],Order[A],ClassTag[A]):Reducer[A,(Option[A],Option[A])]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Outliers</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="k">k: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Double" class="extype" target="_top">Double</a> = <span class="symbol">1.5</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Field">Field</span>[<span class="extype" name="framian.reduce.Outliers.A">A</span>]</span>, <span name="arg1">arg1: <span class="extype" name="spire.algebra.Order">Order</span>[<span class="extype" name="framian.reduce.Outliers.A">A</span>]</span>, <span name="arg2">arg2: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.reduce.Outliers.A">A</span>]</span>)</span><span class="result">: <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.Outliers.A">A</span>, (<a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="framian.reduce.Outliers.A">A</span>], <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="framian.reduce.Outliers.A">A</span>])]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@Outliers[A](k:Double)(implicitevidence$11:spire.algebra.Field[A],implicitevidence$12:spire.algebra.Order[A],implicitevidence$13:scala.reflect.ClassTag[A]):framian.reduce.Reducer[A,(Option[A],Option[A])]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce#Quantile" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Quantile[A](probabilities:Seq[Double])(implicitevidence$8:spire.algebra.Field[A],implicitevidence$9:spire.algebra.Order[A],implicitevidence$10:scala.reflect.ClassTag[A]):framian.reduce.Reducer[A,Seq[(Double,A)]]"></a>
+      <a id="Quantile[A](Seq[Double])(Field[A],Order[A],ClassTag[A]):Reducer[A,Seq[(Double,A)]]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Quantile</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="probabilities">probabilities: <span class="extype" name="scala.Seq">Seq</span>[<a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Double" class="extype" target="_top">Double</a>] = <span class="symbol">Seq(0, .25, .5, .75, 1)</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Field">Field</span>[<span class="extype" name="framian.reduce.Quantile.A">A</span>]</span>, <span name="arg1">arg1: <span class="extype" name="spire.algebra.Order">Order</span>[<span class="extype" name="framian.reduce.Quantile.A">A</span>]</span>, <span name="arg2">arg2: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.reduce.Quantile.A">A</span>]</span>)</span><span class="result">: <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.Quantile.A">A</span>, <span class="extype" name="scala.Seq">Seq</span>[(<a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Double" class="extype" target="_top">Double</a>, <span class="extype" name="framian.reduce.Quantile.A">A</span>)]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@Quantile[A](probabilities:Seq[Double])(implicitevidence$8:spire.algebra.Field[A],implicitevidence$9:spire.algebra.Order[A],implicitevidence$10:scala.reflect.ClassTag[A]):framian.reduce.Reducer[A,Seq[(Double,A)]]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce#SemigroupReducer" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="SemigroupReducer[A](implicitevidence$2:spire.algebra.Semigroup[A]):framian.reduce.Reducer[A,A]"></a>
+      <a id="SemigroupReducer[A](Semigroup[A]):Reducer[A,A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">SemigroupReducer</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Semigroup">Semigroup</span>[<span class="extype" name="framian.reduce.SemigroupReducer.A">A</span>]</span>)</span><span class="result">: <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.SemigroupReducer.A">A</span>, <span class="extype" name="framian.reduce.SemigroupReducer.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@SemigroupReducer[A](implicitevidence$2:spire.algebra.Semigroup[A]):framian.reduce.Reducer[A,A]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce#Sum" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Sum[A](implicitevidence$4:spire.algebra.AdditiveMonoid[A]):framian.reduce.Reducer[A,A]"></a>
+      <a id="Sum[A](AdditiveMonoid[A]):Reducer[A,A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Sum</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.AdditiveMonoid">AdditiveMonoid</span>[<span class="extype" name="framian.reduce.Sum.A">A</span>]</span>)</span><span class="result">: <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.Sum.A">A</span>, <span class="extype" name="framian.reduce.Sum.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@Sum[A](implicitevidence$4:spire.algebra.AdditiveMonoid[A]):framian.reduce.Reducer[A,A]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.reduce#Unique" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Unique[A]:framian.reduce.Reducer[A,Set[A]]"></a>
+      <a id="Unique[A]:Reducer[A,Set[A]]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Unique</span><span class="tparams">[<span name="A">A</span>]</span><span class="result">: <a href="Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.reduce.Unique.A">A</span>, <span class="extype" name="scala.Predef.Set">Set</span>[<span class="extype" name="framian.reduce.Unique.A">A</span>]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.reduce.package@Unique[A]:framian.reduce.Reducer[A,Set[A]]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        <div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
+            </div>
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>
