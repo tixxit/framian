@@ -1,6 +1,7 @@
 import sbt._
 import Keys._
 
+import de.johoop.jacoco4sbt.JacocoPlugin._
 
 object BuildSettings {
 
@@ -15,12 +16,10 @@ object BuildSettings {
     maxErrors                     := 5,
     scalacOptions                ++= Seq("-deprecation", "-feature", "-unchecked")
   )
-
 }
 
 
 object build extends Build {
-
 
   val repositories = Seq(
     "Typesafe Repo"             at "http://repo.typesafe.com/typesafe/releases/",
@@ -30,10 +29,13 @@ object build extends Build {
   )
 
   lazy val sharedSettings =
-    BuildSettings.buildSettings ++ bintray.Plugin.bintrayPublishSettings ++ Seq(
+    BuildSettings.buildSettings ++
+    bintray.Plugin.bintrayPublishSettings ++
+    Seq(
       licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")),
       bintray.Keys.bintrayOrganization in bintray.Keys.bintray := Some("pellucid")
-    )
+    ) ++
+    jacoco.settings
 
   // CORE PROJECT
   lazy val root = Project(
@@ -100,7 +102,6 @@ object build extends Build {
   )
 }
 
-
 object Dependencies {
   import Dependency._
   val framian = Seq(spire, jodaTime, jodaConvert, Test.discipline, Test.specs2, Test.scalaCheck, Test.spireLaws)
@@ -125,22 +126,22 @@ object Dependency {
   }
 
   // Compile
-  val playJson_22        =   "com.typesafe.play"                    %% "play-json"               % V.Play_22
-  val playJson_23        =   "com.typesafe.play"                    %% "play-json"               % V.Play_23
+  val playJson_22       = "com.typesafe.play"                   %% "play-json"                % V.Play_22
+  val playJson_23       = "com.typesafe.play"                   %% "play-json"                % V.Play_23
 
-  val spire              =   "org.spire-math"                       %% "spire"                   % V.Spire
-  val shapeless_10       =   "com.chuusai"                           % "shapeless_2.10.4"        % V.Shapeless
-  val shapeless_11       =   "com.chuusai"                           % "shapeless_2.11"          % V.Shapeless
+  val spire             = "org.spire-math"                      %% "spire"                    % V.Spire
+  val shapeless_10      = "com.chuusai"                          % "shapeless_2.10.4"         % V.Shapeless
+  val shapeless_11      = "com.chuusai"                          % "shapeless_2.11"           % V.Shapeless
 
-  val jodaTime           =  "joda-time"                              % "joda-time"               % V.JodaTime
-  val jodaConvert        =  "org.joda"                               % "joda-convert"            % V.JodaConvert
+  val jodaTime          = "joda-time"                            % "joda-time"                % V.JodaTime
+  val jodaConvert       = "org.joda"                             % "joda-convert"             % V.JodaConvert
 
   // Test
   object Test {
-    val specs2           =   "org.specs2"                           %% "specs2"                  % V.Specs2        % "test"
-    val scalaCheck       =   "org.scalacheck"                       %% "scalacheck"              % V.ScalaCheck    % "test"
-    val spireLaws        =   "org.spire-math"                       %% "spire-scalacheck-binding"% V.Spire         % "test"
-    val discipline       =   "org.typelevel"                        %% "discipline"              % V.Discipline    % "test"
+    val specs2          =   "org.specs2"                        %% "specs2"                   % V.Specs2        % "test"
+    val scalaCheck      =   "org.scalacheck"                    %% "scalacheck"               % V.ScalaCheck    % "test"
+    val spireLaws       =   "org.spire-math"                    %% "spire-scalacheck-binding" % V.Spire         % "test"
+    val discipline      =   "org.typelevel"                     %% "discipline"               % V.Discipline    % "test"
   }
 }
 
