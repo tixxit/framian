@@ -27,31 +27,33 @@ import scala.annotation.{ unspecialized => unspec }
 import spire.algebra._
 import spire.syntax.all._
 
-trait ColumnAlgebras0 {
-  implicit def semiring[@spec(Int,Long,Float,Double) A: Semiring]: Semiring[Column[A]] = new ColumnSemiringImpl[A]
+object ColumnAlgebras {
+  trait ColumnAlgebras0 {
+    implicit def semiring[@spec(Int,Long,Float,Double) A: Semiring]: Semiring[Column[A]] = new ColumnSemiringImpl[A]
+  }
+
+  trait ColumnAlgebras1 extends ColumnAlgebras0 {
+    implicit def rig[@spec(Int,Long,Float,Double) A: Rig]: Rig[Column[A]] = new ColumnRigImpl[A]
+  }
+
+  trait ColumnAlgebras2 extends ColumnAlgebras1 {
+    implicit def rng[@spec(Int,Long,Float,Double) A: Rng]: Rng[Column[A]] = new ColumnRngImpl[A]
+  }
+
+  trait ColumnAlgebras3 extends ColumnAlgebras2 {
+    implicit def ring[@spec(Int,Long,Float,Double) A: Ring]: Ring[Column[A]] = new ColumnRingImpl[A]
+  }
+
+  trait ColumnAlgebras4 extends ColumnAlgebras3 {
+    implicit def euclideanRing[@spec(Int,Long,Float,Double) A: EuclideanRing: Eq]: EuclideanRing[Column[A]] = new ColumnEuclideanRingImpl[A]
+  }
+
+  trait ColumnAlgebras5 extends ColumnAlgebras4 {
+    implicit def field[@spec(Int,Long,Float,Double) A: Field: Eq]: Field[Column[A]] = new ColumnFieldImpl[A]
+  }
 }
 
-trait ColumnAlgebras1 extends ColumnAlgebras0 {
-  implicit def rig[@spec(Int,Long,Float,Double) A: Rig]: Rig[Column[A]] = new ColumnRigImpl[A]
-}
-
-trait ColumnAlgebras2 extends ColumnAlgebras1 {
-  implicit def rng[@spec(Int,Long,Float,Double) A: Rng]: Rng[Column[A]] = new ColumnRngImpl[A]
-}
-
-trait ColumnAlgebras3 extends ColumnAlgebras2 {
-  implicit def ring[@spec(Int,Long,Float,Double) A: Ring]: Ring[Column[A]] = new ColumnRingImpl[A]
-}
-
-trait ColumnAlgebras4 extends ColumnAlgebras3 {
-  implicit def euclideanRing[@spec(Int,Long,Float,Double) A: EuclideanRing: Eq]: EuclideanRing[Column[A]] = new ColumnEuclideanRingImpl[A]
-}
-
-trait ColumnAlgebras5 extends ColumnAlgebras4 {
-  implicit def field[@spec(Int,Long,Float,Double) A: Field: Eq]: Field[Column[A]] = new ColumnFieldImpl[A]
-}
-
-trait ColumnAlgebras extends ColumnAlgebras5
+trait ColumnAlgebras extends ColumnAlgebras.ColumnAlgebras5
 
 @SerialVersionUID(0L)
 private final class ColumnSemiringImpl[@spec(Int,Long,Float,Double) A](implicit val algebra: Semiring[A]) extends ColumnSemiring[A]

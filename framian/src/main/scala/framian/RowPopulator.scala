@@ -48,7 +48,7 @@ trait RowPopulator[A, Row, Col] {
   def frame(state: State): Frame[Row, Col]
 }
 
-trait RowPopulatorLow0 {
+trait RowPopulatorLowPriorityImplicits {
   implicit def generic[A, B, Row, Col](implicit generic: Generic.Aux[A, B],
       pop: RowPopulator[B, Row, Col]) =
     new RowPopulator[A, Row, Col] {
@@ -61,7 +61,7 @@ trait RowPopulatorLow0 {
     }
 }
 
-object RowPopulator extends RowPopulatorLow0 {
+object RowPopulator extends RowPopulatorLowPriorityImplicits {
   implicit def HListRowPopulator[Row: Order: ClassTag, L <: HList](
       implicit pop: HListColPopulator[L]) = new HListRowPopulator[Row, L](pop)
 
