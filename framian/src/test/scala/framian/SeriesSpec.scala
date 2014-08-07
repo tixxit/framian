@@ -1,8 +1,7 @@
 package framian
 
-import org.scalacheck._
-import org.scalacheck.Arbitrary.arbitrary
-
+import org.scalacheck.Prop
+import org.specs2.ScalaCheck
 import org.specs2.mutable._
 
 import scala.reflect.ClassTag
@@ -13,7 +12,9 @@ import spire.std.double._
 import spire.std.int._
 import spire.std.iterable._
 
-class SeriesSpec extends Specification {
+class SeriesSpec extends Specification with ScalaCheck {
+  import Prop.{collect, forAll}
+
   "Series" should {
     "have a sane equality" in {
       Series("a" -> 0, "b" -> 1, "c" -> 2) must_!= Series("b" -> 1, "a" -> 0, "c" -> 2)
@@ -24,7 +25,15 @@ class SeriesSpec extends Specification {
     }
 
     "detect values using hasValues" in {
-      Series("a" -> Cell.notMeaningful).hasValues must_== false
+      // Verify known combinations of only NonValues
+      Series.fromCells(List("a" -> Cell.notMeaningful)).hasValues must_== false
+      Series.fromCells(List("a" -> Cell.notMeaningful, "b" -> Cell.notAvailable)).hasValues must_== false
+      Series.fromCells(List("a" -> Cell.notAvailable)).hasValues must_== false
+
+      // Verify crazy combinations that contain Values
+      forAll(SeriesGenerators.genNonEmptyArbitraryDenseSeries[String, Int])(_.hasValues must_== true)
+      forAll(SeriesGenerators.genNonEmptyArbitrarySparseSeries[String, Int])(_.hasValues must_== true)
+      forAll(SeriesGenerators.genNonEmptyArbitraryDirtySeries[String, Int])(_.hasValues must_== true)
     }
 
     "map values with original order" in {
