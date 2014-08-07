@@ -33,6 +33,8 @@ import scala.annotation.{ unspecialized => unspec }
 import spire.algebra._
 import spire.syntax.cfor._
 
+import framian.columns._
+
 /**
  * A `Column` represents an `Int`-indexed set of values. The defining
  * characteristic is that a column is always defined for all `Int` values. In
