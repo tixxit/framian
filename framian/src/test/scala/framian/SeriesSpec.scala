@@ -1,5 +1,8 @@
 package framian
 
+import org.scalacheck._
+import org.scalacheck.Arbitrary.arbitrary
+
 import org.specs2.mutable._
 
 import scala.reflect.ClassTag
@@ -18,6 +21,10 @@ class SeriesSpec extends Specification {
       Series("a" -> 7) must_== Series(Index("a" -> 0), Column(_ => 7))
       Series("a" -> 7) must_== Series(Index("a" -> 42), Column(_ => 7))
       Series.empty[String, String] must_== Series.empty[String, String]
+    }
+
+    "detect values using hasValues" in {
+      Series("a" -> Cell.notMeaningful).hasValues must_== false
     }
 
     "map values with original order" in {
