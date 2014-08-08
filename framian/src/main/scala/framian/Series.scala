@@ -263,8 +263,12 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   def keyAt(i: Int): K = index.keyAt(i)
 
   @inline
-  def valueAt(i: Int): Cell[V] = column(index.indexAt(i))
+  def cellAt(i: Int): Cell[V] = column(index.indexAt(i))
 
+  @inline
+  def valueAt(i: Int): V = column.valueAt(index.indexAt(i))
+
+  @inline
   def apply(key: K): Cell[V] = index.get(key) map (column(_)) getOrElse NA
 
   /**
