@@ -198,22 +198,36 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   /** Returns the keys of this series as a vector in index order.
     *
     * @return a vector of the keys of the series.
+    * @see [[cells]]
     * @see [[values]]
     */
-  def keys: Vector[K] =
-    index.map(_._1)(collection.breakOut)
+  def keys: Vector[K] = {
+    val builder = Vector.newBuilder[K]
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      builder += index.keyAt(i)
+    }
+    builder.result()
+  }
 
-  /** Return the values of this series as a vector in index order.
+
+  /** Return the cells of this series as a vector in index order.
     *
     * The series may be sparse, so the vector contains [[Cell]]s
     * rather than just plain values.
     *
     * @return a sparse vector of the values of the series.
-    * @see [[denseValues]]
+    * @see [[keys]]
+    * @see [[values]]
     */
 
-  def values: Vector[Cell[V]] =
-    index.map { case (_, i) => column(i) }(collection.breakOut)
+  def cells: Vector[Cell[V]] = {
+    val builder = Vector.newBuilder[Cell[V]]
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      builder += column(index.indexAt(i))
+    }
+    builder.result()
+  }
+
 
   /** Returns the values of this series as a vector in index order.
     *
@@ -222,19 +236,26 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     * the [[NonValue]]s are ignored.
     *
     * @return a dense vector of the values of the series.
+    * @see [[keys]]
     * @see [[values]]
     * @note The `Vector` returned by this method is related to
     * the `Vector` returned by [[values]]
     * {{{
-    * series.values.collect { case Value(v) => v } == series.denseValues
+    * series.cells.collect { case Value(v) => v } == series.values
     * }}}
     * however, this method uses a more efficient access pattern
     * to the underlying data.
     */
-  def denseValues: Vector[V] =
-    index.collect { case (_, ix) if column.isValueAt(ix) =>
-      column.valueAt(ix)
-    }(collection.breakOut)
+  def values: Vector[V] = {
+    val builder = Vector.newBuilder[V]
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      val ix = index.indexAt(i)
+      if (column.isValueAt(ix)) {
+        builder += column.valueAt(ix)
+      }
+    }
+    builder.result()
+  }
 
   def keyAt(i: Int): K = index.keyAt(i)
   def valueAt(i: Int): Cell[V] = column(index.indexAt(i))
