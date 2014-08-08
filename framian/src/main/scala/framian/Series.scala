@@ -48,6 +48,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   private implicit def classTag = index.classTag
   private implicit def order = index.order
 
+  @inline
   def size: Int = index.size
 
   /** Returns this series as a collection of key/value pairs. */
@@ -257,7 +258,11 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     builder.result()
   }
 
+
+  @inline
   def keyAt(i: Int): K = index.keyAt(i)
+
+  @inline
   def valueAt(i: Int): Cell[V] = column(index.indexAt(i))
 
   def apply(key: K): Cell[V] = index.get(key) map (column(_)) getOrElse NA
