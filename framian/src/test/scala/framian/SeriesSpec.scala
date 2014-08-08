@@ -13,7 +13,7 @@ import spire.std.int._
 import spire.std.iterable._
 
 class SeriesSpec extends Specification with ScalaCheck {
-  import Prop.{collect, forAll}
+  import Prop.forAll
 
   "Series" should {
     "have a sane equality" in {
@@ -32,8 +32,8 @@ class SeriesSpec extends Specification with ScalaCheck {
 
       // Verify crazy combinations that contain Values
       forAll(SeriesGenerators.genNonEmptyArbitraryDenseSeries[String, Int])(_.hasValues must_== true)
-      forAll(SeriesGenerators.genNonEmptyArbitrarySparseSeries[String, Int])(_.hasValues must_== true)
-      forAll(SeriesGenerators.genNonEmptyArbitraryDirtySeries[String, Int])(_.hasValues must_== true)
+      forAll(SeriesGenerators.genNonEmptyArbitrarySparseSeries[String, Int]())(_.hasValues must_== true)
+      forAll(SeriesGenerators.genNonEmptyArbitraryDirtySeries[String, Int]())(_.hasValues must_== true)
     }
 
     "map values with original order" in {
