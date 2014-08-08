@@ -197,7 +197,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
       val lExists = lCol.isValueAt(l)
       val rExists = rCol.isValueAt(r)
       if (lExists && rExists) {
-        bldr.addValue(lCol.valueAt(l): VV)
+        bldr.addValue(lCol.valueAt(l))
       } else if (lExists) {
         bldr.addValue(lCol.valueAt(l))
       } else if (rExists) {
