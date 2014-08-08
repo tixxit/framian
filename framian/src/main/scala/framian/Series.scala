@@ -88,6 +88,113 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
       k -> column.valueAt(ix)
     }
 
+
+  /** Applies a function `f` to all key-cell pairs of the series.
+    *
+    * The series is traversed in index order.
+    *
+    * @param  f  the function that is applied for its side-effect
+    *            to every key-cell pair. The result of the
+    *            function `f` is discarded
+    * @see [[foreachCells]]
+    * @see [[foreachDense]]
+    * @see [[foreachKeys]]
+    * @see [[foreachValues]]
+    */
+  def foreach[U](f: (K, Cell[V]) => U): Unit = {
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      f(index.keyAt(i), column(index.indexAt(i)))
+    }
+  }
+
+
+  /** Applies a function `f` to all key-value pairs of the series.
+    *
+    * The series is traversed in index order.
+    *
+    * This method assumes that the series is dense, so it will skip
+    * over any non value cells if, in fact, the series is sparse.
+    *
+    * @param  f  the function that is applied for its side-effect
+    *            to every key-value pair. The result of the
+    *            function `f` is discarded
+    * @see [[foreach]]
+    * @see [[foreachCells]]
+    * @see [[foreachKeys]]
+    * @see [[foreachValues]]
+    */
+  def foreachDense[U](f: (K, V) => U): Unit = {
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      val ix = index.indexAt(i)
+      if (column.isValueAt(ix)) {
+        f(index.keyAt(i), column.valueAt(ix))
+      }
+    }
+  }
+
+
+  /** Applies a function `f` to all keys of the series.
+    *
+    * The series is traversed in index order.
+    *
+    * @param  f  the function that is applied for its side-effect
+    *            to every key. The result of the
+    *            function `f` is discarded
+    * @see [[foreach]]
+    * @see [[foreachCells]]
+    * @see [[foreachDense]]
+    * @see [[foreachValues]]
+    */
+  def foreachKeys[U](f: K => U): Unit = {
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      f(index.keyAt(i))
+    }
+  }
+
+
+  /** Applies a function `f` to all cells of the series.
+    *
+    * The series is traversed in index order.
+    *
+    * @param  f  the function that is applied for its side-effect
+    *            to every cell. The result of the
+    *            function `f` is discarded
+    * @see [[foreach]]
+    * @see [[foreachDense]]
+    * @see [[foreachKeys]]
+    * @see [[foreachValues]]
+    */
+  def foreachCells[U](f: Cell[V] => U): Unit = {
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      f(column(index.indexAt(i)))
+    }
+  }
+
+
+  /** Applies a function `f` to all values of the series.
+    *
+    * The series is traversed in index order.
+    *
+    * This method assumes that the series is dense, so it will skip
+    * over any non value cells if, in fact, the series is sparse.
+    *
+    * @param  f  the function that is applied for its side-effect
+    *            to every value. The result of the
+    *            function `f` is discarded
+    * @see [[foreach]]
+    * @see [[foreachCells]]
+    * @see [[foreachDense]]
+    * @see [[foreachKeys]]
+    */
+  def foreachValues[U](f: V => U): Unit = {
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      val ix = index.indexAt(i)
+      if (column.isValueAt(ix)) {
+        f(column.valueAt(ix))
+      }
+    }
+  }
+
   /** Returns the keys of this series as a vector in index order.
     *
     * @return a vector of the keys of the series.
