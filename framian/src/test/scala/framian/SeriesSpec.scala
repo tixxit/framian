@@ -31,9 +31,23 @@ class SeriesSpec extends Specification with ScalaCheck {
       Series.fromCells(List("a" -> Cell.notAvailable)).hasValues must_== false
 
       // Verify crazy combinations that contain Values
-      forAll(SeriesGenerators.genNonEmptyArbitraryDenseSeries[String, Int])(_.hasValues must_== true)
-      forAll(SeriesGenerators.genNonEmptyArbitrarySparseSeries[String, Int])(_.hasValues must_== true)
-      forAll(SeriesGenerators.genNonEmptyArbitraryDirtySeries[String, Int])(_.hasValues must_== true)
+      forAll(SeriesGenerators.genNonEmptyArbitraryDenseSeries[String, Int]) { series =>
+        collect(series.size) {
+          series.hasValues must_== true
+        }
+      }
+
+      forAll(SeriesGenerators.genNonEmptyArbitrarySparseSeries[String, Int]) { series =>
+        collect(series.size) {
+          series.hasValues must_== true
+        }
+      }
+
+      forAll(SeriesGenerators.genNonEmptyArbitraryDirtySeries[String, Int]) { series =>
+        collect(series.size) {
+          series.hasValues must_== true
+        }
+      }
     }
 
     "map values with original order" in {
