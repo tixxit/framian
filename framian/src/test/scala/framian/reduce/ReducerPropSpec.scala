@@ -13,63 +13,47 @@ import org.specs2.mutable._
 
 import org.scalacheck.{ Arbitrary, Gen, Prop }
 
-
 class ReducerPropSpec extends Specification with ScalaCheck {
   import Arbitrary.arbitrary
-  import Prop.{ classify, collect, forAll }
-  import SeriesGenerators.{
-    genEmptyArbitrarySeries,
-    genNonEmptyArbitraryDenseSeries,
-    genNonEmptyArbitraryDirtySeries,
-    genNonEmptyArbitrarySparseSeries,
-    genNonEmptyDenseSeries
+  import Prop.{classify, collect, forAll}
+  import SeriesGenerators.arbSeries
+
+  implicit val params = Parameters(minTestsOk = 20, maxDiscardRatio = 20F)
+
+  def classifySparse[K, V](s: Series[K, V])(prop: Prop): Prop =
+    classify(s.values.exists(_.isNonValue), "sparse", "dense")(prop)
+
+  def classifyMeaningful[K, V](s: Series[K, V])(prop: Prop): Prop =
+    classify(s.values.contains(NM), "meaningless", "meaningful")(prop)
+
+  def classifyEmpty[K, V](s: Series[K, V])(prop: Prop): Prop =
+    classify(s.values.exists(_.isValue), "non-empty, empty")(prop)
+
+  def reducingEmptySeriesMustEqNA[I: Arbitrary: ClassTag, O: ClassTag](reducer: Reducer[I, O]): Prop = {
+    // Create series that only contain sparse entries
+    forAll(arbitrary[Series[Int, I]]) { series =>
+      classifyEmpty(series) {
+        // If the series does not contain any Values, then the reducer should always result in NA
+        (!series.values.exists(_.isValue)) must_== (series.reduce(reducer) == NA)
+      }
+    }.set(minTestsOk = 10)
   }
 
-  implicit val params = Parameters(minTestsOk = 20)
-
-  def classifySparse[A](c: TraversableOnce[Cell[A]])(prop: Prop): Prop =
-    classify(c.exists(_.isNonValue), "sparse", "dense")(prop)
-
-  def classifyMeaningful[A](c: TraversableOnce[Cell[A]])(prop: Prop): Prop =
-    classify(c.exists(_ == NM), "meaningless", "meaningful")(prop)
-
-  def reducingEmptySeriesMustEqNA[I: Arbitrary: ClassTag, O: ClassTag](reducer: Reducer[I, O]): Prop =
-    forAll (genEmptyArbitrarySeries[Int, I]) { series =>
-      collect(series.size) {
-        series.reduce(reducer) must_== NA
-      }
-    } .set(minTestsOk = 10)
-
-  def reducingMeaninglessSeriesMustEqNM[I: Arbitrary: ClassTag, O: ClassTag](reducer: Reducer[I, O]): Prop =
-    forAll (genNonEmptyArbitraryDirtySeries[Int, I]()) { series =>
-      classifyMeaningful(series.values) {
-        series.values.exists(_.isNonValue) ==> (
-          series.reduce(reducer) must_== NM
-          )
+  def reducingMeaninglessSeriesMustEqNM[I: Arbitrary : ClassTag, O: ClassTag](reducer: Reducer[I, O]): Prop =
+    forAll(arbitrary[Series[Int, I]]) { series =>
+      classifyMeaningful(series) {
+        (series.reduce(reducer) == NM) must_== series.values.contains(NM)
       }
     }.set(minTestsOk = 10)
 
   "Count" should {
 
-    "return 0 for an empty series" in {
-      forAll (genEmptyArbitrarySeries[Int, Int]) { series =>
-        collect(series.size) {
-          series.reduce(Count) must_== Value(0)
-        }
-      }.set(minTestsOk = 10)
-    }
-
-    "return the count for a dense series" in {
-      forAll (genNonEmptyArbitraryDenseSeries[Int, Int]) { series =>
-        series.reduce(Count) must_== Value(series.size)
-      }
-    }
-
-    "return the count for a sparse series" in {
-      forAll (genNonEmptyArbitrarySparseSeries[Int, Int]()) { series =>
-        classifySparse(series.values) {
-          series.reduce(Count) must_==
-            Value(series.values.count(_.isValue))
+    "return the count for series" in {
+      forAll(arbitrary[Series[Int, Int]].suchThat(!_.values.contains(NM))) { series =>
+        classifyEmpty(series) {
+          classifySparse(series) {
+            series.reduce(Count) must_== Value(series.values.count(_.isValue))
+          }
         }
       }
     }
@@ -80,179 +64,113 @@ class ReducerPropSpec extends Specification with ScalaCheck {
 
   "First" should {
 
-    "return NA for an empty series" in reducingEmptySeriesMustEqNA(First[Int])
-
-    "return the first value in a dense series" in {
-      forAll (genNonEmptyArbitraryDenseSeries[Int, Int]) { series =>
-        series.reduce(First[Int]) must_== series.values.head
-      }
-    }
-
-    "return the first value in a sparse series" in {
-      forAll (genNonEmptyArbitrarySparseSeries[Int, Int]()) { series =>
-        classifySparse(series.values) {
-          series.values.exists(_.isValue) ==> (
-            series.reduce(First[Int]) must_== series.values.filter(_.isValue).head
-            )
-        }
-      } and
-        forAll (genNonEmptyArbitraryDirtySeries[Int, Int]()) { series =>
-          classifyMeaningful(series.values) {
-            series.reduce(First[Int]) must_== series.values.filterNot(_ == NA).head
+    "return the first value in a series" in {
+      forAll(arbitrary[Series[Int, Int]]) { series =>
+        classifySparse(series) {
+          classifyMeaningful(series) {
+            val reduction = series.reduce(First[Int])
+            if (series.values.filter(_ != NA).length == 0) {
+              reduction must_== NA
+            } else {
+              reduction must_== series.values.filter(_ != NA).head
+            }
           }
         }
+      }
     }
   }
 
 
   "FirstN" should {
 
-    "return NA for an empty series" in {
-      forAll (Arbitrary.arbitrary[Int]) { n =>
-        (n > 0) ==> reducingEmptySeriesMustEqNA(FirstN[Int](n))
-      }
-    }
-
-    "return the first n values in a dense series" in {
-      forAll (genNonEmptyArbitraryDenseSeries[Int, Int]) { series =>
-        forAll (Gen.choose(1, series.size)) { n =>
-          series.reduce(FirstN[Int](n)) must_== Value(series.values.map(_.get).take(n))
-        }
-      }
-    }
-
-    "return the first n values in a sparse series" in {
-      forAll (genNonEmptyArbitrarySparseSeries[Int, Int]()) { series =>
-        classifySparse(series.values) {
-          forAll (Gen.choose(1, series.size)) { n =>
-            val res = series.reduce(FirstN[Int](n))
-
-            (n <= series.values.count(_.isValue)) ==> (
-              res must_== Value(series.values.filter(_.isValue).map(_.get).take(n))
-              ) ||
-              (n > series.values.count(_.isValue)) ==> (
-                res must_== NA
-                )
-          }
-        }
-      } and
-        forAll (genNonEmptyArbitraryDirtySeries[Int, Int]()) { series =>
-          classifyMeaningful(series.values) {
-            forAll (Gen.choose(1, series.values.count(_.isValue))) { n =>
-              val res = series.reduce(FirstN[Int](n))
-              val containsNM = series.values.filterNot(_ == NA).take(n).contains(NM)
-
-              containsNM ==> (
-                res must_== NM
-                ) ||
-                !containsNM ==> (
-                  res must_== Value(series.values.filter(_.isValue).map(_.get).take(n))
-                  )
+    "return the first n values in a series" in {
+      forAll(arbitrary[Series[Int, Int]]) { series =>
+        classifyEmpty(series) {
+          classifySparse(series) {
+            classifyMeaningful(series) {
+              forAll(Gen.choose(1, series.size)) { n =>
+                val takeN = series.values.filter(_ != NA).take(n)
+                if (takeN.contains(NM)) {
+                  // If the firstN contains an NM, the result must be NM
+                  series.reduce(FirstN[Int](n)) must_== NM
+                } else if (takeN.length < n) {
+                  // If there are not enough valid values, the result must be NA
+                  series.reduce(FirstN[Int](n)) must_== NA
+                } else {
+                  // Otherwise, we should have a valid range of only the valid Values
+                  series.reduce(FirstN[Int](n)) must_== Value(takeN.map(_.get))
+                }
+              }
             }
           }
         }
+      }
     }
   }
 
 
   "Last" should {
 
-    "return NA for an empty series" in reducingEmptySeriesMustEqNA(Last[Int])
-
-    "return the first value in a dense series" in {
-      forAll (genNonEmptyArbitraryDenseSeries[Int, Int]) { series =>
-        series.reduce(Last[Int]) must_== series.values.last
-      }
-    }
-
-    "return the last value in a sparse series" in {
-      forAll (genNonEmptyArbitrarySparseSeries[Int, Int]()) { series =>
-        classifySparse(series.values) {
-          series.values.exists(_.isValue) ==> (
-            series.reduce(Last[Int]) must_== series.values.filter(_.isValue).last
-            )
-        }
-      } and
-        forAll (genNonEmptyArbitraryDirtySeries[Int, Int]()) { series =>
-          classifyMeaningful(series.values) {
-            series.reduce(Last[Int]) must_== series.values.filterNot(_ == NA).last
+    "return the last value in a series" in {
+      forAll(arbitrary[Series[Int, Int]]) { series =>
+        classifyEmpty(series) {
+          classifySparse(series) {
+            classifyMeaningful(series) {
+              val reduction = series.reduce(Last[Int])
+              if (series.values.filter(_ != NA).length == 0) {
+                reduction must_== NA
+              } else {
+                reduction must_== series.values.filter(_ != NA).last
+              }
+            }
           }
         }
+      }
     }
   }
 
 
   "LastN" should {
 
-    "return NA for an empty series" in {
-      forAll (Arbitrary.arbitrary[Int]) { n =>
-        (n > 0) ==> reducingEmptySeriesMustEqNA(LastN[Int](n))
-      }
-    }
-
-    "return the first n values in a dense series" in {
-      forAll (genNonEmptyArbitraryDenseSeries[Int, Int]) { series =>
-        forAll (Gen.choose(1, series.size)) { n =>
-          series.reduce(LastN[Int](n)) must_== Value(series.values.map(_.get).takeRight(n))
-        }
-      }
-    }
-
-    "return the first n values in a sparse series" in {
-      forAll (genNonEmptyArbitrarySparseSeries[Int, Int]()) { series =>
-        classifySparse(series.values) {
-          val s = series
-
-          forAll (Gen.choose(1, series.size)) { n =>
-            val res = s.reduce(LastN[Int](n))
-
-            (n <= series.values.count(_.isValue)) ==> (
-              res must_== Value(series.values.filter(_.isValue).map(_.get).takeRight(n))
-              ) ||
-              (n > series.values.count(_.isValue)) ==> (
-                res must_== NA
-                )
-          }
-        }
-      } and
-        forAll (genNonEmptyArbitraryDirtySeries[Int, Int]()) { series =>
-          classifyMeaningful(series.values) {
-            val s = series
-
-            forAll (Gen.choose(1, series.values.count(_.isValue))) { n =>
-              val res = s.reduce(LastN[Int](n))
-              val containsNM = series.values.filterNot(_ == NA).takeRight(n).contains(NM)
-
-              containsNM ==> (
-                res must_== NM
-                ) ||
-                !containsNM ==> (
-                  res must_== Value(series.values.filter(_.isValue).map(_.get).takeRight(n))
-                  )
+    "return the last n values in a series" in {
+      forAll(arbitrary[Series[Int, Int]]) { series =>
+        classifyEmpty(series) {
+          classifySparse(series) {
+            classifyMeaningful(series) {
+              forAll(Gen.choose(1, series.size)) { n =>
+                val reduction = series.reduce(LastN[Int](n))
+                val takeN = series.values.filter(_ != NA).takeRight(n)
+                if (takeN.contains(NM)) {
+                  // If the lastN contains an NM, the result must be NM
+                  reduction must_== NM
+                } else if (takeN.length < n) {
+                  // If there is no valid Value, the result must be NA
+                  reduction must_== NA
+                } else {
+                  // Otherwise, we should have a valid range of only the valid Values
+                  reduction must_== Value(takeN.map(_.get))
+                }
+              }
             }
           }
         }
+      }
     }
   }
 
 
   "Max" should {
 
-    "return NA for an empty series" in reducingEmptySeriesMustEqNA(Max[Int])
-
-    "return the max value in a dense series" in {
-      forAll (genNonEmptyArbitraryDenseSeries[Int, Int]) { series =>
-        series.reduce(Max[Int]) must_== Value(series.values.map(_.get).max)
-      }
-    }
-
-    "return the max value in a sparse series" in {
-      forAll (genNonEmptyArbitrarySparseSeries[Int, Int]()) { series =>
-        classifySparse(series.values) {
-          series.values.exists(_.isValue) ==> (
-            series.reduce(Max[Int]) must_==
-              Value(series.values.filter(_.isValue).map(_.get).max)
-            )
+    "return the max value of a series" in {
+      forAll(arbitrary[Series[Int, Int]].suchThat(!_.values.contains(NM))) { series =>
+        classifyEmpty(series) {
+          classifySparse(series) {
+            if (series.denseValues.isEmpty) {
+              series.reduce(Max[Int]) must_== NA
+            } else {
+              series.reduce(Max[Int]) must_== Value(series.denseValues.max)
+            }
+          }
         }
       }
     }
@@ -263,29 +181,16 @@ class ReducerPropSpec extends Specification with ScalaCheck {
 
   "Mean" should {
 
-    "return NA for an empty series" in {
-      forAll (genEmptyArbitrarySeries[Int, Double]) { series =>
-        collect(series.size) {
-          series.reduce(Mean[Double]) must_== NA
-        }
-      }.set(minTestsOk = 10)
-    }
-
-    "return the mean value of a dense series" in {
-      forAll (genNonEmptyArbitraryDenseSeries[Int, Double]) { series =>
-        series.reduce(Mean[Double]) must_== Value(series.values.map(_.get).sum / series.size)
-      }
-    }
-
-    "return the mean value of a sparse series" in {
-      forAll (genNonEmptyArbitrarySparseSeries[Int, Double]()) { series =>
-        classifySparse(series.values) {
-          series.values.exists(_.isValue) ==> (
-            series.reduce(Mean[Double]) must_== {
-              val l0 = series.values.filter(_.isValue).map(_.get)
-              Value(l0.sum / l0.length)
+    "return the mean value of a series" in {
+      forAll(arbitrary[Series[Int, Double]].suchThat(!_.values.contains(NM))) { series =>
+        classifyEmpty(series) {
+          classifySparse(series) {
+            if (series.denseValues.isEmpty) {
+              series.reduce(Mean[Double]) must_== NA
+            } else {
+              series.reduce(Mean[Double]) must_== Value(series.denseValues.sum / series.denseValues.length)
             }
-          )
+          }
         }
       }
     }
@@ -297,101 +202,89 @@ class ReducerPropSpec extends Specification with ScalaCheck {
   "Monoid" should {
     import spire.algebra.Monoid
 
-    implicit val m = Monoid.additive[Int]
-
-    "return monoid identity for an empty series" in {
-      forAll (genEmptyArbitrarySeries[Int, Int]) { series =>
-        collect(series.size) {
-          {
-            implicit val m = Monoid.additive[Int]
-            series.reduce(MonoidReducer[Int]) must_== Value(m.id)
-          } and {
-            implicit val m = Monoid.multiplicative[Int]
-            series.reduce(MonoidReducer[Int]) must_== Value(m.id)
+    "return the monoidal reduction for a series" in {
+      forAll(arbitrary[Series[Int, Int]].suchThat(!_.values.contains(NM))) { series =>
+        classifyEmpty(series) {
+          classifySparse(series) {
+            if (series.denseValues.isEmpty) {
+              // For empty series, ensure the reducers return the identity value
+              {
+                implicit val m = Monoid.additive[Int]
+                series.reduce(MonoidReducer[Int]) must_== Value(m.id)
+              } and {
+                implicit val m = Monoid.multiplicative[Int]
+                series.reduce(MonoidReducer[Int]) must_== Value(m.id)
+              }
+            } else {
+              // For non-empty series, ensure the reducers return the correct value
+              {
+                implicit val m = Monoid.additive[Int]
+                series.reduce(MonoidReducer[Int]) must_== Value(series.denseValues.sum)
+              } and {
+                implicit val m = Monoid.multiplicative[Int]
+                series.reduce(MonoidReducer[Int]) must_== Value(series.denseValues.product)
+              }
+            }
           }
         }
-      }.set(minTestsOk = 10)
-    }
-
-    "return the monoidal reduction of a dense series" in {
-      forAll (genNonEmptyArbitraryDenseSeries[Int, Int]) { series => {
-        implicit val m = Monoid.additive[Int]
-        series.reduce(MonoidReducer[Int]) must_== Value(series.values.map(_.get).sum)
-      } and {
-        implicit val m = Monoid.multiplicative[Int]
-        series.reduce(MonoidReducer[Int]) must_== Value(series.values.map(_.get).product)
-      }
       }
     }
 
-    "return the monoidal reduction of a sparse series" in {
-      forAll (genNonEmptyArbitrarySparseSeries[Int, Int]()) { series =>
-        classifySparse(series.values) {
-          series.reduce(MonoidReducer[Int]) must_== Value(series.values.filter(_.isValue).map(_.get).sum)
-        }
-      }
+    "return NM if the series contains NM" in {
+      implicit val m = Monoid.additive[Int]
+      reducingMeaninglessSeriesMustEqNM(MonoidReducer[Int])
     }
-
-    "return MM if the series contains NM" in reducingMeaninglessSeriesMustEqNM(MonoidReducer[Int])
   }
 
 
   "SemiGroup" should {
     import spire.algebra.Semigroup
 
-    implicit val g = Semigroup.additive[Int]
-
-    "return NA for an empty series" in reducingEmptySeriesMustEqNA(SemigroupReducer[Int])
-
-    "return the semigroup reduction of a dense series" in {
-      forAll (genNonEmptyArbitraryDenseSeries[Int, Int]) { series => {
-        implicit val g = Semigroup.additive[Int]
-        series.reduce(SemigroupReducer[Int]) must_== Value(series.values.map(_.get).sum)
-      } and {
-        implicit val g = Semigroup.multiplicative[Int]
-        series.reduce(SemigroupReducer[Int]) must_== Value(series.values.map(_.get).product)
-      }
-      }
-    }
-
-    "return the semigroup reduction of a sparse series" in {
-      forAll (genNonEmptyArbitrarySparseSeries[Int, Int]()) { series =>
-        classifySparse(series.values) {
-          val res = series.reduce(SemigroupReducer[Int])
-          series.values.exists(_.isValue) ==> (
-            res must_== Value(series.values.filter(_.isValue).map(_.get).sum)
-            ) ||
-            series.values.forall(_ == NA) ==> (
-              res must_== NA
-              )
+    "return the semigroup reduction of a series" in {
+      forAll(arbitrary[Series[Int, Int]].suchThat(!_.values.contains(NM))) { series =>
+        classifyEmpty(series) {
+          classifySparse(series) {
+            if (series.denseValues.isEmpty) {
+              // For empty series, ensure the reducers return NA
+              {
+                implicit val g = Semigroup.additive[Int]
+                series.reduce(SemigroupReducer[Int]) must_== NA
+              } and {
+                implicit val g = Semigroup.multiplicative[Int]
+                series.reduce(SemigroupReducer[Int]) must_== NA
+              }
+            } else {
+              // For non-empty series, ensure the reducers return the correct value
+              {
+                implicit val m = Semigroup.additive[Int]
+                series.reduce(SemigroupReducer[Int]) must_== Value(series.denseValues.sum)
+              } and {
+                implicit val m = Semigroup.multiplicative[Int]
+                series.reduce(SemigroupReducer[Int]) must_== Value(series.denseValues.product)
+              }
+            }
+          }
         }
       }
     }
 
-    "return MM if the series contains NM" in reducingMeaninglessSeriesMustEqNM(SemigroupReducer[Int])
+    implicit val m = Semigroup.additive[Int]
+    "return NM if the series contains NM" in reducingMeaninglessSeriesMustEqNM(SemigroupReducer[Int])
   }
 
 
   "Unique" should {
 
-    "return the empty set for an empty series" in {
-      forAll (genEmptyArbitrarySeries[Int, Int]) { series =>
-        collect(series.size) {
-          series.reduce(Unique[Int]) must_== Value(Set.empty)
-        }
-      }.set(minTestsOk = 10)
-    }
-
-    "return the unique values of a dense series" in {
-      forAll (genNonEmptyArbitraryDenseSeries[Int, Int]) { series =>
-        series.reduce(Unique[Int]) must_== Value(series.values.map(_.get).toSet)
-      }
-    }
-
-    "return the unique values of a sparse series" in {
-      forAll (genNonEmptyArbitrarySparseSeries[Int, Int]()) { series =>
-        classifySparse(series.values) {
-          series.reduce(Unique[Int]) must_== Value(series.values.filter(_.isValue).map(_.get).toSet)
+    "return the unique values for a series" in {
+      forAll(arbitrary[Series[Int, Int]].suchThat(!_.values.contains(NM))) { series =>
+        classifyEmpty(series) {
+          classifySparse(series) {
+            if (series.denseValues.isEmpty) {
+              series.reduce(Unique[Int]) must_== Value(Set.empty)
+            } else {
+              series.reduce(Unique[Int]) must_== Value(series.denseValues.toSet)
+            }
+          }
         }
       }
     }
@@ -402,48 +295,33 @@ class ReducerPropSpec extends Specification with ScalaCheck {
 
   "Exists" should {
 
-    "return false for an empty series" in {
-      forAll (genEmptyArbitrarySeries[Int, Int]) { series =>
-        collect(series.size) {
-          series.reduce(Exists[Int](_ => true)) must_== Value(false)
-        }
-      }.set(minTestsOk = 10)
-    }
+    val pAll = (_ => true): Int => Boolean
+    val pNone = (_ => false): Int => Boolean
+    val pMod10 = (_ % 10 == 0): Int => Boolean
 
-    "evaluate the predicate for a dense series" in {
-      forAll (genNonEmptyArbitraryDenseSeries[Int, Int]) { series =>
-        (
-          series.reduce(Exists[Int](_ => false)) must_== Value(false)
-          ) && {
-          val p = (i: Int) => i % 10 == 0
-
-          classify(series.values.map(_.get).exists(p), "exists=true", "exists=false") {
-            series.reduce(Exists(p)) must_== Value(series.values.map(_.get).exists(p))
+    "return whether or not a predicate exists for a series" in {
+      forAll(arbitrary[Series[Int, Int]].suchThat(!_.values.contains(NM))) { series =>
+        classifyEmpty(series) {
+          classifySparse(series) {
+            if (series.denseValues.isEmpty) {
+              series.reduce(Exists[Int](pAll)) must_== Value(false)
+            } else {
+              classify(series.denseValues.exists(pMod10), "exists=true", "exists=false") {
+                series.reduce(Exists(pNone)) must_== Value(false)
+                series.reduce(Exists(pMod10)) must_== Value(series.denseValues.exists(pMod10))
+              }
+            }
           }
         }
       }
-    }
-
-    "evaluate the predicate for a sparse series" in {
-      val p = (i: Int) => i % 10 == 0
-
-      forAll (genNonEmptyArbitrarySparseSeries[Int, Int]()) { series =>
-        classifySparse(series.values) {
-          series.reduce(Exists(p)) must_== Value(series.values.filter(_.isValue).map(_.get).exists(p))
-        }
-      } and
-        forAll (genNonEmptyArbitraryDirtySeries[Int, Int]()) { series =>
-          classifyMeaningful(series.values) {
-            series.reduce(Exists(p)) must_== Value(series.values.filter(_.isValue).map(_.get).exists(p))
-          }
-        }
     }
   }
 
 
   "Quantile" should {
+
     "return NA for empty series" in {
-      forAll (genEmptyArbitrarySeries[Int, Double]) { series =>
+      forAll (SeriesGenerators.genSeries(arbitrary[Int], arbitrary[Double], (0, 1, 0))) { series =>
         collect(series.size) {
           series.reduce(Quantile[Double](List(0.25, 0.5, 0.75))) must_== NA
         }
@@ -451,40 +329,46 @@ class ReducerPropSpec extends Specification with ScalaCheck {
     }
 
     "return min value for 0p" in {
-      forAll (genNonEmptyArbitraryDenseSeries[Int, Double]) { series =>
-        val min = series.values.map(_.get).min
-        series.reduce(Quantile[Double](List(0.0))) must_== Value(List(0.0 -> min))
+      forAll(arbitrary[Series[Int, Double]].suchThat(!_.values.contains(NM)).suchThat(_.denseValues.nonEmpty)) { series =>
+        classifySparse(series) {
+          val min = series.denseValues.min
+          series.reduce(Quantile[Double](List(0.0))) must_== Value(List(0.0 -> min))
+        }
       }
     }
 
     "return max value for 1p" in {
-      forAll (genNonEmptyArbitraryDenseSeries[Int, Double]) { series =>
-        val max = series.values.map(_.get).max
-        series.reduce(Quantile[Double](List(1.0))) must_== Value(List(1.0 -> max))
+      forAll(arbitrary[Series[Int, Double]].suchThat(!_.values.contains(NM)).suchThat(_.denseValues.nonEmpty)) { series =>
+        classifySparse(series) {
+          val max = series.denseValues.max
+          series.reduce(Quantile[Double](List(1.0))) must_== Value(List(1.0 -> max))
+        }
       }
     }
 
-    val quantiles = List(0.01, 0.1, 0.25, 0.5, 0.75, 0.9, 0.99)
-
     "never return percentile below min or above max" in {
-      forAll (genNonEmptyArbitraryDenseSeries[Int, Double]) { series =>
-        val min = series.values.map(_.get).min
-        val max = series.values.map(_.get).max
-        val percentiles = series.reduce(Quantile[Double](quantiles))
-        percentiles.value.get.forall { case (_, q) =>
-          q >= min && q <= max
+      forAll(arbitrary[Series[Int, Double]].suchThat(!_.values.contains(NM)).suchThat(_.denseValues.nonEmpty)) { series =>
+        forAll(Gen.listOf(Gen.choose(0d, 1d))) { quantiles =>
+          classifySparse(series) {
+            val min = series.denseValues.min
+            val max = series.denseValues.max
+            series.reduce(Quantile[Double](quantiles)).value.get.forall { case (_, q) =>
+              q >= min && q <= max
+            }
+          }
         }
       }
     }
 
     "percentiles split at appropriate mark" in {
-      def genRational = arbitrary[Double].map(Rational(_))
-      forAll (genNonEmptyDenseSeries(arbitrary[Int], genRational)) { series =>
-        val percentiles = series.reduce(Quantile[Rational](quantiles))
-        percentiles.value.get forall { case (p, q) =>
-          val below = math.ceil(series.values.size * p)
-          val above = math.ceil(series.values.size * (1 - p))
-          series.values.map(_.get).count(_ < q) <= below && series.values.map(_.get).count(_ > q) <= above
+      implicit val arbRational = Arbitrary(arbitrary[Double].map(Rational(_)))
+      forAll(arbitrary[Series[Int, Rational]].suchThat(!_.values.contains(NM)).suchThat(_.denseValues.nonEmpty)) { series =>
+        forAll(Gen.listOf(Gen.choose(0d, 1d))) { quantiles =>
+          series.reduce(Quantile[Rational](quantiles)).value.get.forall { case (p, q) =>
+            val below = math.ceil(series.denseValues.size * p)
+            val above = math.ceil(series.denseValues.size * (1 - p))
+            series.denseValues.count(_ < q) <= below && series.denseValues.count(_ > q) <= above
+          }
         }
       }
     }
@@ -493,48 +377,34 @@ class ReducerPropSpec extends Specification with ScalaCheck {
 
   "ForAll" should {
 
+    val pTrue = (_ => true): Int => Boolean
+    val pFalse = (_ => false): Int => Boolean
+    val pPositive = (_ > 0): Int => Boolean
+
     "return true for an empty series" in {
-      forAll (genEmptyArbitrarySeries[Int, Int]) { series =>
+      forAll(SeriesGenerators.genSeries(arbitrary[Int], arbitrary[Int], (0, 1, 0))) { series =>
         collect(series.size) {
-          series.reduce(ForAll[Int](_ => false)) must_== Value(true)
+          series.reduce(ForAll[Int](pFalse)) must_== Value(true)
         }
       }.set(minTestsOk = 10)
     }
 
-    "evaluate the predicate for a dense series" in {
-      forAll (genNonEmptyArbitraryDenseSeries[Int, Int]) { series =>
-        (
-          series.reduce(ForAll[Int](_ => false)) must_== Value(false)
-          ) && {
-          val p = (i: Int) => i >= 0
-
-          classify(series.values.map(_.get).forall(p), "forall=true", "forall=false") {
-            series.reduce(ForAll(p)) must_== Value(series.values.map(_.get).forall(p))
-          }
+    "return false for a series that contains NM" in {
+      forAll(arbitrary[Series[Int, Int]]) { series =>
+        classifyMeaningful(series) {
+          series.reduce(ForAll[Int](pTrue)) must_== Value(!series.values.contains(NM))
         }
       }
     }
 
-    "evaluate the predicate for a sparse series" in {
-      val p = (i: Int) => i >= 0
-
-      forAll (genNonEmptyArbitrarySparseSeries[Int, Int]()) { series =>
-        classifySparse(series.values) {
-          series.reduce(ForAll(p)) must_== Value(series.values.filter(_.isValue).map(_.get).forall(p))
-        }
-      } and
-        forAll (genNonEmptyArbitraryDirtySeries[Int, Int]()) { series =>
-          classifyMeaningful(series.values) {
-            val res = series.reduce(ForAll(p))
-            val containsNM = series.values.contains(NM)
-            containsNM ==> (
-              res must_== Value(false)
-              ) ||
-              !containsNM ==> (
-                res must_== Value(series.values.filter(_.isValue).map(_.get).forall(p))
-                )
+    "evaluate the predicate for a series" in {
+      forAll(arbitrary[Series[Int, Int]].suchThat(!_.values.contains(NM)).suchThat(_.denseValues.nonEmpty)) { series =>
+        classifySparse(series) {
+          classify(series.denseValues.min > 0, "forall=true", "forall=false") {
+            series.reduce(ForAll[Int](pPositive)) must_== Value(series.denseValues.min > 0)
           }
         }
       }
     }
   }
+}

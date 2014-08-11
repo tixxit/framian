@@ -22,14 +22,12 @@
 package framian
 package reduce
 
-import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
 import spire._
 import spire.compat._
 import spire.algebra.{Field, Order}
 import spire.syntax.field._
-import spire.syntax.order._
 
 final class Quantile[A: Field: Order: ClassTag](percentiles: Seq[Double]) extends SimpleReducer[A, List[(Double, A)]] {
   require(percentiles.forall(p => p >= 0.0 && p <= 1.0), "percentile must lie in [0,1]")
