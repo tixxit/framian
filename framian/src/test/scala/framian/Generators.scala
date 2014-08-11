@@ -54,8 +54,17 @@ object ColumnGenerators extends ColumnGenerators
 
 trait SeriesGenerators {
 
+  case class EmptySeries[K, V](series: Series[K, V])
+  case class MeaningfulSeries[K, V](series: Series[K, V])
+
   implicit def arbSeries[K: Arbitrary: Order: ClassTag, V: Arbitrary: ClassTag]: Arbitrary[Series[K, V]] =
     Arbitrary(SeriesGenerators.genSeries(arbitrary[K], arbitrary[V], (60, 30, 1)))
+
+  implicit def arbEmptySeries[K: Arbitrary: Order: ClassTag, V: Arbitrary: ClassTag]: Arbitrary[EmptySeries[K, V]] =
+    Arbitrary(SeriesGenerators.genSeries(arbitrary[K], arbitrary[V], (0, 1, 0)).map(EmptySeries(_)))
+
+  implicit def arbMeaningfulSeries[K: Arbitrary: Order: ClassTag, V: Arbitrary: ClassTag]: Arbitrary[MeaningfulSeries[K, V]] =
+    Arbitrary(SeriesGenerators.genSeries(arbitrary[K], arbitrary[V], (7, 3, 0)).map(MeaningfulSeries(_)))
 
   /** Generate a [[framian.Series]] whose keys and values come from the given generators. The cell
     * types will be split among [[Value]], [[NA]] and [[NM]] according to the provided weighted

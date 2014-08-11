@@ -15,7 +15,7 @@ import spire.std.iterable._
 class SeriesSpec extends Specification with ScalaCheck {
   import Arbitrary.arbitrary
   import Prop.forAll
-  import SeriesGenerators.arbSeries
+  import SeriesGenerators._
 
   "Series" should {
     "have a sane equality" in {
@@ -28,7 +28,7 @@ class SeriesSpec extends Specification with ScalaCheck {
 
     "detect values using hasValues" in {
       forAll(arbitrary[Series[String, Int]]) { series =>
-        series.hasValues must_== series.values.filter(_.isValue).nonEmpty
+        series.hasValues must_== series.denseValues.nonEmpty
         series.filterValues(_.isNonValue).hasValues must_== false
       }
     }
