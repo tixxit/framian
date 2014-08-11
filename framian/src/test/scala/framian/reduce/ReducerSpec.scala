@@ -19,6 +19,7 @@ class ReducerSpec extends Specification with ScalaCheck {
   import Prop.{classify, collect, forAll}
   import SeriesGenerators._
 
+  implicit val arbRational = Arbitrary(arbitrary[Double].map(Rational(_)))
   implicit val params = Parameters(minTestsOk = 20, maxDiscardRatio = 20F)
 
   object unique {
@@ -631,39 +632,40 @@ class ReducerSpec extends Specification with ScalaCheck {
   "Quantile" should {
 
     "return NA for empty series" in {
-      check1[EmptySeries[Int, Double], Prop] { case EmptySeries(series) =>
+      check1[EmptySeries[Int, Rational], Prop] { case EmptySeries(series) =>
         collect(series.size) {
-          series.reduce(Quantile[Double](List(0.25, 0.5, 0.75))) must_== NA
+          series.reduce(Quantile[Rational](List(0.25, 0.5, 0.75))) must_== NA
         }
       }.set(minTestsOk = 10)
     }
 
     "return min value for 0p" in {
-      forAll(arbitrary[MeaningfulSeries[Int, Double]].suchThat(_.series.denseValues.nonEmpty)) { case MeaningfulSeries(series) =>
+      forAll(arbitrary[MeaningfulSeries[Int, Rational]].suchThat(_.series.denseValues.nonEmpty)) { case MeaningfulSeries(series) =>
         classifySparse(series) {
           val min = series.denseValues.min
-          series.reduce(Quantile[Double](List(0.0))) must_== Value(List(0.0 -> min))
+          series.reduce(Quantile[Rational](List(0.0))) must_== Value(List(0.0 -> min))
         }
       }
     }
 
     "return max value for 1p" in {
-      forAll(arbitrary[MeaningfulSeries[Int, Double]].suchThat(_.series.denseValues.nonEmpty)) { case MeaningfulSeries(series) =>
+      forAll(arbitrary[MeaningfulSeries[Int, Rational]].suchThat(_.series.denseValues.nonEmpty)) { case MeaningfulSeries(series) =>
         classifySparse(series) {
           val max = series.denseValues.max
-          series.reduce(Quantile[Double](List(1.0))) must_== Value(List(1.0 -> max))
+          series.reduce(Quantile[Rational](List(1.0))) must_== Value(List(1.0 -> max))
         }
       }
     }
 
     "never return percentile below min or above max" in {
-      forAll(arbitrary[MeaningfulSeries[Int, Double]].suchThat(_.series.denseValues.nonEmpty)) { case MeaningfulSeries(series) =>
+      forAll(arbitrary[MeaningfulSeries[Int, Rational]].suchThat(_.series.denseValues.nonEmpty)) { case MeaningfulSeries(series) =>
         forAll(Gen.listOf(Gen.choose(0d, 1d))) { quantiles =>
           classifySparse(series) {
             val min = series.denseValues.min
             val max = series.denseValues.max
-            series.reduce(Quantile[Double](quantiles)).value.get.forall { case (_, q) =>
-              q >= min && q <= max
+            series.reduce(Quantile[Rational](quantiles)).value.get.forall { case (_, q) =>
+              q must be >= min
+              q must be <= max
             }
           }
         }
@@ -671,7 +673,6 @@ class ReducerSpec extends Specification with ScalaCheck {
     }
 
     "percentiles split at appropriate mark" in {
-      implicit val arbRational = Arbitrary(arbitrary[Double].map(Rational(_)))
       forAll(arbitrary[MeaningfulSeries[Int, Rational]].suchThat(_.series.denseValues.nonEmpty)) { case MeaningfulSeries(series) =>
         forAll(Gen.listOf(Gen.choose(0d, 1d))) { quantiles =>
           series.reduce(Quantile[Rational](quantiles)).value.get.forall { case (p, q) =>
