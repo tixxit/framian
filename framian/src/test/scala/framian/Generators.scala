@@ -54,15 +54,35 @@ object ColumnGenerators extends ColumnGenerators
 
 trait SeriesGenerators {
 
+  /** Wrapper class to specialize "empty" series for use with arbitrary generators
+    *
+    * @param series   The series instance to wrap
+    */
   case class EmptySeries[K, V](series: Series[K, V])
+
+  /** Wrapper class to specialize "meaningful" series for use with arbitrary generators
+    *
+    * @param series   The series instance to wrap
+    */
   case class MeaningfulSeries[K, V](series: Series[K, V])
 
+  /**
+   * @return an arbitrary series generator that generates series that contain all potential types of
+   *         cell types ([[Value]], [[NA]], [[NM]])
+   */
   implicit def arbSeries[K: Arbitrary: Order: ClassTag, V: Arbitrary: ClassTag]: Arbitrary[Series[K, V]] =
     Arbitrary(SeriesGenerators.genSeries(arbitrary[K], arbitrary[V], (60, 30, 1)))
 
+  /**
+   * @return an arbitrary series generator that generates series that contain only [[NA]] cells
+   */
   implicit def arbEmptySeries[K: Arbitrary: Order: ClassTag, V: Arbitrary: ClassTag]: Arbitrary[EmptySeries[K, V]] =
     Arbitrary(SeriesGenerators.genSeries(arbitrary[K], arbitrary[V], (0, 1, 0)).map(EmptySeries(_)))
 
+  /**
+   * @return an arbitrary series generator that generates series that contain only [[Value]] and
+   *         [[NA]] cells
+   */
   implicit def arbMeaningfulSeries[K: Arbitrary: Order: ClassTag, V: Arbitrary: ClassTag]: Arbitrary[MeaningfulSeries[K, V]] =
     Arbitrary(SeriesGenerators.genSeries(arbitrary[K], arbitrary[V], (7, 3, 0)).map(MeaningfulSeries(_)))
 
