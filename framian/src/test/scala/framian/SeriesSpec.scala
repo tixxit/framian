@@ -53,8 +53,6 @@ class SeriesSpec extends Specification with ScalaCheck {
       mergedSeries("a") must_== Value("a")
       mergedSeries("b") must_== Value("b")
       mergedSeries("c") must_== Value("c")
-
-      ok
     }
 
     "merge series from left to right and maintain all keys" in {
@@ -76,8 +74,6 @@ class SeriesSpec extends Specification with ScalaCheck {
       mergedSeriesOther("c") must_== Value("c2")
       mergedSeriesOther("x") must_== Value("x2")
       mergedSeriesOther("y") must_== NA
-
-      ok
     }
   }
 
@@ -120,8 +116,6 @@ class SeriesSpec extends Specification with ScalaCheck {
       mergedSeries("a") must_== NM
       mergedSeries("b") must_== NM
       mergedSeries("c") must_== NM
-
-      ok
     }
 
     "always let Value take precedence over NA" in {
@@ -140,8 +134,6 @@ class SeriesSpec extends Specification with ScalaCheck {
       doubleMergedSeries("a") must_== Value("aa")
       doubleMergedSeries("b") must_== Value("bb")
       doubleMergedSeries("c") must_== Value("cc")
-
-      ok
     }
 
     "merge series from left to right and maintain all keys" in {
@@ -163,8 +155,6 @@ class SeriesSpec extends Specification with ScalaCheck {
       mergedSeriesOther("c") must_== NM
       mergedSeriesOther("x") must_== Value("x2")
       mergedSeriesOther("y") must_== NA
-
-      ok
     }
   }
 
