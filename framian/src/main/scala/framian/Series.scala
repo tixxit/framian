@@ -220,7 +220,6 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     * @see [[keys]]
     * @see [[values]]
     */
-
   def cells: Vector[Cell[V]] = {
     val builder = Vector.newBuilder[Cell[V]]
     cfor(0)(_ < index.size, _ + 1) { i =>
@@ -280,7 +279,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     var seenValue = false
     while (i < index.size && !seenValue) {
       val row = index.indexAt(i)
-      seenValue = seenValue & column.isValueAt(row)
+      seenValue = seenValue | column.isValueAt(row)
       i += 1
     }
     seenValue
