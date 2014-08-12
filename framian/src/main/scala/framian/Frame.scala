@@ -281,6 +281,32 @@ trait Frame[Row, Col] {
     })
   }
 
+  def sortBy[A: Order: ClassTag](cols: Cols[Col, A], na: Option[A] = None, nm: Option[A] = None): Frame[Row, Col] = {
+    import spire.compat._
+    import scala.collection.mutable.ArrayBuffer
+
+    val extractor = cols.extractor
+    val colKeys = cols getOrElse columnsAsSeries.index.keys.toList
+    var buffer: ArrayBuffer[(A, (Row, Int))] = new ArrayBuffer
+    for (p <- extractor.prepare(this, colKeys)) {
+      rowIndex foreach { (key, row) =>
+        extractor.extract(this, key, row, p) match {
+          case Value(group) =>
+            buffer += (group -> (key, row))
+          case (missing: NonValue) =>
+            val missingValue = if (missing == NA) na else nm
+            missingValue foreach { group =>
+              buffer += (group -> (key, row))
+            }
+        }
+      }
+    }
+    val pairs = buffer.toArray
+    pairs.qsortBy(_._1)
+    val (keys, indices) = pairs.map(_._2).unzip
+    withRowIndex(Index(keys, indices))
+  }
+
   def group[A: Order: ClassTag](cols: Cols[Col, A], na: Option[A] = None, nm: Option[A] = None): Frame[A, Col] = {
     import spire.compat._
 
