@@ -1,5 +1,7 @@
 package framian
 
+import org.scalacheck._
+import org.specs2.ScalaCheck
 import org.specs2.mutable._
 
 import scala.reflect.ClassTag
@@ -10,7 +12,11 @@ import spire.std.double._
 import spire.std.int._
 import spire.std.iterable._
 
-class SeriesSpec extends Specification {
+class SeriesSpec extends Specification with ScalaCheck {
+  import Arbitrary.arbitrary
+  import Prop.forAll
+  import SeriesGenerators._
+
   "Series" should {
     "have a sane equality" in {
       Series("a" -> 0, "b" -> 1, "c" -> 2) must_!= Series("b" -> 1, "a" -> 0, "c" -> 2)
@@ -18,6 +24,13 @@ class SeriesSpec extends Specification {
       Series("a" -> 7) must_== Series(Index("a" -> 0), Column(_ => 7))
       Series("a" -> 7) must_== Series(Index("a" -> 42), Column(_ => 7))
       Series.empty[String, String] must_== Series.empty[String, String]
+    }
+
+    "detect values using hasValues" in {
+      forAll(arbitrary[Series[String, Int]]) { series =>
+        series.hasValues must_== series.denseValues.nonEmpty
+        series.filterValues(_.isNonValue).hasValues must_== false
+      }
     }
 
     "map values with original order" in {

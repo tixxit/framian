@@ -1,18 +1,14 @@
 package framian
 
 import org.specs2.mutable._
-import org.specs2.specification.{ Fragments, Fragment, Example}
-import org.specs2.matcher.Parameters
-import org.specs2.{ScalaCheck, SpecificationLike}
+import org.specs2.{ScalaCheck}
 
 import org.scalacheck._
 import org.scalacheck.Arbitrary.arbitrary
-import org.scalacheck.Prop._
 
 import spire.algebra._
 import spire.math.Rational
 import spire.laws._
-import spire.std.int._
 import spire.syntax.eq._
 import spire.implicits.IntAlgebra
 
@@ -20,7 +16,7 @@ import org.typelevel.discipline.specs2.mutable.Discipline
 
 /* extends Properties("ColumnAlgebras")*/
 class ColumnAlgebrasSpec extends Specification with ScalaCheck with Discipline  {
-  import ColumnGenerators._
+  import ColumnGenerators.arbColumn
 
   // We use a pretty sketchy notion of equality here. Basically, pretending that
   // only real values matter. Also, actually only checking rows 0-1000 is bad too.
@@ -32,9 +28,6 @@ class ColumnAlgebrasSpec extends Specification with ScalaCheck with Discipline  
       }
     }
   }
-
-  implicit def arbColumn[A: Arbitrary] =
-    Arbitrary(genSparseColumn(arbitrary[A]))
 
   def genRational: Gen[Rational] = for {
     n <- arbitrary[Long] map {

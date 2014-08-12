@@ -104,7 +104,6 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     * @return a sparse vector of the values of the series.
     * @see [[denseValues]]
     */
-
   def values: Vector[Cell[V]] =
     index.map { case (_, i) => column(i) }(collection.breakOut)
 
@@ -143,7 +142,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     var seenValue = false
     while (i < index.size && !seenValue) {
       val row = index.indexAt(i)
-      seenValue = seenValue & column.isValueAt(row)
+      seenValue = seenValue | column.isValueAt(row)
       i += 1
     }
     seenValue
