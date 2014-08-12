@@ -3,19 +3,26 @@ package framian
 import org.scalacheck._
 import org.specs2.ScalaCheck
 import org.specs2.mutable._
+import spire.math.Rational
 
 import scala.reflect.ClassTag
 
 import spire.algebra._
-import spire.std.string._
+import spire.math.Rational
 import spire.std.double._
 import spire.std.int._
 import spire.std.iterable._
+import spire.std.string._
 
 class SeriesSpec extends Specification with ScalaCheck {
   import Arbitrary.arbitrary
-  import Prop.forAll
+  import Prop._
   import SeriesGenerators._
+
+  implicit val arbRational = Arbitrary(arbitrary[Double].map(Rational(_)))
+  implicit def rationalMetricSpace = new MetricSpace[Rational, Double] {
+    def distance(v: Rational, w: Rational) = (v - w).abs.toDouble
+  }
 
   "equals" should {
     "have a sane equality" in {
@@ -287,6 +294,45 @@ class SeriesSpec extends Specification with ScalaCheck {
       val s1 = Series.fromCells(1 -> NA, 2 -> NM, 3 -> Value("a"), 4 -> NA, 5 -> Value("b"), 6 -> NA)
       s1.findFirstValue must_== Some(3 -> "a")
       s1.findLastValue must_== Some(5 -> "b")
+    }
+  }
+
+  "closestKeyTo" should {
+    "always return None for a series with no keys" in {
+      val s = Series[Double, Double]()
+      forAll (arbitrary[(Double, Double)]) { case (source, tolerance) =>
+        s.closestKeyTo(source, tolerance) must_== None
+      }
+    }
+
+    "return the value that is closest to the given key" in {
+      val s = Series.fromCells[Double, Double](1d -> NM, 2d -> NA, 3d -> NA, 4d -> NM, 5d -> NM)
+      s.closestKeyTo(6, 1) must_== Some(5d)
+      s.closestKeyTo(6, 0.9) must_== None
+      s.closestKeyTo(4.5, 0.5) must_== Some(4d)
+      s.closestKeyTo(3.5, 0.4) must_== None
+    }
+
+    "always return a value within the tolerance, or None" in {
+      forAll (arbitrary[(Series[Rational, Rational], Rational, Double)]) { case (series, source, toleranceNegative) =>
+        val tolerance = Math.abs(toleranceNegative)
+        series.closestKeyTo(source, tolerance) match {
+          case Some(value) => {
+            // Ensure the closest key is within the tolerance
+            collect("hit") {
+              (source - value).abs.toDouble must be <= tolerance
+            }
+          }
+          case None => {
+            // There was no closest, ensure all keys are outside the tolerance
+            collect("miss") {
+              series.keys.forall { key =>
+                (key - source).abs.toDouble must be > tolerance
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
