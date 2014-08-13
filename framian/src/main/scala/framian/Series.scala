@@ -31,6 +31,7 @@ import scala.reflect.ClassTag
 
 import spire.algebra._
 import spire.math._
+import spire.std.double._
 import spire.std.int._
 import spire.syntax.additiveMonoid._
 import spire.syntax.monoid._
@@ -39,6 +40,7 @@ import spire.syntax.cfor._
 
 import spire.compat._
 
+import framian.columns.MappedColumn
 import framian.reduce.Reducer
 import framian.util.TrivialMetricSpace
 
@@ -103,7 +105,6 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     * @return a sparse vector of the values of the series.
     * @see [[denseValues]]
     */
-
   def values: Vector[Cell[V]] =
     index.map { case (_, i) => column(i) }(collection.breakOut)
 
@@ -142,7 +143,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     var seenValue = false
     while (i < index.size && !seenValue) {
       val row = index.indexAt(i)
-      seenValue = seenValue & column.isValueAt(row)
+      seenValue = seenValue | column.isValueAt(row)
       i += 1
     }
     seenValue
@@ -268,12 +269,9 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     apply(k) match {
       case Value(v) => Some(k)
       case _ =>
-        val possibleDates =
-          keys.filter { key =>
-            val distance = K0.distance(key, k)
-            (distance <= tolerance)
-          }
-        possibleDates.headOption
+        keys.collectFirst {
+          case key if MetricSpace.closeTo[K, Double](k, key, tolerance) => key
+        }
     }
 
   /**

@@ -322,11 +322,14 @@ final case class Value[+A](get: A) extends Cell[A] {
   }
 }
 
-trait CellInstances0 {
-  implicit def cellEq[A: Eq]: Eq[Cell[A]] = new CellEq[A]
+object CellInstances {
+  trait CellInstances0 {
+    implicit def cellEq[A: Eq]: Eq[Cell[A]] = new CellEq[A]
+  }
 }
 
-trait CellInstances extends CellInstances0 {
+
+trait CellInstances extends CellInstances.CellInstances0 {
   implicit def cellOrder[A: Order]: Order[Cell[A]] = new CellOrder[A]
   implicit def cellMonoid[A: Semigroup]: Monoid[Cell[A]] = new CellMonoid[A]
 }

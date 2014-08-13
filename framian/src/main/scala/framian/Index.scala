@@ -36,9 +36,8 @@ import shapeless._
 import spire.syntax.order._
 import spire.syntax.cfor._
 
-sealed trait Index[K] extends Iterable[(K, Int)] with IterableLike[(K, Int), Index[K]] {
-  implicit def classTag: ClassTag[K]
-  implicit def order: Order[K]
+sealed abstract class Index[K](implicit val order: Order[K], val classTag: ClassTag[K])
+    extends Iterable[(K, Int)] with IterableLike[(K, Int), Index[K]] {
 
   def empty: Index[K] = Index.empty[K]
 
@@ -319,12 +318,9 @@ object Index {
   }
 }
 
-sealed abstract class BaseIndex[K](implicit
-    val order: Order[K], val classTag: ClassTag[K]) extends Index[K]
-
 final case class UnorderedIndex[K: Order: ClassTag](
       keys: Array[K], indices: Array[Int], ord: Array[Int])
-    extends BaseIndex[K] {
+    extends Index[K] {
 
   override def size: Int = keys.size
 
@@ -346,7 +342,7 @@ final case class UnorderedIndex[K: Order: ClassTag](
   private[framian] def withIndices(is: Array[Int]): Index[K] = UnorderedIndex(keys, is, ord)
 }
 
-final case class OrderedIndex[K: Order: ClassTag](keys: Array[K], indices: Array[Int]) extends BaseIndex[K] {
+final case class OrderedIndex[K: Order: ClassTag](keys: Array[K], indices: Array[Int]) extends Index[K] {
   override def size: Int = keys.size
   def keyAt(i: Int): K = keys(i)
   def indexAt(i: Int): Int = indices(i)
