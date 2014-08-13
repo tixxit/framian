@@ -193,6 +193,36 @@ class SeriesSpec extends Specification with ScalaCheck {
       val c = a.zipMap(b) { (x, y) => y * x}
       c must_== Series("a" -> 2D, "b" -> 12D, "b" -> 16D)
     }
+
+    "let NA cells clobber Value cells" in {
+      val one = Series.fromCells(   "a" -> Value(1),  "b" -> NA,        "c" -> Value(3),              "d" -> NA,        "d" -> Value(5),  "d" -> NA,        "d" -> Value(7))
+      val other = Series.fromCells( "a" -> NA,        "b" -> Value(2),  "c" -> Value(3),  "c" -> NA,  "d" -> Value(5),  "d" -> NA,        "d" -> Value(6),  "d" -> Value(7))
+
+      one.zipMap(other)(_ * _) must_== Series.fromCells(
+        "a" -> NA,
+        "b" -> NA,
+        "c" -> Value(9), "c" -> NA,
+        "d" -> NA, "d" -> NA, "d" -> NA, "d" -> NA,
+        "d" -> Value(25), "d" -> NA, "d" -> Value(30), "d" -> Value(35),
+        "d" -> NA, "d" -> NA, "d" -> NA, "d" -> NA,
+        "d" -> Value(35), "d" -> NA, "d" -> Value(42), "d" -> Value(49)
+      )
+    }
+
+    "let NM cells clobber NA and Value cells" in {
+      val one = Series.fromCells(   "a" -> Value(1),  "b" -> NM,        "c" -> Value(3),              "d" -> NM,        "d" -> Value(5),  "d" -> NA,        "d" -> Value(7))
+      val other = Series.fromCells( "a" -> NM,        "b" -> Value(2),  "c" -> Value(3),  "c" -> NM,  "d" -> Value(5),  "d" -> NA,        "d" -> Value(6),  "d" -> NM)
+
+      one.zipMap(other)(_ * _) must_== Series.fromCells(
+        "a" -> NM,
+        "b" -> NM,
+        "c" -> Value(9), "c" -> NM,
+        "d" -> NM, "d" -> NM, "d" -> NM, "d" -> NM,
+        "d" -> Value(25), "d" -> NA, "d" -> Value(30), "d" -> NM,
+        "d" -> NA, "d" -> NA, "d" -> NA, "d" -> NM,
+        "d" -> Value(35), "d" -> NA, "d" -> Value(42), "d" -> NM
+      )
+    }
   }
 
   "sorted" should {
