@@ -50,7 +50,11 @@ final case class Merger[K: ClassTag](merge: Merge) extends Index.GenericJoin[K] 
       var rPosition = rStart
       var lPosition = lStart
 
+      // When doing an outer join, we iterate over the left index and right index till *both* are
+      // exhausted
       if (merge.outer) while (lPosition < lEnd || rPosition < rEnd) {
+        // If either the left index become exhausted, start returning `Skip` elements to indicate
+        // there is no match for the side
         val li = if (lPosition >= lEnd) Skip else lIdx(lPosition)
         val ri = if (rPosition >= rEnd) Skip else rIdx(rPosition)
         lPosition += 1

@@ -31,6 +31,7 @@ import scala.reflect.ClassTag
 
 import spire.algebra._
 import spire.math._
+import spire.std.double._
 import spire.std.int._
 import spire.syntax.additiveMonoid._
 import spire.syntax.monoid._
@@ -405,12 +406,9 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     apply(k) match {
       case Value(v) => Some(k)
       case _ =>
-        val possibleDates =
-          keys.filter { key =>
-            val distance = K0.distance(key, k)
-            (distance <= tolerance)
-          }
-        possibleDates.headOption
+        keys.collectFirst {
+          case key if MetricSpace.closeTo[K, Double](k, key, tolerance) => key
+        }
     }
 
   /**

@@ -43,21 +43,6 @@ class ColumnAlgebrasSpec extends Specification with ScalaCheck with Discipline  
 
   implicit def arbRational = Arbitrary(genRational)
 
-  /*def checkAll(props: Properties): Fragments = {
-    val examples: Seq[Example] = for {
-      (name, prop) <- props.properties
-    } yield {
-      name ! check(prop)(Parameters(maxDiscardRatio = 20F))
-    }
-
-    Fragments.createList(examples: _*)
-  }*/
-
-  //implicit val intColumnEq = ColumnEq[Int]
-  //implicit val rationalColumnEq = ColumnEq[Rational]
-
-  //val ringLaws: RuleSet = RingLaws[Column[Int]].ring
-
   "ColumnAlgebras" should {
     checkAll("Int column ring", RingLaws[Column[Int]].ring)
     checkAll("Rational column field", RingLaws[Column[Rational]].field)
