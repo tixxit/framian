@@ -97,19 +97,16 @@ trait Frame[Row, Col] {
     withRowIndex(rowIndex.getAll(row))
 
   def mapRowGroups[R1: ClassTag: Order, C1: ClassTag: Order](f: (Row, Frame[Row, Col]) => Frame[R1, C1]): Frame[R1, C1] = {
-    val columns = columnsAsSeries.denseIterator.toSeq
     object grouper extends Index.Grouper[Row] {
       case class State(rows: Int, keys: Vector[Array[R1]], cols: Series[C1, UntypedColumn]) {
-        def result(): Frame[R1, C1] = Frame(
-          Index(Array.concat(keys: _*)),
-          cols.denseIterator.toSeq: _*)
+        def result(): Frame[R1, C1] = ColOrientedFrame(Index(Array.concat(keys: _*)), cols)
       }
 
       def init = State(0, Vector.empty, Series.empty)
       def group(state: State)(keys: Array[Row], indices: Array[Int], start: Int, end: Int): State = {
         val groupRowIndex = Index(keys.slice(start, end), indices.slice(start, end))
         val groupKey = keys(start)
-        val group = Frame(groupRowIndex, columns: _*)
+        val group = ColOrientedFrame(groupRowIndex, columnsAsSeries)
 
         val State(offset, groupKeys, cols) = state
         val result = f(groupKey, group)
@@ -499,14 +496,6 @@ object ColOrientedFrame {
 object Frame {
   def empty[Row: ClassTag: Order, Col: ClassTag: Order]: Frame[Row, Col] =
     ColOrientedFrame[Row, Col](Index.empty[Row], Index.empty[Col], Column.empty)
-
-  def apply[Row: ClassTag: Order, Col: ClassTag: Order](
-    rowIndex: Index[Row],
-    colPairs: (Col,UntypedColumn)*
-  ): Frame[Row,Col] = {
-    val (colKeys, cols) = colPairs.unzip
-    ColOrientedFrame(rowIndex, Index(colKeys.toArray), Column.fromArray(cols.toArray))
-  }
 
   def fill[A: Order: ClassTag, B: Order: ClassTag, C: ClassTag](rows: Iterable[A], cols: Iterable[B])(f: (A, B) => Cell[C]): Frame[A, B] = {
     val rows0 = rows.toVector

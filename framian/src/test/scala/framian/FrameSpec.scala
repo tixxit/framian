@@ -291,9 +291,9 @@ class FrameSpec extends Specification {
         .withRowIndex(Index.fromKeys("a", "b"))
       val b = Frame.fromGeneric(2.0 :: HNil, 3.0 :: HNil)
         .withRowIndex(Index.fromKeys("b", "c"))
-      val c = Frame[String, Int](Index.fromKeys("a", "b"),
-        0 -> TypedColumn(Column.fromCells(Vector(Value(1), Value(2)))),
-        0 -> TypedColumn(Column.fromCells(Vector(NA, Value(2.0)))))
+      val c = Frame.fromColumns(
+        0 -> Series.fromCells("a" -> Value(1), "b" -> Value(2)),
+        0 -> Series.fromCells("a" ->       NA, "b" -> Value(2.0)))
       a.join(b)(Join.Left) must_== c
     }
 
@@ -310,9 +310,9 @@ class FrameSpec extends Specification {
         .withRowIndex(Index.fromKeys("a", "b"))
       val b = Frame.fromGeneric(2.0 :: HNil, 3.0 :: HNil)
         .withRowIndex(Index.fromKeys("b", "c"))
-      val c = Frame[String, Int](Index.fromKeys("b", "c"),
-        0 -> TypedColumn(Column.fromCells(Vector(Value(2), NA))),
-        0 -> TypedColumn(Column.fromCells(Vector(Value(2.0), Value(3.0)))))
+      val c = Frame.fromColumns(
+        0 -> Series.fromCells("b" -> Value(2), "c" -> NA),
+        0 -> Series.fromCells("b" -> Value(2.0), "c" -> Value(3.0)))
       a.join(b)(Join.Right) must_== c
     }
 
@@ -329,9 +329,9 @@ class FrameSpec extends Specification {
         .withRowIndex(Index.fromKeys("a", "b"))
       val b = Frame.fromGeneric(2.0 :: HNil, 3.0 :: HNil)
         .withRowIndex(Index.fromKeys("b", "c"))
-      val c = Frame[String, Int](Index.fromKeys("a", "b", "c"),
-        0 -> TypedColumn(Column.fromCells(Vector(Value(1), Value(2), NA))),
-        0 -> TypedColumn(Column.fromCells(Vector(NA, Value(2.0), Value(3.0)))))
+      val c = Frame.fromColumns(
+        0 -> Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA),
+        0 -> Series.fromCells("a" -> NA, "b" -> Value(2.0), "c" -> Value(3.0)))
       a.join(b)(Join.Outer) must_== c
     }
 
