@@ -41,6 +41,9 @@ trait AxisSelection[K, A] {
 
 trait AxisSelectionLike[K, A, +This[K, A] <: AxisSelectionLike[K, A, This]] extends AxisSelection[K, A] {
   def map[B](f: A => B): This[K, B]
+  def recoverWith(f: NonValue => Cell[A]): This[K, A]
+  def recover(pf: PartialFunction[NonValue, A]): This[K, A] =
+    recoverWith { nonValue => pf.andThen(Value(_)).applyOrElse[NonValue, Cell[A]](nonValue, a => a) }
 }
 
 trait AxisSelectionCompanion[AxisSelection[K, A] <: AxisSelectionLike[K, A, AxisSelection]] {
@@ -70,6 +73,8 @@ trait AxisSelectionCompanion[AxisSelection[K, A] <: AxisSelectionLike[K, A, Axis
       All(extractor0)
     def map[B](f: A => B): All[K, B] =
       All(extractor map f)
+    def recoverWith(f: NonValue => Cell[A]): All[K, A] =
+      All(extractor recoverWith f)
 
     def asListOf[B](implicit extractor0: RowExtractor[B, K, Fixed[Nat._1]]): All[K, List[Cell[B]]] =
       as(RowExtractor.collectionOf)
@@ -88,6 +93,8 @@ trait AxisSelectionCompanion[AxisSelection[K, A] <: AxisSelectionLike[K, A, Axis
       Pick(keys, extractor0)
     def map[B](f: A => B): Pick[K, S, B] =
       Pick(keys, extractor map f)
+    def recoverWith(f: NonValue => Cell[A]): Pick[K, S, A] =
+      Pick(keys, extractor recoverWith f)
     def variable: Pick[K, Variable, A] = this.asInstanceOf[Pick[K, Variable, A]]
 
     def asListOf[B](implicit extractor0: RowExtractor[B, K, Fixed[Nat._1]]): Pick[K, Variable, List[Cell[B]]] =
