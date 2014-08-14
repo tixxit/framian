@@ -443,7 +443,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   /**
    * Filter the values of this series only.
    */
-  def filterValues(p: Cell[V] => Boolean): Series[K, V] = {
+  def filterCells(p: Cell[V] => Boolean): Series[K, V] = {
     val b = new SeriesBuilder[K, V]
     b.sizeHint(this.size)
     for ((k, ix) <- index.iterator) {
