@@ -56,31 +56,6 @@ trait Frame[Row, Col] {
       case (id, Value(column)) if Series(rowIndex, column.cast[Any]).hasValues => id
     }.isEmpty
 
-  //def ++(that: Frame[Row, Col]): Frame[Row, Col] = {
-  //  // TODO: clean this up... really awful...
-  //  def magicConversion[T](classTag: ClassTag[T])(col: Column[Any]): TypedColumn[T] =
-  //    TypedColumn[T](col.asInstanceOf[Column[T]])(classTag)
-
-  //  val colIds = colIndex.map(_._1).toList
-  //  val thisCols = columnsAsSeries
-  //  val thatColIds = colIndex.map(_._1).toList
-
-  //  var rowIdx = this.rowIndex
-  //  val colSeries = colIds.map { colId =>
-  //    val thisColAsColumn = thisCols(colId).value.get.asInstanceOf[TypedColumn[_]]
-  //    val newCol =
-  //      if (thatColIds.contains(colId)) {
-  //        val col = this.column[Any](colId) ++ that.column[Any](colId)
-  //        rowIdx = col.index
-  //        col
-  //      } else
-  //        column[Any](colId)
-
-  //    (colId, magicConversion(thisColAsColumn.classTagA)(newCol.column))
-  //  }
-  //  Frame(rowIdx, colSeries: _*)
-  //}
-
   def reduce[A, B: ClassTag](cols: Cols[Col, A], to: Col)(reducer: Reducer[A, B]): Frame[Row, Col] = {
     val series = get(cols)
     val cell = series.reduce(reducer)
