@@ -29,7 +29,7 @@ import org.joda.time._
 import spire.algebra._
 import spire.implicits._
 import spire.compat._
-import shapeless.{HList, HNil, Typeable, Poly2, LUBConstraint, UnaryTCConstraint}
+import shapeless.{Generic, HList, HNil, Typeable, Poly2, LUBConstraint, UnaryTCConstraint}
 import shapeless.ops.hlist.{LeftFolder, Length}
 import shapeless.syntax.typeable._
 import shapeless.syntax._
@@ -88,20 +88,23 @@ trait Frame[Row, Col] {
     this.merge(result, to)(Merge.Outer)
   }
 
+  private def columnsAs[V: ColumnTyper]: Vector[(Col, Series[Row, V])] =
+    columnsAsSeries.denseIterator.map { case (key, col) =>
+      key -> Series(rowIndex, col.cast[V])
+    }.toVector
+
   /** The following methods allow a user to apply reducers directly across a frame. In
     * particular, this API demands that we specify the type that the reducer accepts and
     * it will only apply it in the case that there exists a type conversion for a given
     * column.
     */
-  def reduceFrame[V: ClassTag: ColumnTyper, R: ClassTag: ColumnTyper](reducer: Reducer[V, R]): Series[Col, R] =
-    Series.fromCells(columnsAsSeries.denseIterator.map { case (key, col) =>
-      (key, Series(rowIndex, col.cast[V]).reduce(reducer))
-    })
+  def reduceFrame[V: ColumnTyper, R: ClassTag: ColumnTyper](reducer: Reducer[V, R]): Series[Col, R] =
+    Series.fromCells(columnsAs[V].map { case (col, series) => col -> series.reduce(reducer) })
 
-  def reduceFrameByKey[V: ClassTag: ColumnTyper, R: ClassTag: ColumnTyper](reducer: Reducer[V, R]): Frame[Row, Col] =
-    Frame.fromSeries(columnsAsSeries.denseIterator.map { case (key, col) =>
-      (key, Series(rowIndex, col.cast[V]).reduceByKey(reducer))
-    }.toSeq: _*)
+  def reduceFrameByKey[V: ColumnTyper, R: ClassTag: ColumnTyper](reducer: Reducer[V, R]): Frame[Row, Col] =
+    columnsAs[V].foldLeft(Frame.empty[Row, Col]) { case (acc, (key, col)) =>
+      acc.join(key, col.reduceByKey(reducer))(Join.Outer)
+    }
 
   def reduceFrameWithCol[A: ColumnTyper, B: ColumnTyper, C: ClassTag](col: Col)(reducer: Reducer[(A, B), C]): Series[Col, C] = {
     val fixed = column[A](col)
@@ -252,7 +255,7 @@ trait Frame[Row, Col] {
       Column.fromCells(cells.toVector)
     }
     val untypedColumn: UntypedColumn = TypedColumn[B](column)
-    Frame.fromColumns(rowIndex, columnsAsSeries ++ Series(to -> untypedColumn))
+    ColOrientedFrame(rowIndex, columnsAsSeries ++ Series(to -> untypedColumn))
   }
 
   def map[A, B: ClassTag](rows: Rows[Row, A], to: Row)(f: A => B): Frame[Row, Col] =
@@ -268,7 +271,7 @@ trait Frame[Row, Col] {
       Column.fromCells(cells.toVector)
     }
     val untypedColumn: UntypedColumn = TypedColumn[B](column)
-    Frame.fromColumns(rowIndex, columnsAsSeries ++ Series(to -> untypedColumn))
+    ColOrientedFrame(rowIndex, columnsAsSeries ++ Series(to -> untypedColumn))
   }
 
   def filter[A](cols: Cols[Col, A])(f: A => Boolean): Frame[Row, Col] = {
@@ -287,23 +290,29 @@ trait Frame[Row, Col] {
 
     val extractor = cols.extractor
     val colKeys = cols getOrElse columnsAsSeries.index.keys.toList
-    var buffer: ArrayBuffer[(A, (Row, Int))] = new ArrayBuffer
+    var buffer: ArrayBuffer[(A, Row, Int)] = new ArrayBuffer
     for (p <- extractor.prepare(this, colKeys)) {
       rowIndex foreach { (key, row) =>
         extractor.extract(this, key, row, p) match {
           case Value(group) =>
-            buffer += (group -> (key, row))
+            buffer += ((group, key, row))
           case (missing: NonValue) =>
             val missingValue = if (missing == NA) na else nm
             missingValue foreach { group =>
-              buffer += (group -> (key, row))
+              buffer += ((group, key, row))
             }
         }
       }
     }
-    val pairs = buffer.toArray
-    pairs.qsortBy(_._1)
-    val (keys, indices) = pairs.map(_._2).unzip
+
+    val pairs = buffer.toArray; pairs.qsortBy(_._1)
+    val keys = new Array[Row](pairs.length)
+    val indices = new Array[Int](pairs.length)
+    cfor(0)(_ < pairs.length, _ + 1) { i =>
+      val (_, key, idx) = pairs(i)
+      keys(i) = key
+      indices(i) = idx
+    }
     withRowIndex(Index(keys, indices))
   }
 
@@ -454,36 +463,15 @@ trait Frame[Row, Col] {
         } .toSeq }
     )(that)(Joiner[Row](joinStrategy)(rowIndex.classTag))
 
-  def join[T: ClassTag: ColumnTyper](that: Series[Row, T], columnKey: Col)(joinStrategy: Join): Frame[Row, Col] =
+  def join[T: ClassTag: ColumnTyper](col: Col, that: Series[Row, T])(joinStrategy: Join): Frame[Row, Col] =
     genericJoin[Series[Row, T]](
       { series: Series[Row, T] => series.index },
       { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => series: Series[Row, T] =>
-        Seq((columnKey, TypedColumn(series.column.setNA(Skip).reindex(rIndex)))) }
+        Seq((col, TypedColumn(series.column.setNA(Skip).reindex(rIndex)))) }
     )(that)(Joiner[Row](joinStrategy)(rowIndex.classTag))
 
-  import LUBConstraint.<<:
-  import Frame.joinSeries
-  def join[TSeries <: HList: <<:[Series[Row, _]]#λ]
-          (them: TSeries, columnKeys: Seq[Col] = Seq())
-          (join: Join)
-          (implicit
-             tf1: LeftFolder.Aux[TSeries, (List[Col], Frame[Row, Col]), joinSeries.type, (List[Col], Frame[Row, Col])],
-             tpe: Typeable[Index[Col]]
-          ): Frame[Row, Col] = {
-    val columnIndices = (columnKeys.isEmpty, colIndex.cast[Index[Int]]) match {
-      case (false, _) =>
-        columnKeys
-      case (_, Some(_)) if colIndex.isEmpty =>
-        0 to (them.runtimeLength - 1)
-      case (_, Some(index)) =>
-        val colMax = index.max._1
-        (colMax + 1) to (colMax + them.runtimeLength)
-      case _ =>
-        throw new Exception("Cannot create default column index values if column type is not numeric.")
-    }
-
-    them.foldLeft(columnIndices.toList.asInstanceOf[List[Col]], this)(joinSeries)._2
-  }
+  def join[L <: HList](them: L)(join: Join)(implicit folder: Frame.SeriesJoinFolder[L, Row, Col]): Frame[Row, Col] =
+    them.foldLeft(this)(Frame.joinSeries)
 }
 
 case class TransposedFrame[Row, Col](frame: Frame[Col, Row]) extends Frame[Row, Col] {
@@ -528,20 +516,16 @@ case class ColOrientedFrame[Row, Col](
   }
 }
 
+object ColOrientedFrame {
+  def apply[Row, Col](rowIdx: Index[Row], cols: Series[Col, UntypedColumn]): Frame[Row, Col] =
+    ColOrientedFrame(rowIdx, cols.index, cols.column)
+}
+
 object Frame {
+  def empty[Row: ClassTag: Order, Col: ClassTag: Order]: Frame[Row, Col] =
+    ColOrientedFrame[Row, Col](Index.empty[Row], Index.empty[Col], Column.empty)
 
-  object joinSeries extends Poly2 {
-    implicit def caseT[T: ClassTag: ColumnTyper, Row: ClassTag: Order: ColumnTyper, Col: ClassTag: Order: ColumnTyper] =
-      at[(List[Col], Frame[Row, Col]), Series[Row, T]] {
-        case ((columnIndex :: columnIndices, frame), series) =>
-          (columnIndices, frame.join(series, columnIndex)(Join.Outer))
-      }
-  }
-
-  def empty[Row: ClassTag: Order: ColumnTyper, Col: ClassTag: Order: ColumnTyper]: Frame[Row, Col] =
-    ColOrientedFrame[Row, Col](Index.empty, Index.empty, Column.empty)
-
-  def apply[Row: ClassTag: Order: ColumnTyper, Col: ClassTag: Order: ColumnTyper](
+  def apply[Row: ClassTag: Order, Col: ClassTag: Order](
     rowIndex: Index[Row],
     colPairs: (Col,UntypedColumn)*
   ): Frame[Row,Col] = {
@@ -555,48 +539,65 @@ object Frame {
     val columns = Column.fromArray(cols0.map { b =>
       TypedColumn(Column.fromCells(rows0.map { a => f(a, b) })): UntypedColumn
     }.toArray)
-    fromColumns(Index.fromKeys(rows0: _*), Index.fromKeys(cols0: _*), columns)
+    ColOrientedFrame(Index.fromKeys(rows0: _*), Index.fromKeys(cols0: _*), columns)
   }
 
-  def fromRows[A, Col: ClassTag](rows: A*)(implicit pop: RowPopulator[A, Int, Col]): Frame[Int, Col] =
+  def fromGeneric[A, Col: ClassTag](rows: A*)(implicit pop: RowPopulator[A, Int, Col]): Frame[Int, Col] =
     pop.frame(rows.zipWithIndex.foldLeft(pop.init) { case (state, (data, row)) =>
       pop.populate(state, row, data)
     })
 
-  def fromColumns[Row, Col](
-    rowIdx: Index[Row],
-    cols: Series[Col, UntypedColumn]
-  ): Frame[Row, Col] =
-    ColOrientedFrame(rowIdx, cols.index, cols.column)
+  // Here by dragons, devoid of form...
 
-  def fromColumns[Row, Col](
-    rowIdx: Index[Row],
-    colIdx: Index[Col],
-    cols: Column[UntypedColumn]
-  ): Frame[Row, Col] =
-    ColOrientedFrame(rowIdx, colIdx, cols)
+  object joinSeries extends Poly2 {
+    implicit def colSeriesPair[A: ClassTag: ColumnTyper, Row, Col] =
+      at[Frame[Row, Col], (Col, Series[Row, A])] { case (frame, (col, series)) =>
+        frame.join(col, series)(Join.Outer)
+      }
+  }
 
-  def fromSeries[Row: ClassTag: Order: ColumnTyper, Col: ClassTag: Order: ColumnTyper, Value: ClassTag: ColumnTyper](
-    cols: (Col, Series[Row, Value])*
-  ): Frame[Row,Col] =
-    cols.foldLeft[Frame[Row, Col]](Frame.empty[Row, Col]) {
-      case (accum, (id, series)) => accum.join(series, id)(Join.Outer)
-    }
+  type SeriesJoinFolder[L <: HList, Row, Col] = LeftFolder.Aux[L, Frame[Row, Col], joinSeries.type, Frame[Row, Col]]
 
-  import LUBConstraint.<<:
-  def fromHList[Row: ClassTag: Order: ColumnTyper, Col: ClassTag: Order: ColumnTyper, TSeries <: HList: <<:[Series[Row, _]]#λ]
-               (colIndex: Index[Col], colSeries: TSeries)
-               (implicit
-                  tf: LeftFolder.Aux[TSeries, (List[Col], Frame[Row,Col]), joinSeries.type, (List[Col], Frame[Row,Col])]
-               ): Frame[Row,Col] =
-    Frame.empty[Row, Col].join(colSeries, colIndex.keys.toSeq)(Join.Outer)
+  /** Implicit to help with inference of Row/Col in fromColumns/fromRows. Please ignore... */
+  trait KeySeriesPair[L <: HList, Row, Col]
+  object KeySeriesPair {
+    import shapeless.::
+    implicit def hnilKeySeriesPair[Row, Col] = new KeySeriesPair[HNil, Row, Col] {}
+    implicit def hconsKeySeriesPair[A, T <: HList, Row, Col](implicit
+        t: KeySeriesPair[T, Row, Col]) = new KeySeriesPair[(Col, Series[Row, A]) :: T, Row, Col] {}
+  }
 
-  def fromHList[Row: ClassTag: Order: ColumnTyper, TSeries <: HList: <<:[Series[Row, _]]#λ]
-               (colSeries: TSeries)
-               (implicit
-                  tf: LeftFolder.Aux[TSeries,(List[Int], Frame[Row,Int]), joinSeries.type, (List[Int], Frame[Row,Int])]
-               ): Frame[Row,Int] =
-    fromHList(Index.empty[Int], colSeries)
+  /**
+   * Given an HList of `(Col, Series[Row, V])` pairs, this will build a
+   * `Frame[Row, Col]`, outer-joining all of the series together as the columns
+   * of the frame.
+   *
+   * The use of `Generic.Aux` allows us to use auto-tupling (urgh) to allow
+   * things like `Frame.fromColumns("a" -> seriesA, "b" -> seriesB)`, rather
+   * than having to use explicit `HList`s.
+   */
+  def fromColumns[S, L <: HList, Col, Row](cols: S)(implicit
+      gen: Generic.Aux[S, L],
+      ev: KeySeriesPair[L, Row, Col],
+      folder: SeriesJoinFolder[L, Row, Col],
+      ctCol: ClassTag[Col], orderCol: Order[Col],
+      ctRow: ClassTag[Row], orderRow: Order[Row]): Frame[Row, Col] =
+    gen.to(cols).foldLeft(Frame.empty[Row, Col])(joinSeries)
 
-  // def concat[Row, Col](frames: Frame[Row, Col]): Frame[Row, Col]
+  /**
+   * Given an HList of `(Row, Series[Col, V])` pairs, this will build a
+   * `Frame[Row, Col]`, outer-joining all of the series together as the rows
+   * of the frame.
+   *
+   * The use of `Generic.Aux` allows us to use auto-tupling (urgh) to allow
+   * things like `Frame.fromColumns("a" -> seriesA, "b" -> seriesB)`, rather
+   * than having to use explicit `HList`s.
+   */
+  def fromRows[S, L <: HList, Col, Row](rows: S)(implicit
+      gen: Generic.Aux[S, L],
+      ev: KeySeriesPair[L, Col, Row],
+      folder: SeriesJoinFolder[L, Col, Row],
+      ctCol: ClassTag[Col], orderCol: Order[Col],
+      ctRow: ClassTag[Row], orderRow: Order[Row]): Frame[Row, Col] =
+    gen.to(rows).foldLeft(Frame.empty[Col, Row])(joinSeries).transpose
 }

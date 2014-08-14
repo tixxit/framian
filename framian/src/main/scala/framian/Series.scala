@@ -258,11 +258,11 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
    * Convert this Series to a single column [[Frame]].
    */
   def toFrame[C: Order: ClassTag](col: C)(implicit tt: ClassTag[V]): Frame[K, C] =
-    Frame(index, col -> TypedColumn(column))
+    ColOrientedFrame(index, Series(col -> TypedColumn(column)))
 
   def toFrame(implicit tt: ClassTag[V]): Frame[K, Int] = {
     import spire.std.int._
-    Frame[K, Int](index, 0 -> TypedColumn(column))
+    toFrame(0)
   }
 
   def closestKeyTo(k: K, tolerance: Double)(implicit K0: MetricSpace[K, Double], K1: Order[K]): Option[K] =

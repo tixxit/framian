@@ -23,21 +23,19 @@ class SummarySpec extends Specification {
     }
 
     "be NA for empty col" in {
-      val emptyFrame = Frame.fromSeries(
-        "x" -> Series.fromCells[Int, Double](0 -> NA, 1 -> NA, 2 -> NA)
-      )
+      val emptyFrame = Series.fromCells[Int, Double](0 -> NA, 1 -> NA, 2 -> NA).toFrame("x")
       val expected = Frame.fill[String, String, Double](List("x"), stats) { (_, _) => NA }
       summary(emptyFrame) must_== expected
     }
 
     "summarize dense frame" in {
-      val input = Frame.fromRows(
+      val input = Frame.fromGeneric(
         1 :: 2 :: HNil,
         3 :: 3 :: HNil,
         2 :: 4 :: HNil
       )
 
-      val expected = Frame.fromRows(
+      val expected = Frame.fromGeneric(
         2 :: 2 :: 3 :: 1 :: HNil,
         3 :: 3 :: 4 :: 2 :: HNil
       ).withColIndex(statsIndex)
@@ -46,7 +44,7 @@ class SummarySpec extends Specification {
     }
 
     "summarize sparse frame" in {
-      val input = Frame.fromSeries(
+      val input = Frame.fromColumns(
         0 -> Series.fromCells[Int, Int](0 -> NA, 1 -> Value(3), 2 -> Value(2), 3 -> NA, 4 -> Value(1)),
         1 -> Series.fromCells[Int, Int](0 -> Value(2), 1 -> NM, 2 -> NM, 3 -> Value(4), 4 -> Value(3))
       )

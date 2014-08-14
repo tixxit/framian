@@ -23,7 +23,7 @@ class CsvSpec extends Specification {
   val withColumnRowIndex = Index.fromKeys("0", "1", "2", "3")
   val defaultAPColumnIndex = Index.fromKeys("0", "1", "2")
 
-  val defaultAirPassengers = Frame.fromRows(
+  val defaultAirPassengers = Frame.fromGeneric(
     "" :: "time" :: "AirPassengers" :: HNil,
     "1" :: "1949" :: "112" :: HNil,
     "2" :: "1949.08333333333" :: "118" :: HNil,
@@ -31,14 +31,14 @@ class CsvSpec extends Specification {
     "4" :: "1949.25" :: "129" :: HNil)
     .withColIndex(defaultAPColumnIndex)
     .withRowIndex(defaultRowIndex)
-  val columnAirPassengers = Frame.fromRows(
+  val columnAirPassengers = Frame.fromGeneric(
     "1" :: "1949" :: "112" :: HNil,
     "2" :: "1949.08333333333" :: "118" :: HNil,
     "3" :: "1949.16666666667" :: "132" :: HNil,
     "4" :: "1949.25" :: "129" :: HNil)
     .withColIndex(Index.fromKeys("", "time", "AirPassengers"))
     .withRowIndex(withColumnRowIndex)
-  val rowAirPassengers = (Frame.fromRows(
+  val rowAirPassengers = (Frame.fromGeneric(
     "time" :: "AirPassengers" :: HNil,
     "1949" :: "112" :: HNil,
     "1949.08333333333" :: "118" :: HNil,
@@ -46,7 +46,7 @@ class CsvSpec extends Specification {
     "1949.25" :: "129" :: HNil)
     .withColIndex(Index.fromKeys("0", "1"))
     .withRowIndex(Index.fromKeys("", "1", "2", "3", "4")))
-  val correctAirPassengers = Frame.fromRows(
+  val correctAirPassengers = Frame.fromGeneric(
     "1949" :: "112" :: HNil,
     "1949.08333333333" :: "118" :: HNil,
     "1949.16666666667" :: "132" :: HNil,
@@ -54,7 +54,7 @@ class CsvSpec extends Specification {
     .withColIndex(Index.fromKeys("time", "AirPassengers"))
     .withRowIndex(Index.fromKeys("1", "2", "3", "4"))
 
-  val defaultMPG = Frame.fromRows(
+  val defaultMPG = Frame.fromGeneric(
     "18.0" :: "8" :: "307.0" :: "130.0" :: "3504." :: "12.0" :: "70" :: "1" :: "chevrolet chevelle malibu" :: HNil,
     "15.0" :: "8" :: "350.0" :: "165.0" :: "3693." :: "11.5" :: "70" :: "1" :: "buick skylark 320" :: HNil,
     "18.0" :: "8" :: "318.0" :: "150.0" :: "3436." :: "11.0" :: "70" :: "1" :: "plymouth satellite" :: HNil,
@@ -62,7 +62,7 @@ class CsvSpec extends Specification {
     "17.0" :: "8" :: "302.0" :: "140.0" :: "3449." :: "10.5" :: "70" :: "1" :: "ford torino" :: HNil)
     .withRowIndex(defaultRowIndex)
     .withColIndex(Index.fromKeys("0", "1", "2", "3", "4", "5", "6", "7", "8"))
-  val withRowIndexMPG = Frame.fromRows(
+  val withRowIndexMPG = Frame.fromGeneric(
     "18.0" :: "8" :: "307.0" :: "130.0" :: "3504." :: "12.0" :: "70" :: "1" :: HNil,
     "15.0" :: "8" :: "350.0" :: "165.0" :: "3693." :: "11.5" :: "70" :: "1" :: HNil,
     "18.0" :: "8" :: "318.0" :: "150.0" :: "3436." :: "11.0" :: "70" :: "1" :: HNil,
@@ -72,7 +72,7 @@ class CsvSpec extends Specification {
                     "chevrolet chevelle malibu", "buick skylark 320",
                     "plymouth satellite", "amc rebel sst", "ford torino"))
     .withColIndex(Index.fromKeys("0", "1", "2", "3", "4", "5", "6", "7"))
-  val customColsMPG = Frame.fromRows(
+  val customColsMPG = Frame.fromGeneric(
     "18.0" :: "8" :: "307.0" :: HNil,
     "15.0" :: "8" :: "350.0" :: HNil,
     "18.0" :: "8" :: "318.0" :: HNil,
@@ -80,7 +80,7 @@ class CsvSpec extends Specification {
     "17.0" :: "8" :: "302.0" :: HNil)
     .withRowIndex(defaultRowIndex)
     .withColIndex(Index.fromKeys("0", "1", "2"))
-  val withRowIndexCustomColsMPG = Frame.fromRows(
+  val withRowIndexCustomColsMPG = Frame.fromGeneric(
     "18.0" :: "8" :: "307.0" :: HNil,
     "15.0" :: "8" :: "350.0" :: HNil,
     "18.0" :: "8" :: "318.0" :: HNil,
@@ -91,7 +91,7 @@ class CsvSpec extends Specification {
                     "plymouth satellite", "amc rebel sst", "ford torino"))
     .withColIndex(Index.fromKeys("0", "1", "2"))
 
-  val apBadComma = Frame.fromRows(
+  val apBadComma = Frame.fromGeneric(
     "" :: "FlightName" :: "AirPassengers" :: HNil,
     "1" :: "ABCD111" :: "112" :: HNil,
     "2" :: "Delta20394" :: "118" :: HNil,
