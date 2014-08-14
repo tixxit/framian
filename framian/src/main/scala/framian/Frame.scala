@@ -70,7 +70,7 @@ trait Frame[Row, Col] {
     val series = get(cols)
     val cell = series.reduce(reducer)
     val result = Series(rowIndex, Column.wrap(_ => cell))
-    this.merge(result, to)(Merge.Outer)
+    this.merge(to, result)(Merge.Outer)
   }
 
   private def columnsAs[V: ColumnTyper]: Vector[(Col, Series[Row, V])] =
@@ -184,8 +184,8 @@ trait Frame[Row, Col] {
   /**
     * Add an arbitrary sequence of values to your frame as a column.
     */
-  def addColumn[T: ClassTag](column: Seq[T], columnKey: Col): Frame[Row, Col] =
-    this.merge(Series(rowIndex, Column.fromArray(column.toArray)), columnKey)(Merge.Outer)
+  def addColumn[T: ClassTag](col: Col, column: Seq[T]): Frame[Row, Col] =
+    this.merge(col, Series(rowIndex, Column.fromArray(column.toArray)))(Merge.Outer)
 
   /**
    * Drop the columns `cols` from the column index. This simply removes the
@@ -257,34 +257,36 @@ trait Frame[Row, Col] {
   def reindex[A: Order: ClassTag](rows: Rows[Row, A]): Frame[Row, A] =
     withColIndex(Frame.reindex(colIndex, rowsAsSeries, rows))
 
-  def mapWithIndex[A, B: ClassTag](cols: Cols[Col, A], to: Col)(f: (Row, A) => B): Frame[Row, Col] = {
-    val extractor = cols.extractor
-    val keys = cols getOrElse columnsAsSeries.index.keys.toList
-    val column = extractor.prepare(columnsAsSeries, keys).fold(Column.empty[B]) { p =>
-      val cells = rowIndex map { case (key, row) =>
-        extractor.extract(row, p) map (f(key, _))
-      }
-      Column.fromCells(cells.toVector)
-    }
-    val untypedColumn: UntypedColumn = TypedColumn[B](column)
-    ColOrientedFrame(rowIndex, columnsAsSeries ++ Series(to -> untypedColumn))
-  }
+  /**
+   * Maps each row to a value using `rows`, then maps the result with the
+   * column key using `f` and stores it in a new row `to`.
+   */
+  def mapWithIndex[A, B: ClassTag](rows: Rows[Row, A], to: Row)(f: (Col, A) => B): Frame[Row, Col] =
+    transpose.mapWithIndex(rows.toCols, to)(f).transpose
 
+  /**
+   * Maps each column to a value using `cols`, then maps the result with the row
+   * key using `f` and stores it in a new column `to`.
+   */
+  def mapWithIndex[A, B: ClassTag](cols: Cols[Col, A], to: Col)(f: (Row, A) => B): Frame[Row, Col] =
+    merge(to, Frame.extract(rowIndex, columnsAsSeries, cols).mapValuesWithKeys(f))(Merge.Outer)
+
+  /**
+   * Extracts a row from this frame using [[Rows]], then merges it back into
+   * this frame as the row `to`.
+   */
   def map[A, B: ClassTag](rows: Rows[Row, A], to: Row)(f: A => B): Frame[Row, Col] =
     transpose.map(rows.toCols, to)(f).transpose
 
-  def map[A, B: ClassTag](cols: Cols[Col, A], to: Col)(f: A => B): Frame[Row, Col] = {
-    val extractor = cols.extractor
-    val keys = cols getOrElse columnsAsSeries.index.keys.toList
-    val column = extractor.prepare(columnsAsSeries, keys).fold(Column.empty[B]) { p =>
-      val cells = rowIndex map { case (key, row) =>
-        extractor.extract(row, p) map f
-      }
-      Column.fromCells(cells.toVector)
-    }
-    val untypedColumn: UntypedColumn = TypedColumn[B](column)
-    ColOrientedFrame(rowIndex, columnsAsSeries ++ Series(to -> untypedColumn))
-  }
+  /**
+   * Extracts a column from this frame using [[Cols]], then merges it back into
+   * this frame as the column `to`.
+   *
+   * This is equivalent to, but may be more efficient than
+   * `frame.merge(to, frame.get(cols))(Merge.Outer)`.
+   */
+  def map[A, B: ClassTag](cols: Cols[Col, A], to: Col)(f: A => B): Frame[Row, Col] =
+    merge(to, Frame.extract(rowIndex, columnsAsSeries, cols.map(f)))(Merge.Outer)
 
   def filter[A](cols: Cols[Col, A])(f: A => Boolean): Frame[Row, Col] = {
     val extractor = cols.extractor
@@ -432,12 +434,15 @@ trait Frame[Row, Col] {
         } .toSeq }
     )(that)(Merger[Row](mergeStrategy)(rowIndex.classTag))
 
-  def merge[T: ClassTag: ColumnTyper](that: Series[Row, T], columnKey: Col)(mergeStrategy: Merge): Frame[Row, Col] =
+  def merge[T: ClassTag: ColumnTyper](col: Col, that: Series[Row, T])(mergeStrategy: Merge): Frame[Row, Col] =
     genericJoin[Series[Row, T]](
       { series: Series[Row, T] => series.index },
       { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => series: Series[Row, T] =>
-        Seq((columnKey, TypedColumn(series.column.setNA(Skip).reindex(rIndex)))) }
+        Seq((col, TypedColumn(series.column.setNA(Skip).reindex(rIndex)))) }
     )(that)(Merger[Row](mergeStrategy)(rowIndex.classTag))
+
+  def merge[L <: HList](them: L)(merge: Merge)(implicit folder: Frame.SeriesMergeFolder[L, Row, Col]): Frame[Row, Col] =
+    them.foldLeft(this)(Frame.mergeSeries)
 
   def join(that: Frame[Row, Col])(joinStrategy: Join): Frame[Row, Col] =
     genericJoin[Frame[Row, Col]](
@@ -526,8 +531,19 @@ object Frame {
       }
   }
 
+  /** A polymorphic function for merging many [[Series]] into a `Frame`. */
+  object mergeSeries extends Poly2 {
+    implicit def colSeriesPair[A: ClassTag: ColumnTyper, Row, Col] =
+      at[Frame[Row, Col], (Col, Series[Row, A])] { case (frame, (col, series)) =>
+        frame.merge(col, series)(Merge.Outer)
+      }
+  }
+
   /** A left fold on an HList that creates a Frame from a set of [[Series]]. */
   type SeriesJoinFolder[L <: HList, Row, Col] = LeftFolder.Aux[L, Frame[Row, Col], joinSeries.type, Frame[Row, Col]]
+
+  /** A left fold on an HList that creates a Frame from a set of [[Series]]. */
+  type SeriesMergeFolder[L <: HList, Row, Col] = LeftFolder.Aux[L, Frame[Row, Col], mergeSeries.type, Frame[Row, Col]]
 
   /** Implicit to help with inference of Row/Col in fromColumns/fromRows. Please ignore... */
   trait KeySeriesPair[L <: HList, Row, Col]
@@ -550,10 +566,10 @@ object Frame {
   def fromColumns[S, L <: HList, Col, Row](cols: S)(implicit
       gen: Generic.Aux[S, L],
       ev: KeySeriesPair[L, Row, Col],
-      folder: SeriesJoinFolder[L, Row, Col],
+      folder: SeriesMergeFolder[L, Row, Col],
       ctCol: ClassTag[Col], orderCol: Order[Col],
       ctRow: ClassTag[Row], orderRow: Order[Row]): Frame[Row, Col] =
-    gen.to(cols).foldLeft(Frame.empty[Row, Col])(joinSeries)
+    gen.to(cols).foldLeft(Frame.empty[Row, Col])(mergeSeries)
 
   /**
    * Given an HList of `(Row, Series[Col, V])` pairs, this will build a
@@ -567,11 +583,10 @@ object Frame {
   def fromRows[S, L <: HList, Col, Row](rows: S)(implicit
       gen: Generic.Aux[S, L],
       ev: KeySeriesPair[L, Col, Row],
-      folder: SeriesJoinFolder[L, Col, Row],
+      folder: SeriesMergeFolder[L, Col, Row],
       ctCol: ClassTag[Col], orderCol: Order[Col],
       ctRow: ClassTag[Row], orderRow: Order[Row]): Frame[Row, Col] =
-    gen.to(rows).foldLeft(Frame.empty[Col, Row])(joinSeries).transpose
-
+    gen.to(rows).foldLeft(Frame.empty[Col, Row])(mergeSeries).transpose
 
   // Axis-agnostic frame operations.
 
@@ -622,6 +637,18 @@ object Frame {
       }
     }
     bldr.result().sorted
+  }
+
+  private def extract[I, K, A](index: Index[I], cols: Series[K, UntypedColumn], sel: AxisSelection[K, A]): Series[I, A] = {
+    val extractor = sel.extractor
+    val keys = sel getOrElse cols.index.keys.toList
+    val bldr = Vector.newBuilder[Cell[A]]
+    extractor.prepare(cols, keys).foreach { p =>
+      index foreach { (key, row) =>
+        bldr += extractor.extract(row, p)
+      }
+    }
+    Series(index.resetIndices, Column.fromCells(bldr.result()))
   }
 }
 

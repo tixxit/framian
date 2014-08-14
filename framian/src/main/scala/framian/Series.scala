@@ -290,6 +290,18 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     Series(index, new MappedColumn(f, column)) // TODO: Use a macro here?
 
   /**
+   * Map the values of this series, using both the *key* and *value* of each
+   * cell.
+   */
+  def mapValuesWithKeys[W: ClassTag](f: (K, V) => W): Series[K, W] = {
+    val bldr = Column.builder[W]
+    index.foreach { (k, row) =>
+      bldr += column(row).map(v => f(k, v))
+    }
+    Series(index.resetIndices, bldr.result())
+  }
+
+  /**
    * Filter the this series by its keys.
    */
   def filterKeys(p: K => Boolean): Series[K, V] = {

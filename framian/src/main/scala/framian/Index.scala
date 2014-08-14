@@ -108,13 +108,6 @@ sealed abstract class Index[K](implicit val order: Order[K], val classTag: Class
   }
 
   def sorted: OrderedIndex[K] = Index.ordered(keys, indices)
-  /*def sortWith(f: ((K, Int), (K, Int)) => Boolean) = {
-    val ind = keys.zip(indices)
-    val sorted = ind.sortWith(f)
-    val (ks, ids) = sorted.unzip
-
-    Index.unordered(keys, indices)
-  }*/
 
   def resetIndices: Index[K]
 

@@ -226,7 +226,7 @@ class FrameSpec extends Specification {
     }
 
     "merge with a series" in {
-      f3.merge(s1, 1)(Merge.Inner) must_==
+      f3.merge(1, s1)(Merge.Inner) must_==
         Frame.fromGeneric(
           3 :: "s3" :: HNil,
           2 :: "s2" :: HNil,
