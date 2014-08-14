@@ -33,10 +33,13 @@ import shapeless._
 import shapeless.ops.function._
 import shapeless.ops.nat._
 
-trait AxisSelectionLike[K, A, +This[K, A] <: AxisSelectionLike[K, A, This]] {
+trait AxisSelection[K, A] {
   val extractor: RowExtractor[A, K, _]
-  def getOrElse(all: => List[K]) = fold(all)(keys => keys)
+  def getOrElse(all: => List[K]): List[K] = fold(all)(keys => keys)
   def fold[B](all: => B)(f: List[K] => B): B
+}
+
+trait AxisSelectionLike[K, A, +This[K, A] <: AxisSelectionLike[K, A, This]] extends AxisSelection[K, A] {
   def map[B](f: A => B): This[K, B]
 }
 

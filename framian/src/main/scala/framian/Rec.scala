@@ -78,13 +78,12 @@ object Rec {
   implicit def RecRowExtractor[K]: RowExtractor[Rec[K], K, Variable] = new RowExtractor[Rec[K], K, Variable] {
     type P = Series[K, UntypedColumn]
 
-    def prepare[R](frame: Frame[R, K], cols: List[K]): Option[P] = {
-      val s = frame.columnsAsSeries
-      import s.index.{ order, classTag }
-      Some(Series.fromCells(cols map { k => k -> s(k) }: _*))
+    def prepare(cols: Series[K, UntypedColumn], keys: List[K]): Option[P] = {
+      import cols.index.{ order, classTag }
+      Some(Series.fromCells(keys map { k => k -> cols(k) }: _*))
     }
 
-    def extract[R](frame: Frame[R, K], key: R, row: Int, cols: P): Cell[Rec[K]] =
+    def extract(row: Int, cols: P): Cell[Rec[K]] =
       Value(new Rec(cols, row))
   }
 }

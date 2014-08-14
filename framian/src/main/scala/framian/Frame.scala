@@ -202,9 +202,9 @@ trait Frame[Row, Col] {
 
   def get[A](cols: Cols[Col, A]): Series[Row, A] = {
     val keys = cols getOrElse columnsAsSeries.index.keys.toList
-    val column = cols.extractor.prepare(this, keys).fold(Column.empty[A]) { p =>
+    val column = cols.extractor.prepare(columnsAsSeries, keys).fold(Column.empty[A]) { p =>
       val cells = rowIndex map { case (key, row) =>
-        cols.extractor.extract(this, key, row, p)
+        cols.extractor.extract(row, p)
       }
       Column.fromCells(cells.toVector)
     }
@@ -218,9 +218,9 @@ trait Frame[Row, Col] {
   def mapWithIndex[A, B: ClassTag](cols: Cols[Col, A], to: Col)(f: (Row, A) => B): Frame[Row, Col] = {
     val extractor = cols.extractor
     val keys = cols getOrElse columnsAsSeries.index.keys.toList
-    val column = extractor.prepare(this, keys).fold(Column.empty[B]) { p =>
+    val column = extractor.prepare(columnsAsSeries, keys).fold(Column.empty[B]) { p =>
       val cells = rowIndex map { case (key, row) =>
-        extractor.extract(this, key, row, p) map (f(key, _))
+        extractor.extract(row, p) map (f(key, _))
       }
       Column.fromCells(cells.toVector)
     }
@@ -234,9 +234,9 @@ trait Frame[Row, Col] {
   def map[A, B: ClassTag](cols: Cols[Col, A], to: Col)(f: A => B): Frame[Row, Col] = {
     val extractor = cols.extractor
     val keys = cols getOrElse columnsAsSeries.index.keys.toList
-    val column = extractor.prepare(this, keys).fold(Column.empty[B]) { p =>
+    val column = extractor.prepare(columnsAsSeries, keys).fold(Column.empty[B]) { p =>
       val cells = rowIndex map { case (key, row) =>
-        extractor.extract(this, key, row, p) map f
+        extractor.extract(row, p) map f
       }
       Column.fromCells(cells.toVector)
     }
@@ -247,44 +247,30 @@ trait Frame[Row, Col] {
   def filter[A](cols: Cols[Col, A])(f: A => Boolean): Frame[Row, Col] = {
     val extractor = cols.extractor
     val keys = cols getOrElse columnsAsSeries.index.keys.toList
-    withRowIndex(extractor.prepare(this, keys).fold(rowIndex.empty) { p =>
+    withRowIndex(extractor.prepare(columnsAsSeries, keys).fold(rowIndex.empty) { p =>
       rowIndex filter { case (key, row) =>
-        extractor.extract(this, key, row, p) map f getOrElse false
+        extractor.extract(row, p) map f getOrElse false
       }
     })
   }
 
-  def sortBy[A: Order: ClassTag](cols: Cols[Col, A], na: Option[A] = None, nm: Option[A] = None): Frame[Row, Col] = {
-    import spire.compat._
-    import scala.collection.mutable.ArrayBuffer
+  /**
+   * Sorts the frame using the order for the [[Rows]] provided. This will only
+   * ever permute the cols of the frame and will not remove/add anything.
+   *
+   * @param rows The column value extractor to get the sort key
+   */
+  def sortBy[A: Order](rows: Rows[Row, A]): Frame[Row, Col] =
+    withColIndex(Frame.sortBy(colIndex, rowsAsSeries, rows))
 
-    val extractor = cols.extractor
-    val colKeys = cols getOrElse columnsAsSeries.index.keys.toList
-    var buffer: ArrayBuffer[(A, Row, Int)] = new ArrayBuffer
-    for (p <- extractor.prepare(this, colKeys)) {
-      rowIndex foreach { (key, row) =>
-        extractor.extract(this, key, row, p) match {
-          case Value(group) =>
-            buffer += ((group, key, row))
-          case (missing: NonValue) =>
-            val missingValue = if (missing == NA) na else nm
-            missingValue foreach { group =>
-              buffer += ((group, key, row))
-            }
-        }
-      }
-    }
-
-    val pairs = buffer.toArray; pairs.qsortBy(_._1)
-    val keys = new Array[Row](pairs.length)
-    val indices = new Array[Int](pairs.length)
-    cfor(0)(_ < pairs.length, _ + 1) { i =>
-      val (_, key, idx) = pairs(i)
-      keys(i) = key
-      indices(i) = idx
-    }
-    withRowIndex(Index(keys, indices))
-  }
+  /**
+   * Sorts the frame using the order for the [[Cols]] provided. This will only
+   * ever permute the rows of the frame and will not remove/add anything.
+   *
+   * @param cols The row value extractor to get the sort key
+   */
+  def sortBy[A: Order](cols: Cols[Col, A]): Frame[Row, Col] =
+    withRowIndex(Frame.sortBy(rowIndex, columnsAsSeries, cols))
 
   def group[A: Order: ClassTag](cols: Cols[Col, A], na: Option[A] = None, nm: Option[A] = None): Frame[A, Col] = {
     import spire.compat._
@@ -292,9 +278,9 @@ trait Frame[Row, Col] {
     val extractor = cols.extractor
     val colKeys = cols getOrElse columnsAsSeries.index.keys.toList
     var groups: SortedMap[A, List[Int]] = SortedMap.empty // TODO: Lots of room for optimization here.
-    for (p <- extractor.prepare(this, colKeys)) {
+    for (p <- extractor.prepare(columnsAsSeries, colKeys)) {
       rowIndex foreach { (key, row) =>
-        extractor.extract(this, key, row, p) match {
+        extractor.extract(row, p) match {
           case Value(group) =>
             groups += (group -> (row :: groups.getOrElse(group, Nil)))
           case (missing: NonValue) =>
@@ -593,4 +579,32 @@ object Frame {
       ctCol: ClassTag[Col], orderCol: Order[Col],
       ctRow: ClassTag[Row], orderRow: Order[Row]): Frame[Row, Col] =
     gen.to(rows).foldLeft(Frame.empty[Col, Row])(joinSeries).transpose
+
+
+  // Axis-agnostic frame operations.
+
+  private def sortBy[I: ClassTag: Order, K, A: Order](index: Index[I], cols: Series[K, UntypedColumn], sel: AxisSelection[K, A]): Index[I] = {
+    import spire.compat._
+    import scala.collection.mutable.ArrayBuffer
+
+    val extractor = sel.extractor
+    val colKeys = sel.getOrElse(cols.index.keys.toList)
+    var buffer: ArrayBuffer[(Cell[A], I, Int)] = new ArrayBuffer
+    for (p <- extractor.prepare(cols, colKeys)) {
+      index foreach { (key, row) =>
+        val sortKey = extractor.extract(row, p)
+        buffer += ((sortKey, key, row))
+      }
+    }
+
+    val pairs = buffer.toArray; pairs.qsortBy(_._1)
+    val keys = new Array[I](pairs.length)
+    val indices = new Array[Int](pairs.length)
+    cfor(0)(_ < pairs.length, _ + 1) { i =>
+      val (_, key, idx) = pairs(i)
+      keys(i) = key
+      indices(i) = idx
+    }
+    Index(keys, indices)
+  }
 }

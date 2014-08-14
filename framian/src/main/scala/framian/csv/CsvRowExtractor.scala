@@ -102,9 +102,10 @@ object CsvRow {
 
   implicit object CsvRowExtractor extends RowExtractor[CsvRow, String, Variable] {
     type P = List[Column[CsvCell]]
-    def prepare[Row](frame: Frame[Row, String], cols: List[String]): Option[List[Column[CsvCell]]] =
-      Some(cols map { key => frame.column[CsvCell](key)(CsvCell.CsvCellColumnTyper).column })
-    def extract[Row](frame: Frame[Row, String], key: Row, row: Int, cols: List[Column[CsvCell]]): Cell[CsvRow] =
+    def prepare(cols: Series[String, UntypedColumn], keys: List[String]): Option[List[Column[CsvCell]]] =
+      Some(keys flatMap { key => cols(key).value.map(_.cast[CsvCell](CsvCell.CsvCellColumnTyper)) })
+
+    def extract(row: Int, cols: List[Column[CsvCell]]): Cell[CsvRow] =
       Value(CsvRow(cols map { _.foldRow(row)(a => a, CsvCell.fromNonValue) }))
   }
 }
