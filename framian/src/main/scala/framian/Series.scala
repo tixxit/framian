@@ -432,9 +432,10 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   def filterKeys(p: K => Boolean): Series[K, V] = {
     val b = new SeriesBuilder[K, V]
     b.sizeHint(this.size)
-    for ((k, ix) <- index.iterator) {
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      val k = index.keyAt(i)
       if (p(k)) {
-        b += (k -> column(ix))
+        b += (k -> column(index.indexAt(i)))
       }
     }
     b.result()
@@ -446,10 +447,10 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   def filterCells(p: Cell[V] => Boolean): Series[K, V] = {
     val b = new SeriesBuilder[K, V]
     b.sizeHint(this.size)
-    for ((k, ix) <- index.iterator) {
-      val cell = column(ix)
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      val cell = column(index.indexAt(i))
       if (p(cell)) {
-        b += (k -> cell)
+        b += (index.keyAt(i) -> cell)
       }
     }
     b.result()
