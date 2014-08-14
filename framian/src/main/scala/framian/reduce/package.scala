@@ -21,8 +21,6 @@
 
 package framian
 
-import org.joda.time.LocalDate
-
 import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
