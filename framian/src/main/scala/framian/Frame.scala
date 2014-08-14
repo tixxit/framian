@@ -24,8 +24,6 @@ package framian
 import scala.collection.SortedMap
 import scala.reflect.ClassTag
 
-import org.joda.time._
-
 import spire.algebra._
 import spire.implicits._
 import spire.compat._
