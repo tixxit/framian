@@ -131,6 +131,8 @@ object Index {
       def apply(from: Index[_]): Builder[(K, Int), Index[K]] = apply()
     }
 
+  def newBuilder[K: Order: ClassTag]: IndexBuilder[K] = new IndexBuilder
+
   def empty[K: Order: ClassTag]: Index[K] = new OrderedIndex[K](new Array[K](0), new Array[Int](0))
 
   def fromKeys[K: Order: ClassTag](keys: K*): Index[K] =
@@ -199,9 +201,15 @@ object Index {
     new UnorderedIndex(keys0, indices0, flip(order0))
   }
 
-  private final class IndexBuilder[K: Order: ClassTag] extends Builder[(K, Int), Index[K]] {
+  final class IndexBuilder[K: Order: ClassTag] extends Builder[(K, Int), Index[K]] {
     val keys = ArrayBuilder.make[K]()
     val indices = ArrayBuilder.make[Int]()
+
+    def add(k: K, i: Int): this.type = {
+      keys += k
+      indices += i
+      this
+    }
 
     def +=(elem: (K, Int)) = {
       keys += elem._1

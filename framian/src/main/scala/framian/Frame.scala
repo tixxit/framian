@@ -215,6 +215,36 @@ trait Frame[Row, Col] {
 
   def getCol(key: Col): Option[Rec[Row]] = colIndex.get(key) map Rec.fromCol(this)
 
+  /**
+   * Re-indexes the frame using the extractor `cols` to define the new row
+   * keys. This will not re-order the frame rows, just replace the keys. This
+   * will drop any rows where `cols` extracts a [[NonValue]].
+   *
+   * To retain `NA`s or `NM`s in the index, you'll need to recover your
+   * [[Cols]] with some other value. For example,
+   *
+   * {{{
+   * frame.reindex(cols.map(Value(_)).recoverWith(nonValue => nonValue))
+   * }}}
+   */
+  def reindex[A: Order: ClassTag](cols: Cols[Col, A]): Frame[A, Col] =
+    withRowIndex(Frame.reindex(rowIndex, columnsAsSeries, cols))
+
+  /**
+   * Re-indexes the frame using the extractor `rows` to define the new row
+   * keys. This will not re-order the frame cols, just replace the keys. This
+   * will drop any columns where `rows` extracts a [[NonValue]].
+   *
+   * To retain `NA`s or `NM`s in the index, you'll need to recover your
+   * [[Rows]] with some other value. For example,
+   *
+   * {{{
+   * frame.reindex(rows.map(Value(_)).recoverWith(nonValue => nonValue))
+   * }}}
+   */
+  def reindex[A: Order: ClassTag](rows: Rows[Row, A]): Frame[Row, A] =
+    withColIndex(Frame.reindex(colIndex, rowsAsSeries, rows))
+
   def mapWithIndex[A, B: ClassTag](cols: Cols[Col, A], to: Col)(f: (Row, A) => B): Frame[Row, Col] = {
     val extractor = cols.extractor
     val keys = cols getOrElse columnsAsSeries.index.keys.toList
@@ -272,36 +302,23 @@ trait Frame[Row, Col] {
   def sortBy[A: Order](cols: Cols[Col, A]): Frame[Row, Col] =
     withRowIndex(Frame.sortBy(rowIndex, columnsAsSeries, cols))
 
-  def group[A: Order: ClassTag](cols: Cols[Col, A], na: Option[A] = None, nm: Option[A] = None): Frame[A, Col] = {
-    import spire.compat._
+  /**
+   * This "groups" the frame rows using the [[Cols]] extractor to determine the
+   * group for each row. Each row is then re-keyed using its group.
+   *
+   * This is equivalent to, but more efficient than, `frame.sortBy(cols).reindex(cols)`.
+   */
+  def group[A: Order: ClassTag](cols: Cols[Col, A]): Frame[A, Col] =
+    withRowIndex(Frame.group(rowIndex, columnsAsSeries, cols))
 
-    val extractor = cols.extractor
-    val colKeys = cols getOrElse columnsAsSeries.index.keys.toList
-    var groups: SortedMap[A, List[Int]] = SortedMap.empty // TODO: Lots of room for optimization here.
-    for (p <- extractor.prepare(columnsAsSeries, colKeys)) {
-      rowIndex foreach { (key, row) =>
-        extractor.extract(row, p) match {
-          case Value(group) =>
-            groups += (group -> (row :: groups.getOrElse(group, Nil)))
-          case (missing: NonValue) =>
-            val missingValue = if (missing == NA) na else nm
-            missingValue foreach { group =>
-              groups += (group -> (row :: groups.getOrElse(group, Nil)))
-            }
-        }
-      }
-    }
-
-    val (keys, rows) = (for {
-      (group, rows) <- groups.toList
-      row <- rows.reverse
-    } yield (group -> row)).unzip
-    val groupedIndex = Index.ordered(keys.toArray, rows.toArray)
-    withRowIndex(groupedIndex)
-  }
-
-  def groupBy[A, B: Order: ClassTag](cols: Cols[Col, A], na: Option[B] = None, nm: Option[B] = None)(f: A => B): Frame[B, Col] =
-    group(cols map f)
+  /**
+   * This "groups" the frame cols using the [[Rows]] extractor to determine the
+   * group for each column. Each column is then re-keyed using its group.
+   *
+   * This is equivalent to, but more efficient than, `frame.sortBy(rows).reindex(rows)`.
+   */
+  def group[A: Order: ClassTag](rows: Rows[Row, A]): Frame[Row, A] =
+    withColIndex(Frame.group(colIndex, rowsAsSeries, rows))
 
   override def hashCode: Int = {
     val values = columnsAsSeries.iterator flatMap { case (colKey, cell) =>
@@ -583,6 +600,20 @@ object Frame {
 
   // Axis-agnostic frame operations.
 
+  private def reindex[I, K, A: Order: ClassTag](index: Index[I], cols: Series[K, UntypedColumn], sel: AxisSelection[K, A]): Index[A] = {
+    import scala.collection.mutable.ArrayBuffer
+
+    val bldr = Index.newBuilder[A]
+    val extractor = sel.extractor
+    val colKeys = sel.getOrElse(cols.index.keys.toList)
+    for (p <- extractor.prepare(cols, colKeys)) {
+      index foreach { (_, row) =>
+        extractor.extract(row, p).foreach(bldr.add(_, row))
+      }
+    }
+    bldr.result()
+  }
+
   private def sortBy[I: ClassTag: Order, K, A: Order](index: Index[I], cols: Series[K, UntypedColumn], sel: AxisSelection[K, A]): Index[I] = {
     import spire.compat._
     import scala.collection.mutable.ArrayBuffer
@@ -597,14 +628,24 @@ object Frame {
       }
     }
 
+    val bldr = Index.newBuilder[I]
     val pairs = buffer.toArray; pairs.qsortBy(_._1)
-    val keys = new Array[I](pairs.length)
-    val indices = new Array[Int](pairs.length)
     cfor(0)(_ < pairs.length, _ + 1) { i =>
       val (_, key, idx) = pairs(i)
-      keys(i) = key
-      indices(i) = idx
+      bldr.add(key, idx)
     }
-    Index(keys, indices)
+    bldr.result()
+  }
+
+  private def group[I, K, A: Order: ClassTag](index: Index[I], cols: Series[K, UntypedColumn], sel: AxisSelection[K, A]): Index[A] = {
+    val bldr = Index.newBuilder[A]
+    val extractor = sel.extractor
+    val colKeys = sel getOrElse cols.index.keys.toList
+    for (p <- extractor.prepare(cols, colKeys)) {
+      index foreach { (_, row) =>
+        extractor.extract(row, p).foreach(bldr.add(_, row))
+      }
+    }
+    bldr.result().sorted
   }
 }

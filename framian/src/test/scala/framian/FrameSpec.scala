@@ -433,8 +433,8 @@ class FrameSpec extends Specification {
 
     "group by column values" in {
       f0.group(Cols(0).as[String]) must_== f0.withRowIndex(Index.fromKeys("a", "b", "c"))
-      f0.groupBy(Cols(1).as[Int])(-_) must_== f0.withRowIndex(Index(-3 -> 2, -2 -> 1, -1 -> 0))
-      f2.groupBy(Cols(0).as[String])(a => a) must_== f2.withRowIndex(Index(("a",0), ("b",2), ("b",1)))
+      f0.group(Cols(1).as[Int].map(-_)) must_== f0.withRowIndex(Index(-3 -> 2, -2 -> 1, -1 -> 0))
+      f2.group(Cols(0).as[String]) must_== f2.withRowIndex(Index(("a",0), ("b",2), ("b",1)))
     }
   }
 
