@@ -494,9 +494,24 @@ object ColOrientedFrame {
 }
 
 object Frame {
+
+  /**
+   * Create an empty `Frame` with no values.
+   */
   def empty[Row: ClassTag: Order, Col: ClassTag: Order]: Frame[Row, Col] =
     ColOrientedFrame[Row, Col](Index.empty[Row], Index.empty[Col], Column.empty)
 
+  /**
+   * Populates a homogeneous `Frame` given the rows/columns of the table. The
+   * value of each cell is calculated using `f`, applied to its row and column
+   * index.
+   *
+   * For instance, we can make a multiplication table,
+   *
+   * {{{
+   * Frame.fill(1 to 9, 1 to 9) { (row, col) => Value(row * col) }
+   * }}}
+   */
   def fill[A: Order: ClassTag, B: Order: ClassTag, C: ClassTag](rows: Iterable[A], cols: Iterable[B])(f: (A, B) => Cell[C]): Frame[A, B] = {
     val rows0 = rows.toVector
     val cols0 = cols.toVector
@@ -506,6 +521,20 @@ object Frame {
     ColOrientedFrame(Index.fromKeys(rows0: _*), Index.fromKeys(cols0: _*), columns)
   }
 
+  /**
+   * Construct a Frame whose rows are populated from some type `A`. Row
+   * populators may exist for things like JSON objects or Shapeless Generic
+   * types. For example,
+   *
+   * {{{
+   * case class Person(name: String, age: Int)
+   * val Alice = Person("Alice", 42)
+   * val Bob = Person("Alice", 23)
+   * Frame.fromGeneric(Alice, Bob)
+   * }}}
+   *
+   * TODO: This should really take the row too (eg. `rows: (Row, A)*`).
+   */
   def fromGeneric[A, Col: ClassTag](rows: A*)(implicit pop: RowPopulator[A, Int, Col]): Frame[Int, Col] =
     pop.frame(rows.zipWithIndex.foldLeft(pop.init) { case (state, (data, row)) =>
       pop.populate(state, row, data)
@@ -513,6 +542,7 @@ object Frame {
 
   // Here by dragons, devoid of form...
 
+  /** A polymorphic function for joining many [[Series]] into a `Frame`. */
   object joinSeries extends Poly2 {
     implicit def colSeriesPair[A: ClassTag: ColumnTyper, Row, Col] =
       at[Frame[Row, Col], (Col, Series[Row, A])] { case (frame, (col, series)) =>
@@ -520,6 +550,7 @@ object Frame {
       }
   }
 
+  /** A left fold on an HList that creates a Frame from a set of [[Series]]. */
   type SeriesJoinFolder[L <: HList, Row, Col] = LeftFolder.Aux[L, Frame[Row, Col], joinSeries.type, Frame[Row, Col]]
 
   /** Implicit to help with inference of Row/Col in fromColumns/fromRows. Please ignore... */
