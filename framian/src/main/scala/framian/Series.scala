@@ -430,12 +430,12 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
    * Filter the this series by its keys.
    */
   def filterKeys(p: K => Boolean): Series[K, V] = {
-    val b = new SeriesBuilder[K, V]
+    val b = Series.newUnorderedBuilder[K, V]
     b.sizeHint(this.size)
     cfor(0)(_ < index.size, _ + 1) { i =>
       val k = index.keyAt(i)
       if (p(k)) {
-        b += (k -> column(index.indexAt(i)))
+        b.append(k, column(index.indexAt(i)))
       }
     }
     b.result()
@@ -445,12 +445,12 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
    * Filter the values of this series only.
    */
   def filterCells(p: Cell[V] => Boolean): Series[K, V] = {
-    val b = new SeriesBuilder[K, V]
+    val b = Series.newUnorderedBuilder[K, V]
     b.sizeHint(this.size)
     cfor(0)(_ < index.size, _ + 1) { i =>
       val cell = column(index.indexAt(i))
       if (p(cell)) {
-        b += (index.keyAt(i) -> cell)
+        b.append(index.keyAt(i), cell)
       }
     }
     b.result()
@@ -469,14 +469,14 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     *   index order is preserved.
     */
   def filterValues(p: V => Boolean): Series[K, V] = {
-    val b = new SeriesBuilder[K, V]
+    val b = Series.newUnorderedBuilder[K, V]
     b.sizeHint(this.size)
     cfor(0)(_ < index.size, _ + 1) { i =>
       val ix = index.indexAt(i)
       if (column.isValueAt(ix)) {
         val v = column.valueAt(ix)
         if (p(v)) {
-          b += (index.keyAt(i) -> Value(v))
+          b.append(index.keyAt(i), Value(v))
         }
       }
     }
@@ -983,7 +983,7 @@ object Series {
   }
 
   def fromCells[K: Order: ClassTag, V: ClassTag](col: TraversableOnce[(K, Cell[V])]): Series[K, V] = {
-    val bldr = new SeriesBuilder[K ,V]
+    val bldr = Series.newUnorderedBuilder[K ,V]
     bldr ++= col
     bldr.result()
   }
@@ -996,30 +996,53 @@ object Series {
 
   implicit def cbf[K: Order: ClassTag, V]: CanBuildFrom[Series[_, _], (K, Cell[V]), Series[K, V]] =
     new CanBuildFrom[Series[_, _], (K, Cell[V]), Series[K, V]] {
-      def apply(): Builder[(K, Cell[V]), Series[K, V]] = new SeriesBuilder[K, V]
+      def apply(): Builder[(K, Cell[V]), Series[K, V]] = Series.newUnorderedBuilder[K ,V]
       def apply(from: Series[_, _]): Builder[(K, Cell[V]), Series[K, V]] = apply()
+    }
+
+
+  private def newUnorderedBuilder[K : ClassTag : Order, V]: AbstractSeriesBuilder[K, V] =
+    new AbstractSeriesBuilder[K, V] {
+      def result(): Series[K, V] =
+        Series(
+          Index.unordered(keys.result()),
+          Column.fromCells(cells.result()))
+    }
+
+  private def newOrderedBuilder[K : ClassTag : Order, V]: AbstractSeriesBuilder[K, V] =
+    new AbstractSeriesBuilder[K, V] {
+      def result(): Series[K, V] =
+        Series(
+          Index.ordered(keys.result()),
+          Column.fromCells(cells.result()))
     }
 }
 
-private final class SeriesBuilder[K: Order: ClassTag, V] extends Builder[(K, Cell[V]), Series[K,V]] {
-  val keys = ArrayBuilder.make[K]()
-  val values = ArrayBuilder.make[Cell[V]]()
 
-  def +=(elem: (K, Cell[V])) = {
+
+private abstract class AbstractSeriesBuilder[K : ClassTag : Order, V] extends Builder[(K, Cell[V]), Series[K, V]] {
+  protected val keys = Array.newBuilder[K]
+  protected val cells = Array.newBuilder[Cell[V]]
+
+  def +=(elem: (K, Cell[V])): this.type = {
     keys += elem._1
-    values += elem._2
+    cells += elem._2
+    this
+  }
+
+  def append(key: K, cell: Cell[V]): this.type = {
+    keys += key
+    cells += cell
     this
   }
 
   def clear(): Unit = {
     keys.clear()
-    values.clear()
+    cells.clear()
   }
-
-  def result(): Series[K, V] = Series(Index.unordered(keys.result()), Column.fromCells(values.result()))
 
   override def sizeHint(size: Int): Unit = {
     keys.sizeHint(size)
-    values.sizeHint(size)
+    cells.sizeHint(size)
   }
 }
