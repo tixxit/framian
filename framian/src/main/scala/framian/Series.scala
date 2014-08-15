@@ -457,6 +457,33 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   }
 
 
+  /** Selects all key-value pairs of this series where the values
+    * satisfy a predicate.
+    *
+    * This filter method assumes this series is dense, so any
+    * non values will also be filtered out.
+    *
+    * @param  p  the predicate used to test values.
+    * @return a new series consisting of all key-value pairs of this
+    *   series where the values satisfy the given predicate `p`. The
+    *   index order is preserved.
+    */
+  def filterValues(p: V => Boolean): Series[K, V] = {
+    val b = new SeriesBuilder[K, V]
+    b.sizeHint(this.size)
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      val ix = index.indexAt(i)
+      if (column.isValueAt(ix)) {
+        val v = column.valueAt(ix)
+        if (p(v)) {
+          b += (index.keyAt(i) -> Value(v))
+        }
+      }
+    }
+    b.result()
+  }
+
+
   /** Returns the first defined result of `f` when scanning the series in acending order.
     *
     * The parameter `f` is predicate on the key-values pairs of the
