@@ -426,10 +426,50 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   def mapValues[W](f: V => W): Series[K, W] =
     Series(index, new MappedColumn(f, column)) // TODO: Use a macro here?
 
-  /**
-   * Filter the this series by its keys.
-   */
-  def filterKeys(p: K => Boolean): Series[K, V] = {
+
+  /** Select all key-cell pairs of this series where the pairs
+    * satisfy a predicate.
+    *
+    * This method preserves the orderedness of the underlying index.
+    *
+    * @param  p  the predicate used to test key-cell pairs.
+    * @return a new series consisting of all key-cell pairs of this
+    *   series where the pairs satisfy the given predicate `p`.
+    * @see [[filterByKeys]]
+    * @see [[filterByCells]]
+    * @see [[filterByValues]]
+    */
+  def filterEntries(p: (K, Cell[V]) => Boolean): Series[K, V] = {
+    val b = Series.newBuilder[K, V](index.isOrdered)
+    b.sizeHint(index.size)
+    for ((k, ix) <- index) {
+      val cell = column(ix)
+      if (p(k, cell)) {
+        b.append(k, cell)
+      }
+    }
+    b.result()
+  }
+
+
+  /** Select all key-cell pairs of this series where the keys
+    * satisfy a predicate.
+    *
+    * This method preserves the orderedness of the underlying index.
+    *
+    * @param  p  the predicate used to test keys.
+    * @return a new series consisting of all key-call pairs of this
+    *   series where the keys satisfy the given predicate `p`.
+    * @see [[filterEntries]]
+    * @see [[filterByCells]]
+    * @see [[filterByValues]]
+    * @note This method is a specialized and optimized version of
+    * [[filterEntries]], where
+    * {{{
+    *   s.filterEntries { (k, _) => p(k) } == s.filterByKeys(p)
+    * }}}
+    */
+  def filterByKeys(p: K => Boolean): Series[K, V] = {
     val b = Series.newBuilder[K, V](index.isOrdered)
     b.sizeHint(this.size)
     cfor(0)(_ < index.size, _ + 1) { i =>
@@ -441,10 +481,25 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     b.result()
   }
 
-  /**
-   * Filter the values of this series only.
-   */
-  def filterCells(p: Cell[V] => Boolean): Series[K, V] = {
+
+  /** Select all key-cell pairs of this series where the cells
+    * satisfy a predicate.
+    *
+    * This method preserves the orderedness of the underlying index.
+    *
+    * @param  p  the predicate used to test cells.
+    * @return a new series consisting of all key-call pairs of this
+    *   series where the cells satisfy the given predicate `p`.
+    * @see [[filterEntries]]
+    * @see [[filterByKeys]]
+    * @see [[filterByValues]]
+    * @note This method is a specialized and optimized version of
+    * [[filterEntries]], where
+    * {{{
+    *   s.filterEntries { (_, c) => p(c) } == s.filterByCells(p)
+    * }}}
+    */
+  def filterByCells(p: Cell[V] => Boolean): Series[K, V] = {
     val b = Series.newBuilder[K, V](index.isOrdered)
     b.sizeHint(this.size)
     cfor(0)(_ < index.size, _ + 1) { i =>
@@ -460,15 +515,27 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   /** Selects all key-value pairs of this series where the values
     * satisfy a predicate.
     *
-    * This filter method assumes this series is dense, so any
-    * non values will also be filtered out.
+    * This method preserves the orderedness of the underlying index.
+    * It also assumes this series is dense, so any non values will
+    * also be filtered out. The column that backs the new series
+    * will be dense.
     *
     * @param  p  the predicate used to test values.
     * @return a new series consisting of all key-value pairs of this
-    *   series where the values satisfy the given predicate `p`. The
-    *   index order is preserved.
+    *   series where the values satisfy the given predicate `p`.
+    * @see [[filterEntries]]
+    * @see [[filterByKeys]]
+    * @see [[filterByCells]]
+    * @note This method is a specialized and optimized version of
+    * [[filterEntries]], where
+    * {{{
+    *   s.filterEntries {
+    *     case (_, Value(v)) => p(v)
+    *     case _ => false
+    *   } == s.filterByValues(p)
+    * }}}
     */
-  def filterValues(p: V => Boolean)(implicit ev: ClassTag[V]): Series[K, V] = {
+  def filterByValues(p: V => Boolean)(implicit ev: ClassTag[V]): Series[K, V] = {
     val b = Series.newDenseBuilder[K, V](index.isOrdered)
     b.sizeHint(this.size)
     cfor(0)(_ < index.size, _ + 1) { i =>

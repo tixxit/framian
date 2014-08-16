@@ -38,7 +38,7 @@ class SeriesSpec extends Specification with ScalaCheck {
     "detect values" in {
       forAll(arbitrary[Series[String, Int]]) { series =>
         series.hasValues must_== series.values.nonEmpty
-        series.filterCells(_.isNonValue).hasValues must_== false
+        series.filterByCells(_.isNonValue).hasValues must_== false
       }
     }
   }
