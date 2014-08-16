@@ -430,7 +430,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
    * Filter the this series by its keys.
    */
   def filterKeys(p: K => Boolean): Series[K, V] = {
-    val b = Series.newUnorderedBuilder[K, V]
+    val b = Series.newBuilder[K, V](index.isOrdered)
     b.sizeHint(this.size)
     cfor(0)(_ < index.size, _ + 1) { i =>
       val k = index.keyAt(i)
@@ -445,7 +445,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
    * Filter the values of this series only.
    */
   def filterCells(p: Cell[V] => Boolean): Series[K, V] = {
-    val b = Series.newUnorderedBuilder[K, V]
+    val b = Series.newBuilder[K, V](index.isOrdered)
     b.sizeHint(this.size)
     cfor(0)(_ < index.size, _ + 1) { i =>
       val cell = column(index.indexAt(i))
@@ -469,7 +469,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     *   index order is preserved.
     */
   def filterValues(p: V => Boolean)(implicit ev: ClassTag[V]): Series[K, V] = {
-    val b = Series.newDenseUnorderedBuilder[K, V]
+    val b = Series.newDenseBuilder[K, V](index.isOrdered)
     b.sizeHint(this.size)
     cfor(0)(_ < index.size, _ + 1) { i =>
       val ix = index.indexAt(i)
@@ -1000,6 +1000,8 @@ object Series {
       def apply(from: Series[_, _]): Builder[(K, Cell[V]), Series[K, V]] = apply()
     }
 
+  private def newBuilder[K : ClassTag : Order, V](isOrdered: Boolean): SeriesBuilder[K, Cell[V], V] =
+    if (isOrdered) newOrderedBuilder else newUnorderedBuilder
 
   private def newUnorderedBuilder[K : ClassTag : Order, V]: SeriesBuilder[K, Cell[V], V] =
     new AbstractSeriesBuilder[K, V] {
@@ -1016,6 +1018,9 @@ object Series {
           Index.ordered(this.keys.result()),
           Column.fromCells(this.cells.result()))
     }
+
+  private def newDenseBuilder[K : ClassTag : Order, V : ClassTag](isOrdered: Boolean): SeriesBuilder[K, V, V] =
+    if (isOrdered) newDenseOrderedBuilder else newDenseUnorderedBuilder
 
   private def newDenseUnorderedBuilder[K : ClassTag : Order, V : ClassTag]: SeriesBuilder[K, V, V] =
     new AbstractDenseSeriesBuilder[K, V] {
