@@ -468,15 +468,15 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     *   series where the values satisfy the given predicate `p`. The
     *   index order is preserved.
     */
-  def filterValues(p: V => Boolean): Series[K, V] = {
-    val b = Series.newUnorderedBuilder[K, V]
+  def filterValues(p: V => Boolean)(implicit ev: ClassTag[V]): Series[K, V] = {
+    val b = Series.newDenseUnorderedBuilder[K, V]
     b.sizeHint(this.size)
     cfor(0)(_ < index.size, _ + 1) { i =>
       val ix = index.indexAt(i)
       if (column.isValueAt(ix)) {
         val v = column.valueAt(ix)
         if (p(v)) {
-          b.append(index.keyAt(i), Value(v))
+          b.append(index.keyAt(i), v)
         }
       }
     }
@@ -1001,26 +1001,48 @@ object Series {
     }
 
 
-  private def newUnorderedBuilder[K : ClassTag : Order, V]: AbstractSeriesBuilder[K, V] =
+  private def newUnorderedBuilder[K : ClassTag : Order, V]: SeriesBuilder[K, Cell[V], V] =
     new AbstractSeriesBuilder[K, V] {
       def result(): Series[K, V] =
         Series(
-          Index.unordered(keys.result()),
-          Column.fromCells(cells.result()))
+          Index.unordered(this.keys.result()),
+          Column.fromCells(this.cells.result()))
     }
 
-  private def newOrderedBuilder[K : ClassTag : Order, V]: AbstractSeriesBuilder[K, V] =
+  private def newOrderedBuilder[K : ClassTag : Order, V]: SeriesBuilder[K, Cell[V], V] =
     new AbstractSeriesBuilder[K, V] {
       def result(): Series[K, V] =
         Series(
-          Index.ordered(keys.result()),
-          Column.fromCells(cells.result()))
+          Index.ordered(this.keys.result()),
+          Column.fromCells(this.cells.result()))
+    }
+
+  private def newDenseUnorderedBuilder[K : ClassTag : Order, V : ClassTag]: SeriesBuilder[K, V, V] =
+    new AbstractDenseSeriesBuilder[K, V] {
+      def result(): Series[K, V] =
+      Series(
+        Index.unordered(this.keys.result()),
+        Column.fromArray(this.vals.result()))
+    }
+
+  private def newDenseOrderedBuilder[K : ClassTag : Order, V : ClassTag]: SeriesBuilder[K, V, V] =
+    new AbstractDenseSeriesBuilder[K, V] {
+      def result(): Series[K, V] =
+      Series(
+        Index.ordered(this.keys.result()),
+        Column.fromArray(this.vals.result()))
     }
 }
 
 
 
-private abstract class AbstractSeriesBuilder[K : ClassTag : Order, V] extends Builder[(K, Cell[V]), Series[K, V]] {
+private abstract class SeriesBuilder[K, CV, V] extends Builder[(K, CV), Series[K, V]] {
+  def append(key: K, cv: CV): this.type
+}
+
+
+
+private abstract class AbstractSeriesBuilder[K : ClassTag : Order, V] extends SeriesBuilder[K, Cell[V], V] { // extends Builder[(K, Cell[V]), Series[K, V]] {
   protected val keys = Array.newBuilder[K]
   protected val cells = Array.newBuilder[Cell[V]]
 
@@ -1044,5 +1066,34 @@ private abstract class AbstractSeriesBuilder[K : ClassTag : Order, V] extends Bu
   override def sizeHint(size: Int): Unit = {
     keys.sizeHint(size)
     cells.sizeHint(size)
+  }
+}
+
+
+
+private abstract class AbstractDenseSeriesBuilder[K : ClassTag : Order, V : ClassTag] extends SeriesBuilder[K, V, V] { // extends Builder[(K, V), Series[K, V]] {
+  protected val keys = Array.newBuilder[K]
+  protected val vals = Array.newBuilder[V]
+
+  def +=(elem: (K, V)): this.type = {
+    keys += elem._1
+    vals += elem._2
+    this
+  }
+
+  def append(k: K, v: V): this.type = {
+    keys += k
+    vals += v
+    this
+  }
+
+  def clear(): Unit = {
+    keys.clear()
+    vals.clear()
+  }
+
+  override def sizeHint(size: Int): Unit = {
+    keys.sizeHint(size)
+    vals.sizeHint(size)
   }
 }
