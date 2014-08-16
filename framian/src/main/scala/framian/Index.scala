@@ -118,6 +118,7 @@ sealed abstract class Index[K](implicit val order: Order[K], val classTag: Class
 
   def resetIndices: Index[K]
 
+  protected[framian] def isOrdered: Boolean
   // These must contain both the keys and the indices, in sorted order.
   private[framian] def keys: Array[K]
   private[framian] def indices: Array[Int]
@@ -339,10 +340,17 @@ final case class UnorderedIndex[K: Order: ClassTag](
   }
 
   def resetIndices: Index[K] = UnorderedIndex(keys, Array.range(0, keys.size), ord)
+
+  protected[framian] def isOrdered = false
+
   private[framian] def withIndices(is: Array[Int]): Index[K] = UnorderedIndex(keys, is, ord)
 }
 
-final case class OrderedIndex[K: Order: ClassTag](keys: Array[K], indices: Array[Int]) extends Index[K] {
+final class OrderedIndex[K: Order: ClassTag](
+      private[framian] val keys: Array[K],
+      private[framian] val indices: Array[Int])
+    extends Index[K] {
+
   override def size: Int = keys.size
   def keyAt(i: Int): K = keys(i)
   def indexAt(i: Int): Int = indices(i)
@@ -355,6 +363,9 @@ final case class OrderedIndex[K: Order: ClassTag](keys: Array[K], indices: Array
     }
   }
   def resetIndices: Index[K] = OrderedIndex(keys, Array.range(0, keys.size))
+
+  protected[framian] def isOrdered = true
+
   private[framian] def withIndices(is: Array[Int]): Index[K] = OrderedIndex(keys, is)
   lazy val isSequential: Boolean = {
     var isSeq = true
