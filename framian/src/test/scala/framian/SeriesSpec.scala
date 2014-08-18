@@ -37,8 +37,8 @@ class SeriesSpec extends Specification with ScalaCheck {
   "hasValues" should {
     "detect values" in {
       forAll(arbitrary[Series[String, Int]]) { series =>
-        series.hasValues must_== series.denseValues.nonEmpty
-        series.filterValues(_.isNonValue).hasValues must_== false
+        series.hasValues must_== series.values.nonEmpty
+        series.filterByCells(_.isNonValue).hasValues must_== false
       }
     }
   }
@@ -274,8 +274,8 @@ class SeriesSpec extends Specification with ScalaCheck {
   }
 
   def series[K: Order: ClassTag, V](kvs: (K, Cell[V])*): Series[K, V] = {
-    val (keys, values) = kvs.unzip
-    Series(Index.fromKeys(keys: _*), Column.fromCells(values.toVector))
+    val (keys, cells) = kvs.unzip
+    Series(Index.fromKeys(keys: _*), Column.fromCells(cells.toVector))
   }
 
   "rollForward" should {
