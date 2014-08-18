@@ -34,13 +34,18 @@ import shapeless.ops.function._
 import shapeless.ops.nat._
 
 trait AxisSelection[K, A] {
-  val extractor: RowExtractor[A, K, _]
-  def getOrElse(all: => List[K]): List[K] = fold(all)(keys => keys)
-  def fold[B](all: => B)(f: List[K] => B): B
+  def foreach[I, U](index: Index[I], cols: Series[K, UntypedColumn])(f: (I, Int, Cell[A]) => U): Unit
+
+  def map[B](f: A => B): AxisSelection[K, B]
+  //def filter(f: A => Boolean): AxisSelection[K, A]
+  def recoverWith(f: NonValue => Cell[A]): AxisSelection[K, A]
+  def recover(pf: PartialFunction[NonValue, A]): AxisSelection[K, A]
 }
 
 trait AxisSelectionLike[K, A, +This[K, A] <: AxisSelectionLike[K, A, This]] extends AxisSelection[K, A] {
+
   def map[B](f: A => B): This[K, B]
+  //def filter(f: A => Boolean): This[K, A]
   def recoverWith(f: NonValue => Cell[A]): This[K, A]
   def recover(pf: PartialFunction[NonValue, A]): This[K, A] =
     recoverWith { nonValue => pf.andThen(Value(_)).applyOrElse[NonValue, Cell[A]](nonValue, a => a) }
@@ -49,6 +54,17 @@ trait AxisSelectionLike[K, A, +This[K, A] <: AxisSelectionLike[K, A, This]] exte
 trait AxisSelectionCompanion[AxisSelection[K, A] <: AxisSelectionLike[K, A, AxisSelection]] {
   sealed trait SizedAxisSelection[K, Sz <: Size, A] extends AxisSelectionLike[K, A, AxisSelection] {
     val extractor: RowExtractor[A, K, Sz]
+
+    def getOrElse(all: => List[K]): List[K] = fold(all)(keys => keys)
+
+    def foreach[I, U](index: Index[I], cols: Series[K, UntypedColumn])(f: (I, Int, Cell[A]) => U): Unit = {
+      val colKeys = getOrElse(cols.index.keys.toList)
+      for (p <- extractor.prepare(cols, colKeys)) {
+        index foreach { (key, row) =>
+          f(key, row, extractor.extract(row, p))
+        }
+      }
+    }
 
     def fold[B](all: => B)(f: List[K] => B): B
     def as[B](implicit extractor0: RowExtractor[B, K, Sz]): SizedAxisSelection[K, Sz, B]

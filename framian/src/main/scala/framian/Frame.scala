@@ -210,18 +210,10 @@ trait Frame[Row, Col] {
   def column[T: ColumnTyper](c: Col): Series[Row, T] = get(Cols(c).as[T])
 
   def get[A](rows: Rows[Row, A]): Series[Col, A] =
-    transpose.get(rows.toCols)
+    Frame.extract(colIndex, rowsAsSeries, rows)
 
-  def get[A](cols: Cols[Col, A]): Series[Row, A] = {
-    val keys = cols getOrElse columnsAsSeries.index.keys.toList
-    val column = cols.extractor.prepare(columnsAsSeries, keys).fold(Column.empty[A]) { p =>
-      val cells = rowIndex map { case (key, row) =>
-        cols.extractor.extract(row, p)
-      }
-      Column.fromCells(cells.toVector)
-    }
-    Series(rowIndex, column)
-  }
+  def get[A](cols: Cols[Col, A]): Series[Row, A] =
+    Frame.extract(rowIndex, columnsAsSeries, cols)
 
   def getRow(key: Row): Option[Rec[Col]] = rowIndex.get(key) map Rec.fromRow(this)
 
@@ -288,15 +280,21 @@ trait Frame[Row, Col] {
   def map[A, B: ClassTag](cols: Cols[Col, A], to: Col)(f: A => B): Frame[Row, Col] =
     merge(to, Frame.extract(rowIndex, columnsAsSeries, cols.map(f)))(Merge.Outer)
 
-  def filter[A](cols: Cols[Col, A])(f: A => Boolean): Frame[Row, Col] = {
-    val extractor = cols.extractor
-    val keys = cols getOrElse columnsAsSeries.index.keys.toList
-    withRowIndex(extractor.prepare(columnsAsSeries, keys).fold(rowIndex.empty) { p =>
-      rowIndex filter { case (key, row) =>
-        extractor.extract(row, p) map f getOrElse false
-      }
-    })
-  }
+  /**
+   * Filter this frame using `cols` extract values and the predicate `p`. If,
+   * for a given row, `p` is false, then that row will be removed from the
+   * frame. Any [[NA]] and [[NM]] rows will also be removed.
+   */
+  def filter[A](cols: Cols[Col, A])(p: A => Boolean): Frame[Row, Col] = 
+    withRowIndex(Frame.filter(rowIndex, columnsAsSeries, cols map p))
+
+  /**
+   * Filter this frame using `rows` extract values and the predicate `p`. If,
+   * for a given column, `p` is false, then that column will be removed from the
+   * frame. Any [[NA]] and [[NM]] columns will also be removed.
+   */
+  def filter[A](rows: Rows[Row, A])(p: A => Boolean): Frame[Row, Col] = 
+    withColIndex(Frame.filter(colIndex, rowsAsSeries, rows map p))
 
   /**
    * Sorts the frame using the order for the [[Rows]] provided. This will only
@@ -594,12 +592,8 @@ object Frame {
     import scala.collection.mutable.ArrayBuffer
 
     val bldr = Index.newBuilder[A]
-    val extractor = sel.extractor
-    val colKeys = sel.getOrElse(cols.index.keys.toList)
-    for (p <- extractor.prepare(cols, colKeys)) {
-      index foreach { (_, row) =>
-        extractor.extract(row, p).foreach(bldr.add(_, row))
-      }
+    sel.foreach(index, cols) { (_, row, cell) =>
+      cell.foreach(bldr.add(_, row))
     }
     bldr.result()
   }
@@ -608,16 +602,10 @@ object Frame {
     import spire.compat._
     import scala.collection.mutable.ArrayBuffer
 
-    val extractor = sel.extractor
-    val colKeys = sel.getOrElse(cols.index.keys.toList)
     var buffer: ArrayBuffer[(Cell[A], I, Int)] = new ArrayBuffer
-    for (p <- extractor.prepare(cols, colKeys)) {
-      index foreach { (key, row) =>
-        val sortKey = extractor.extract(row, p)
-        buffer += ((sortKey, key, row))
-      }
+    sel.foreach(index, cols) { (key, row, sortKey) =>
+      buffer += ((sortKey, key, row))
     }
-
     val bldr = Index.newBuilder[I]
     val pairs = buffer.toArray; pairs.qsortBy(_._1)
     cfor(0)(_ < pairs.length, _ + 1) { i =>
@@ -629,26 +617,27 @@ object Frame {
 
   private def group[I, K, A: Order: ClassTag](index: Index[I], cols: Series[K, UntypedColumn], sel: AxisSelection[K, A]): Index[A] = {
     val bldr = Index.newBuilder[A]
-    val extractor = sel.extractor
-    val colKeys = sel getOrElse cols.index.keys.toList
-    for (p <- extractor.prepare(cols, colKeys)) {
-      index foreach { (_, row) =>
-        extractor.extract(row, p).foreach(bldr.add(_, row))
-      }
+    sel.foreach(index, cols) { (_, row, cell) =>
+      cell.foreach(bldr.add(_, row))
     }
     bldr.result().sorted
   }
 
   private def extract[I, K, A](index: Index[I], cols: Series[K, UntypedColumn], sel: AxisSelection[K, A]): Series[I, A] = {
-    val extractor = sel.extractor
-    val keys = sel getOrElse cols.index.keys.toList
     val bldr = Vector.newBuilder[Cell[A]]
-    extractor.prepare(cols, keys).foreach { p =>
-      index foreach { (key, row) =>
-        bldr += extractor.extract(row, p)
-      }
+    sel.foreach(index, cols) { (_, _, cell) =>
+      bldr += cell
     }
     Series(index.resetIndices, Column.fromCells(bldr.result()))
+  }
+
+  private def filter[I: Order: ClassTag, K](index: Index[I], cols: Series[K, UntypedColumn], sel: AxisSelection[K, Boolean]): Index[I] = {
+    val bldr = Index.newBuilder[I]
+    sel.foreach(index, cols) {
+      case (key, row, Value(true)) => bldr.add(key, row)
+      case _ =>
+    }
+    bldr.result()
   }
 }
 

@@ -34,30 +34,36 @@ trait RowExtractor[A, K, Sz <: Size] {
   type P
   def prepare(cols: Series[K, UntypedColumn], keys: List[K]): Option[P]
   def extract(row: Int, p: P): Cell[A]
-  def map[B](f: A => B): RowExtractor[B, K, Sz] = new MappedRowExtractor(this, f)
+
+  def map[B](f: A => B): RowExtractor[B, K, Sz] =
+    new MappedRowExtractor[A, B, K, Sz](this, {
+      case Value(a) => Value(f(a))
+      case (nonValue: NonValue) => nonValue
+    })
+
+  def filter(p: A => Boolean): RowExtractor[A, K, Sz] =
+    new MappedRowExtractor[A, A, K, Sz](this, {
+      case Value(a) if p(a) => NA
+      case other => other
+    })
+
   def recover(pf: PartialFunction[NonValue, A]): RowExtractor[A, K, Sz] =
     recoverWith { nonValue => pf.andThen(Value(_)).applyOrElse[NonValue, Cell[A]](nonValue, a => a) }
-  def recoverWith(f: NonValue => Cell[A]): RowExtractor[A, K, Sz] = new RecoverableRowExtractor(this, f)
+
+  def recoverWith(f: NonValue => Cell[A]): RowExtractor[A, K, Sz] =
+    new MappedRowExtractor[A, A, K, Sz](this, {
+      case (nonValue: NonValue) => f(nonValue)
+      case value => value
+    })
 }
 
-private final class MappedRowExtractor[A, B, K, Sz <: Size](val e: RowExtractor[A, K, Sz], f: A => B)
+private final class MappedRowExtractor[A, B, K, Sz <: Size](val e: RowExtractor[A, K, Sz], f: Cell[A] => Cell[B])
     extends RowExtractor[B, K, Sz] {
   type P = e.P
   def prepare(cols: Series[K, UntypedColumn], keys: List[K]): Option[P] =
     e.prepare(cols, keys)
   def extract(row: Int, p: P): Cell[B] =
-    e.extract(row, p) map f
-}
-
-private final class RecoverableRowExtractor[A, K, Sz <: Size](val e: RowExtractor[A, K, Sz], f: NonValue => Cell[A])
-    extends RowExtractor[A, K, Sz] {
-  type P = e.P
-  def prepare(cols: Series[K, UntypedColumn], keys: List[K]): Option[P] =
-    e.prepare(cols, keys)
-  def extract(row: Int, p: P): Cell[A] = e.extract(row, p) match {
-    case (nonValue: NonValue) => f(nonValue)
-    case value => value
-  }
+    f(e.extract(row, p))
 }
 
 object RowExtractorLowPriorityImplicits {
