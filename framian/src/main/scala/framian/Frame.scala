@@ -52,7 +52,7 @@ trait Frame[Row, Col] {
    * Transposes the rows and columns of this frame. All rows in this frame
    * becomes the columns of the new frame.
    */
-  def transpose: Frame[Col, Row] = TransposedFrame(this)
+  def transpose: Frame[Col, Row]
 
   /**
    * Returns `true` if this frame is logically empty. A frame is logically
@@ -660,7 +660,7 @@ case class ColOrientedFrame[Row, Col](
 
   def columnsAsSeries: Series[Col, UntypedColumn] = Series(colIndex, cols)
   def rowsAsSeries: Series[Row, UntypedColumn] = Series(rowIndex, Column[UntypedColumn]({ row =>
-    new RowView(col => col, row)
+    RowView(colIndex, cols, row)
   }))
 
   def withColIndex[C1](ci: Index[C1]): Frame[Row, C1] =
@@ -669,22 +669,60 @@ case class ColOrientedFrame[Row, Col](
   def withRowIndex[R1](ri: Index[R1]): Frame[R1, Col] =
     ColOrientedFrame(ri, colIndex, cols)
 
-  private final class RowView(trans: UntypedColumn => UntypedColumn, row: Int) extends UntypedColumn {
-    def cast[B: ColumnTyper]: Column[B] = Column.wrap[B] { colIdx =>
-      for {
-        col <- cols(colIndex.indexAt(colIdx))
-        value <- trans(col).cast[B].apply(row)
-      } yield value
-    }
-    private def transform(f: UntypedColumn => UntypedColumn) = new RowView(trans andThen f, row)
-    def mask(bits: Int => Boolean): UntypedColumn = transform(_.mask(bits))
-    def shift(rows: Int): UntypedColumn = transform(_.shift(rows))
-    def reindex(index: Array[Int]): UntypedColumn = transform(_.reindex(index))
-    def setNA(na: Int): UntypedColumn = transform(_.setNA(na))
-  }
+  def transpose: Frame[Col, Row] = RowOrientedFrame(colIndex, rowIndex, cols)
 }
 
 object ColOrientedFrame {
   def apply[Row, Col](rowIdx: Index[Row], cols: Series[Col, UntypedColumn]): Frame[Row, Col] =
     ColOrientedFrame(rowIdx, cols.index, cols.column)
+}
+
+case class RowOrientedFrame[Row, Col](
+      rowIndex: Index[Row],
+      colIndex: Index[Col],
+      rows: Column[UntypedColumn])
+    extends Frame[Row, Col] {
+
+  def rowsAsSeries: Series[Row, UntypedColumn] = Series(rowIndex, rows)
+  def columnsAsSeries: Series[Col, UntypedColumn] = Series(colIndex, Column[UntypedColumn]({ row =>
+    RowView(colIndex, rows, row)
+  }))
+  
+
+  def withColIndex[C1](ci: Index[C1]): Frame[Row, C1] =
+    RowOrientedFrame(rowIndex, ci, rows)
+
+  def withRowIndex[R1](ri: Index[R1]): Frame[R1, Col] =
+    RowOrientedFrame(ri, colIndex, rows)
+
+  def transpose: Frame[Col, Row] = ColOrientedFrame(colIndex, rowIndex, rows)
+}
+
+object RowOrientedFrame {
+  def apply[Row, Col](colIdx: Index[Col], rows: Series[Row, UntypedColumn]): Frame[Row, Col] =
+    RowOrientedFrame(rows.index, colIdx, rows.column)
+}
+
+private final case class RowView[K](
+      index: Index[K],
+      cols: Column[UntypedColumn],
+      row: Int,
+      trans: UntypedColumn => UntypedColumn = RowView.DefaultTransform
+    ) extends UntypedColumn {
+
+  def cast[B: ColumnTyper]: Column[B] = Column.wrap[B] { colIdx =>
+    for {
+      col <- cols(index.indexAt(colIdx))
+      value <- trans(col).cast[B].apply(row)
+    } yield value
+  }
+  private def transform(f: UntypedColumn => UntypedColumn) = new RowView(index, cols, row, trans andThen f)
+  def mask(bits: Int => Boolean): UntypedColumn = transform(_.mask(bits))
+  def shift(rows: Int): UntypedColumn = transform(_.shift(rows))
+  def reindex(index: Array[Int]): UntypedColumn = transform(_.reindex(index))
+  def setNA(na: Int): UntypedColumn = transform(_.setNA(na))
+}
+
+private object RowView {
+  val DefaultTransform: UntypedColumn => UntypedColumn = a => a
 }
