@@ -44,18 +44,18 @@ class ReducerSpec extends Specification with ScalaCheck {
   }
 
   def classifySparse[K, V](s: Series[K, V])(prop: Prop): Prop =
-    classify(s.values.exists(_.isNonValue), "sparse", "dense")(prop)
+    classify(s.cells.exists(_.isNonValue), "sparse", "dense")(prop)
 
   def classifyMeaningful[K, V](s: Series[K, V])(prop: Prop): Prop =
-    classify(s.values.contains(NM), "meaningless", "meaningful")(prop)
+    classify(s.cells.contains(NM), "meaningless", "meaningful")(prop)
 
   def classifyEmpty[K, V](s: Series[K, V])(prop: Prop): Prop =
-    classify(s.values.exists(_.isValue), "non-empty, empty")(prop)
+    classify(s.cells.exists(_.isValue), "non-empty, empty")(prop)
 
   def reducingMeaninglessSeriesMustEqNM[I: Arbitrary : ClassTag, O: ClassTag](reducer: Reducer[I, O]): Prop =
     forAll(arbitrary[Series[Int, I]]) { series =>
       classifyMeaningful(series) {
-        (series.reduce(reducer) == NM) must_== series.values.contains(NM)
+        (series.reduce(reducer) == NM) must_== series.cells.contains(NM)
       }
     }.set(minTestsOk = 10)
 
@@ -85,7 +85,7 @@ class ReducerSpec extends Specification with ScalaCheck {
       check1[MeaningfulSeries[Int, Int], Prop] { case MeaningfulSeries(series) =>
         classifyEmpty(series) {
           classifySparse(series) {
-            series.reduce(Count) must_== Value(series.values.count(_.isValue))
+            series.reduce(Count) must_== Value(series.cells.count(_.isValue))
           }
         }
       }
@@ -138,10 +138,10 @@ class ReducerSpec extends Specification with ScalaCheck {
         classifySparse(series) {
           classifyMeaningful(series) {
             val reduction = series.reduce(First[Int])
-            if (!series.values.exists(_ != NA)) {
+            if (!series.cells.exists(_ != NA)) {
               reduction must_== NA
             } else {
-              reduction must_== series.values.filter(_ != NA).head
+              reduction must_== series.cells.filter(_ != NA).head
             }
           }
         }
@@ -181,7 +181,7 @@ class ReducerSpec extends Specification with ScalaCheck {
           classifySparse(series) {
             classifyMeaningful(series) {
               forAll(Gen.choose(1, series.size)) { n =>
-                val takeN = series.values.filter(_ != NA).take(n)
+                val takeN = series.cells.filter(_ != NA).take(n)
                 if (takeN.contains(NM)) {
                   // If the firstN contains an NM, the result must be NM
                   series.reduce(FirstN[Int](n)) must_== NM
@@ -243,10 +243,10 @@ class ReducerSpec extends Specification with ScalaCheck {
           classifySparse(series) {
             classifyMeaningful(series) {
               val reduction = series.reduce(Last[Int])
-              if (!series.values.exists(_ != NA)) {
+              if (!series.cells.exists(_ != NA)) {
                 reduction must_== NA
               } else {
-                reduction must_== series.values.filter(_ != NA).last
+                reduction must_== series.cells.filter(_ != NA).last
               }
             }
           }
@@ -288,7 +288,7 @@ class ReducerSpec extends Specification with ScalaCheck {
             classifyMeaningful(series) {
               forAll(Gen.choose(1, series.size)) { n =>
                 val reduction = series.reduce(LastN[Int](n))
-                val takeN = series.values.filter(_ != NA).takeRight(n)
+                val takeN = series.cells.filter(_ != NA).takeRight(n)
                 if (takeN.contains(NM)) {
                   // If the lastN contains an NM, the result must be NM
                   reduction must_== NM
@@ -333,10 +333,10 @@ class ReducerSpec extends Specification with ScalaCheck {
       check1[MeaningfulSeries[Int, Int], Prop] { case MeaningfulSeries(series) =>
         classifyEmpty(series) {
           classifySparse(series) {
-            if (series.denseValues.isEmpty) {
+            if (series.values.isEmpty) {
               series.reduce(Max[Int]) must_== NA
             } else {
-              series.reduce(Max[Int]) must_== Value(series.denseValues.max)
+              series.reduce(Max[Int]) must_== Value(series.values.max)
             }
           }
         }
@@ -372,10 +372,10 @@ class ReducerSpec extends Specification with ScalaCheck {
       check1[MeaningfulSeries[Int, Double], Prop] { case MeaningfulSeries(series) =>
         classifyEmpty(series) {
           classifySparse(series) {
-            if (series.denseValues.isEmpty) {
+            if (series.values.isEmpty) {
               series.reduce(Mean[Double]) must_== NA
             } else {
-              series.reduce(Mean[Double]) must_== Value(series.denseValues.sum / series.denseValues.length)
+              series.reduce(Mean[Double]) must_== Value(series.values.sum / series.values.length)
             }
           }
         }
@@ -410,11 +410,11 @@ class ReducerSpec extends Specification with ScalaCheck {
       check1[MeaningfulSeries[Int, Double], Prop] { case MeaningfulSeries(series) =>
         classifyEmpty(series) {
           classifySparse(series) {
-            val dense = series.denseValues.sorted
+            val dense = series.values.sorted
             if (dense.isEmpty) {
               series.reduce(Median[Double]) must_== NA
             } else {
-              val dense = series.denseValues.sorted
+              val dense = series.values.sorted
               val l = (dense.size - 1) / 2
               val u = dense.size / 2
               val median = (dense(l) + dense(u)) / 2
@@ -453,7 +453,7 @@ class ReducerSpec extends Specification with ScalaCheck {
       check1[MeaningfulSeries[Int, Int], Prop] { case MeaningfulSeries(series) =>
         classifyEmpty(series) {
           classifySparse(series) {
-            if (series.denseValues.isEmpty) {
+            if (series.values.isEmpty) {
               // For empty series, ensure the reducers return the identity value
               {
                 implicit val m = Monoid.additive[Int]
@@ -466,10 +466,10 @@ class ReducerSpec extends Specification with ScalaCheck {
               // For non-empty series, ensure the reducers return the correct value
               {
                 implicit val m = Monoid.additive[Int]
-                series.reduce(MonoidReducer[Int]) must_== Value(series.denseValues.sum)
+                series.reduce(MonoidReducer[Int]) must_== Value(series.values.sum)
               } and {
                 implicit val m = Monoid.multiplicative[Int]
-                series.reduce(MonoidReducer[Int]) must_== Value(series.denseValues.product)
+                series.reduce(MonoidReducer[Int]) must_== Value(series.values.product)
               }
             }
           }
@@ -501,7 +501,7 @@ class ReducerSpec extends Specification with ScalaCheck {
       check1[MeaningfulSeries[Int, Int], Prop] { case MeaningfulSeries(series) =>
         classifyEmpty(series) {
           classifySparse(series) {
-            if (series.denseValues.isEmpty) {
+            if (series.values.isEmpty) {
               // For empty series, ensure the reducers return NA
               {
                 implicit val g = Semigroup.additive[Int]
@@ -514,10 +514,10 @@ class ReducerSpec extends Specification with ScalaCheck {
               // For non-empty series, ensure the reducers return the correct value
               {
                 implicit val m = Semigroup.additive[Int]
-                series.reduce(SemigroupReducer[Int]) must_== Value(series.denseValues.sum)
+                series.reduce(SemigroupReducer[Int]) must_== Value(series.values.sum)
               } and {
                 implicit val m = Semigroup.multiplicative[Int]
-                series.reduce(SemigroupReducer[Int]) must_== Value(series.denseValues.product)
+                series.reduce(SemigroupReducer[Int]) must_== Value(series.values.product)
               }
             }
           }
@@ -568,10 +568,10 @@ class ReducerSpec extends Specification with ScalaCheck {
       check1[MeaningfulSeries[Int, Int], Prop] { case MeaningfulSeries(series) =>
         classifyEmpty(series) {
           classifySparse(series) {
-            if (series.denseValues.isEmpty) {
+            if (series.values.isEmpty) {
               series.reduce(Unique[Int]) must_== Value(Set.empty)
             } else {
-              series.reduce(Unique[Int]) must_== Value(series.denseValues.toSet)
+              series.reduce(Unique[Int]) must_== Value(series.values.toSet)
             }
           }
         }
@@ -614,12 +614,12 @@ class ReducerSpec extends Specification with ScalaCheck {
       check1[MeaningfulSeries[Int, Int], Prop] { case MeaningfulSeries(series) =>
         classifyEmpty(series) {
           classifySparse(series) {
-            if (series.denseValues.isEmpty) {
+            if (series.values.isEmpty) {
               series.reduce(Exists[Int](pAll)) must_== Value(false)
             } else {
-              classify(series.denseValues.exists(pMod10), "exists=true", "exists=false") {
+              classify(series.values.exists(pMod10), "exists=true", "exists=false") {
                 series.reduce(Exists(pNone)) must_== Value(false)
-                series.reduce(Exists(pMod10)) must_== Value(series.denseValues.exists(pMod10))
+                series.reduce(Exists(pMod10)) must_== Value(series.values.exists(pMod10))
               }
             }
           }
@@ -640,29 +640,29 @@ class ReducerSpec extends Specification with ScalaCheck {
     }
 
     "return min value for 0p" in {
-      forAll(arbitrary[MeaningfulSeries[Int, Rational]].suchThat(_.series.denseValues.nonEmpty)) { case MeaningfulSeries(series) =>
+      forAll(arbitrary[MeaningfulSeries[Int, Rational]].suchThat(_.series.values.nonEmpty)) { case MeaningfulSeries(series) =>
         classifySparse(series) {
-          val min = series.denseValues.min
+          val min = series.values.min
           series.reduce(Quantile[Rational](List(0.0))) must_== Value(List(0.0 -> min))
         }
       }
     }
 
     "return max value for 1p" in {
-      forAll(arbitrary[MeaningfulSeries[Int, Rational]].suchThat(_.series.denseValues.nonEmpty)) { case MeaningfulSeries(series) =>
+      forAll(arbitrary[MeaningfulSeries[Int, Rational]].suchThat(_.series.values.nonEmpty)) { case MeaningfulSeries(series) =>
         classifySparse(series) {
-          val max = series.denseValues.max
+          val max = series.values.max
           series.reduce(Quantile[Rational](List(1.0))) must_== Value(List(1.0 -> max))
         }
       }
     }
 
     "never return percentile below min or above max" in {
-      forAll(arbitrary[MeaningfulSeries[Int, Rational]].suchThat(_.series.denseValues.nonEmpty)) { case MeaningfulSeries(series) =>
+      forAll(arbitrary[MeaningfulSeries[Int, Rational]].suchThat(_.series.values.nonEmpty)) { case MeaningfulSeries(series) =>
         forAll(Gen.listOf(Gen.choose(0d, 1d))) { quantiles =>
           classifySparse(series) {
-            val min = series.denseValues.min
-            val max = series.denseValues.max
+            val min = series.values.min
+            val max = series.values.max
             series.reduce(Quantile[Rational](quantiles)).value.get.forall { case (_, q) =>
               q must be >= min
               q must be <= max
@@ -673,12 +673,12 @@ class ReducerSpec extends Specification with ScalaCheck {
     }
 
     "percentiles split at appropriate mark" in {
-      forAll(arbitrary[MeaningfulSeries[Int, Rational]].suchThat(_.series.denseValues.nonEmpty)) { case MeaningfulSeries(series) =>
+      forAll(arbitrary[MeaningfulSeries[Int, Rational]].suchThat(_.series.values.nonEmpty)) { case MeaningfulSeries(series) =>
         forAll(Gen.listOf(Gen.choose(0d, 1d))) { quantiles =>
           series.reduce(Quantile[Rational](quantiles)).value.get.forall { case (p, q) =>
-            val below = math.ceil(series.denseValues.size * p)
-            val above = math.ceil(series.denseValues.size * (1 - p))
-            series.denseValues.count(_ < q) <= below && series.denseValues.count(_ > q) <= above
+            val below = math.ceil(series.values.size * p)
+            val above = math.ceil(series.values.size * (1 - p))
+            series.values.count(_ < q) <= below && series.values.count(_ > q) <= above
           }
         }
       }
@@ -738,16 +738,16 @@ class ReducerSpec extends Specification with ScalaCheck {
     "return false for a series that contains NM" in {
       forAll(arbitrary[Series[Int, Int]]) { series =>
         classifyMeaningful(series) {
-          series.reduce(ForAll[Int](pTrue)) must_== Value(!series.values.contains(NM))
+          series.reduce(ForAll[Int](pTrue)) must_== Value(!series.cells.contains(NM))
         }
       }
     }
 
     "evaluate the predicate for a series" in {
-      forAll(arbitrary[MeaningfulSeries[Int, Int]].suchThat(_.series.denseValues.nonEmpty)) { case MeaningfulSeries(series) =>
+      forAll(arbitrary[MeaningfulSeries[Int, Int]].suchThat(_.series.values.nonEmpty)) { case MeaningfulSeries(series) =>
         classifySparse(series) {
-          classify(series.denseValues.min > 0, "forall=true", "forall=false") {
-            series.reduce(ForAll[Int](pPositive)) must_== Value(series.denseValues.min > 0)
+          classify(series.values.min > 0, "forall=true", "forall=false") {
+            series.reduce(ForAll[Int](pPositive)) must_== Value(series.values.min > 0)
           }
         }
       }

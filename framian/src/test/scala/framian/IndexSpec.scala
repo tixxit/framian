@@ -75,6 +75,16 @@ class IndexSpec extends Specification {
       val idx = Index.fromKeys("c", "a", "b").sorted
       idx.toList must_== List("a" -> 1, "b" -> 2, "c" -> 0)
     }
+
+    "sorted is a stable sort" in {
+      val idx0 = Index.unordered(Array("c", "b", "a", "c", "b", "a")).sorted
+      val idx1 = Index.unordered(Array("a", "a", "b", "b", "c", "c")).sorted
+      val idx2 = Index.unordered(Array("c", "c", "b", "b", "a", "a")).sorted
+
+      idx0.toList must_== List("a" -> 2, "a" -> 5, "b" -> 1, "b" -> 4, "c" -> 0, "c" -> 3)
+      idx1.toList must_== List("a" -> 0, "a" -> 1, "b" -> 2, "b" -> 3, "c" -> 4, "c" -> 5)
+      idx2.toList must_== List("a" -> 4, "a" -> 5, "b" -> 2, "b" -> 3, "c" -> 0, "c" -> 1)
+    }
   }
 
   "Index.Grouper" should {

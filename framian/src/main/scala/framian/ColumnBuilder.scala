@@ -60,6 +60,12 @@ final class ColumnBuilder[@spec(Int,Long,Float,Double) V: ClassTag] extends muta
     nmValues.clear()
   }
 
+  override def sizeHint(size: Int): Unit = {
+    bldr.sizeHint(size)
+    naValues.sizeHint(size)
+    nmValues.sizeHint(size)
+  }
+
   def result(): Column[V] = new DenseColumn(naValues.toImmutable, nmValues.toImmutable, bldr.result())
 }
 
