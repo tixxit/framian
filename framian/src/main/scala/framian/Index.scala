@@ -204,18 +204,39 @@ object Index {
     val keys = ArrayBuilder.make[K]()
     val indices = ArrayBuilder.make[Int]()
 
+    var isOrdered = true
+    var isNonEmpty = false
+    var prev: K = _
+
     def +=(elem: (K, Int)) = {
-      keys += elem._1
+      val k = elem._1
+
+      if (isOrdered && isNonEmpty && prev > k) {
+        isOrdered = false
+      }
+
+      keys += k
       indices += elem._2
+
+      prev = k
+      isNonEmpty = true
+
       this
     }
 
     def clear(): Unit = {
+      isOrdered = true
+      isNonEmpty = false
       keys.clear()
       indices.clear()
     }
 
-    def result(): Index[K] = Index.unordered(keys.result(), indices.result())
+    def result(): Index[K] =
+      if (isOrdered) {
+        Index.ordered(keys.result(), indices.result())
+      } else {
+        Index.unordered(keys.result(), indices.result())
+      }
   }
 
   @tailrec
