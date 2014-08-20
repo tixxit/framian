@@ -462,16 +462,6 @@ trait Frame[Row, Col] {
     them.foldLeft(this)(Frame.joinSeries)
 }
 
-case class TransposedFrame[Row, Col](frame: Frame[Col, Row]) extends Frame[Row, Col] {
-  override def transpose: Frame[Col, Row] = frame
-  def rowIndex: Index[Row] = frame.colIndex
-  def colIndex: Index[Col] = frame.rowIndex
-  def columnsAsSeries: Series[Col, UntypedColumn] = frame.rowsAsSeries
-  def rowsAsSeries: Series[Row, UntypedColumn] = frame.columnsAsSeries
-  def withColIndex[C1](ci: Index[C1]): Frame[Row, C1] = TransposedFrame(frame.withRowIndex(ci))
-  def withRowIndex[R1](ri: Index[R1]): Frame[R1, Col] = TransposedFrame(frame.withColIndex(ri))
-}
-
 object Frame {
 
   /**
