@@ -43,6 +43,8 @@ trait AxisSelection[K, A] {
     }
   }
 
+  def mapCell[B](f: Cell[A] => Cell[B]): AxisSelection[K, B]
+
   def map[B](f: A => B): AxisSelection[K, B]
   def filter(f: A => Boolean): AxisSelection[K, A]
   def recoverWith(pf: PartialFunction[NonValue, Cell[A]]): AxisSelection[K, A]
@@ -52,20 +54,49 @@ trait AxisSelection[K, A] {
 trait AxisSelectionLike[K, A, This[K, A] <: AxisSelectionLike[K, A, This]] extends AxisSelection[K, A] {
   def mapCell[B](f: Cell[A] => Cell[B]): This[K, B]
   def orElse(that: This[K, A]): This[K, A]
+  def flatMap[B](f: A => This[K, B]): This[K, B]
+  def zipWith[B, C](that: This[K, B])(f: (A, B) => C): This[K, C]
 
   def map[B](f: A => B): This[K, B] = mapCell(_ map f)
   def filter(p: A => Boolean): This[K, A] = mapCell(_ filter p)
   def recoverWith(pf: PartialFunction[NonValue, Cell[A]]): This[K, A] = mapCell(_ recoverWith pf)
   def recover(pf: PartialFunction[NonValue, A]): This[K, A] = mapCell(_ recover pf)
+  def zip[B](that: This[K, B]): This[K, (A, B)] = zipWith(that)(_ -> _)
 }
 
-trait AxisSelectionCompanion[AxisSelection[K, A] <: AxisSelectionLike[K, A, AxisSelection]] {
-  sealed trait SizedAxisSelection[K, Sz <: Size, A] extends AxisSelectionLike[K, A, AxisSelection] { self: AxisSelection[K, A] =>
+trait AxisSelectionCompanion[Sel[K, A] <: AxisSelectionLike[K, A, Sel]] {
+
+  type All[K, A] <: AllAxisSelection[K, A] with Sel[K, A]
+  def All: AllCompanion
+  trait AllCompanion {
+    def apply[K, A](extractor: RowExtractor[A, K, Variable]): All[K, A]
+  }
+
+  type Pick[K, S <: Size, A] <: PickAxisSelection[K, S, A] with Sel[K, A]
+  def Pick: PickCompanion
+  trait PickCompanion {
+    def apply[K, S <: Size, A](keys: List[K], extractor: RowExtractor[A, K, S]): Pick[K, S, A]
+  }
+
+  type Wrapped[K, A] <: WrappedAxisSelection[K, A] with Sel[K, A]
+  def Wrapped: WrappedCompanion
+  trait WrappedCompanion {
+    def apply[K, A](sel: AxisSelection[K, A]): Wrapped[K, A]
+  }
+
+  sealed trait Bridge[K, A] extends AxisSelectionLike[K, A, Sel] { self: Sel[K, A] =>
+    def orElse(that: Sel[K, A]): Sel[K, A] =
+      Wrapped(ops.OrElse[K, A](this, that))
+    def flatMap[B](f: A => Sel[K, B]): Sel[K, B] =
+      Wrapped(ops.Bind[K, A, B](this, f))
+    def zipWith[B, C](that: Sel[K, B])(f: (A, B) => C): Sel[K, C] =
+      Wrapped(ops.Zipped[K, A, B, C](this, that, (a, b) => a.zipMap(b)(f)))
+  }
+
+  sealed trait SizedAxisSelection[K, Sz <: Size, A] extends Bridge[K, A] { self: Sel[K, A] =>
     val extractor: RowExtractor[A, K, Sz]
 
     def getOrElse(all: => List[K]): List[K] = fold(all)(keys => keys)
-
-    def orElse(that: AxisSelection[K, A]): AxisSelection[K, A] = OrElse[K, A, A](this, that, identity)
 
     def extractorFor(cols: Series[K, UntypedColumn]): (Int => Cell[A]) = {
       val colKeys = getOrElse(cols.index.keys.toList)
@@ -85,45 +116,27 @@ trait AxisSelectionCompanion[AxisSelection[K, A] <: AxisSelectionLike[K, A, Axis
     }
 
     def fold[B](all: => B)(f: List[K] => B): B
-    def as[B](implicit extractor0: RowExtractor[B, K, Sz]): AxisSelection[K, B]
+    def as[B](implicit extractor0: RowExtractor[B, K, Sz]): Sel[K, B]
   }
 
-  type All[K, A] <: AllAxisSelection[K, A] with AxisSelection[K, A]
-  def All: AllCompanion
-  trait AllCompanion {
-    def apply[K, A](extractor: RowExtractor[A, K, Variable]): All[K, A]
-  }
-
-  type Pick[K, S <: Size, A] <: PickAxisSelection[K, S, A] with AxisSelection[K, A]
-  def Pick: PickCompanion
-  trait PickCompanion {
-    def apply[K, S <: Size, A](keys: List[K], extractor: RowExtractor[A, K, S]): Pick[K, S, A]
-  }
-
-  type OrElse[K, A, B] <: OrElseAxisSelection[K, A, B] with AxisSelection[K, B]
-  def OrElse: OrElseCompanion
-  trait OrElseCompanion {
-    def apply[K, A, B](fst: AxisSelection[K, A], snd: AxisSelection[K, A], f: Cell[A] => Cell[B]): OrElse[K, A, B]
-  }
-
-  trait AllAxisSelection[K, A] extends SizedAxisSelection[K, Variable, A] { self: AxisSelection[K, A] =>
+  trait AllAxisSelection[K, A] extends SizedAxisSelection[K, Variable, A] { self: Sel[K, A] =>
     val extractor: RowExtractor[A, K, Variable]
     def fold[B](all: => B)(f: List[K] => B): B = all
 
     def mapCell[B](f: Cell[A] => Cell[B]): All[K, B] =
       All(extractor mapCell f)
 
-    def as[B](implicit extractor0: RowExtractor[B, K, Variable]): AxisSelection[K, B] =
+    def as[B](implicit extractor0: RowExtractor[B, K, Variable]): Sel[K, B] =
       All(extractor0)
-    def asListOf[B](implicit extractor0: RowExtractor[B, K, Fixed[Nat._1]]): AxisSelection[K, List[Cell[B]]] =
+    def asListOf[B](implicit extractor0: RowExtractor[B, K, Fixed[Nat._1]]): Sel[K, List[Cell[B]]] =
       as(RowExtractor.collectionOf)
-    def asVectorOf[B](implicit extractor0: RowExtractor[B, K, Fixed[Nat._1]]): AxisSelection[K, Vector[Cell[B]]] =
+    def asVectorOf[B](implicit extractor0: RowExtractor[B, K, Fixed[Nat._1]]): Sel[K, Vector[Cell[B]]] =
       as(RowExtractor.collectionOf)
-    def asArrayOf[B: ClassTag](implicit extractor0: RowExtractor[B, K, Fixed[Nat._1]]): AxisSelection[K, Array[B]] =
+    def asArrayOf[B: ClassTag](implicit extractor0: RowExtractor[B, K, Fixed[Nat._1]]): Sel[K, Array[B]] =
       as(RowExtractor.denseCollectionOf)
   }
 
-  trait PickAxisSelection[K, S <: Size, A] extends SizedAxisSelection[K, S, A] { self: AxisSelection[K, A] =>
+  trait PickAxisSelection[K, S <: Size, A] extends SizedAxisSelection[K, S, A] { self: Sel[K, A] =>
     val keys: List[K]
     val extractor: RowExtractor[A, K, S]
 
@@ -134,32 +147,72 @@ trait AxisSelectionCompanion[AxisSelection[K, A] <: AxisSelectionLike[K, A, Axis
 
     def variable: Pick[K, Variable, A] = this.asInstanceOf[Pick[K, Variable, A]]
 
-    def as[B](implicit extractor0: RowExtractor[B, K, S]): AxisSelection[K, B] =
+    def as[B](implicit extractor0: RowExtractor[B, K, S]): Sel[K, B] =
       Pick(keys, extractor0)
-    def asListOf[B](implicit extractor0: RowExtractor[B, K, Fixed[Nat._1]]): AxisSelection[K, List[Cell[B]]] =
+    def asListOf[B](implicit extractor0: RowExtractor[B, K, Fixed[Nat._1]]): Sel[K, List[Cell[B]]] =
       variable.as(RowExtractor.collectionOf)
-    def asVectorOf[B](implicit extractor0: RowExtractor[B, K, Fixed[Nat._1]]): AxisSelection[K, Vector[Cell[B]]] =
+    def asVectorOf[B](implicit extractor0: RowExtractor[B, K, Fixed[Nat._1]]): Sel[K, Vector[Cell[B]]] =
       variable.as(RowExtractor.collectionOf)
-    def asArrayOf[B: ClassTag](implicit extractor0: RowExtractor[B, K, Fixed[Nat._1]]): AxisSelection[K, Array[B]] =
+    def asArrayOf[B: ClassTag](implicit extractor0: RowExtractor[B, K, Fixed[Nat._1]]): Sel[K, Array[B]] =
       variable.as(RowExtractor.denseCollectionOf)
   }
 
-  trait OrElseAxisSelection[K, I, A] extends AxisSelectionLike[K, A, AxisSelection] { self: AxisSelection[K, A] =>
-    def fst: AxisSelection[K, I]
-    def snd: AxisSelection[K, I]
-    def k: Cell[I] => Cell[A]
+  trait WrappedAxisSelection[K, A] extends Bridge[K, A] { self: Sel[K, A] =>
+    def sel: AxisSelection[K, A]
 
-    def orElse(that: AxisSelection[K, A]): AxisSelection[K, A] = OrElse[K, A, A](this, that, identity)
+    def mapCell[B](f: Cell[A] => Cell[B]): Sel[K, B] =
+      Wrapped(sel.mapCell(f))
 
-    def extractorFor(cols: Series[K, UntypedColumn]): (Int => Cell[A]) = {
-      val get1 = fst.extractorFor(cols)
-      val get2 = snd.extractorFor(cols)
+    def extractorFor(cols: Series[K, UntypedColumn]): (Int => Cell[A]) =
+      sel.extractorFor(cols)
 
-      { row => k(get1(row) orElse get2(row)) }
+    override def foreach[I, U](index: Index[I], cols: Series[K, UntypedColumn])(f: (I, Int, Cell[A]) => U): Unit =
+      sel.foreach(index, cols)(f)
+  }
+
+  object ops {
+    trait Op[K, A] extends AxisSelection[K, A] {
+      def mapCell[B](f: Cell[A] => Cell[B]): AxisSelection[K, B]
+
+      def map[B](f: A => B): AxisSelection[K, B] = mapCell(_ map f)
+      def filter(p: A => Boolean): AxisSelection[K, A] = mapCell(_ filter p)
+      def recoverWith(pf: PartialFunction[NonValue, Cell[A]]): AxisSelection[K, A] = mapCell(_ recoverWith pf)
+      def recover(pf: PartialFunction[NonValue, A]): AxisSelection[K, A] = mapCell(_ recover pf)
     }
 
-    def mapCell[B](f: Cell[A] => Cell[B]): OrElse[K, I, B] =
-      OrElse(fst, snd, k andThen f)
+    case class Zipped[K, A, B, C](
+      fst: AxisSelection[K, A],
+      snd: AxisSelection[K, B],
+      combine: (Cell[A], => Cell[B]) => Cell[C]
+    ) extends Op[K, C] {
+
+      def extractorFor(cols: Series[K, UntypedColumn]): (Int => Cell[C]) = {
+        val get1 = fst.extractorFor(cols)
+        val get2 = snd.extractorFor(cols)
+
+        { row => combine(get1(row), get2(row)) }
+      }
+
+      def mapCell[D](f: Cell[C] => Cell[D]): AxisSelection[K, D] =
+        Zipped[K, A, B, D](fst, snd, { (a, b) => f(combine(a, b)) })
+    }
+
+    def OrElse[K, A](fst: AxisSelection[K, A], snd: AxisSelection[K, A]): AxisSelection[K, A] =
+      Zipped[K, A, A, A](fst, snd, _ orElse _)
+
+    case class Bind[K, A, B](
+      sel: AxisSelection[K, A],
+      k: A => AxisSelection[K, B]
+    ) extends Op[K, B] {
+      def extractorFor(cols: Series[K, UntypedColumn]): (Int => Cell[B]) = {
+        val get = sel.extractorFor(cols)
+
+        { row => get(row).map(k).flatMap(_.extractorFor(cols)(row)) }
+      }
+
+      def mapCell[C](f: Cell[B] => Cell[C]): AxisSelection[K, C] =
+        Bind[K, A, C](sel, { a => k(a).mapCell(f) })
+    }
   }
 
   import Nat._
