@@ -25,6 +25,7 @@ sealed trait Rows[K, A] extends AxisSelectionLike[K, A, Rows] {
   def toCols: Cols[K, A] = this match {
     case Rows.All(e) => Cols.All(e)
     case Rows.Pick(keys, e) => Cols.Pick(keys, e)
+    case Rows.OrElse(fst, snd, f) => Cols.OrElse(fst.toCols, snd.toCols, f)
   }
 }
 
@@ -34,4 +35,7 @@ object Rows extends AxisSelectionCompanion[Rows] {
 
   case class Pick[K, S <: Size, A](keys: List[K], extractor: RowExtractor[A, K, S]) extends Rows[K, A] with PickAxisSelection[K, S, A]
   object Pick extends PickCompanion
+
+  case class OrElse[K, A, B](fst: Rows[K, A], snd: Rows[K, A], k: Cell[A] => Cell[B]) extends Rows[K, B] with OrElseAxisSelection[K, A, B]
+  object OrElse extends OrElseCompanion
 }

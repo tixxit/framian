@@ -35,26 +35,20 @@ trait RowExtractor[A, K, Sz <: Size] {
   def prepare(cols: Series[K, UntypedColumn], keys: List[K]): Option[P]
   def extract(row: Int, p: P): Cell[A]
 
+  def mapCell[B](f: Cell[A] => Cell[B]): RowExtractor[B, K, Sz] =
+    new MappedRowExtractor[A, B, K, Sz](this, f)
+
   def map[B](f: A => B): RowExtractor[B, K, Sz] =
-    new MappedRowExtractor[A, B, K, Sz](this, {
-      case Value(a) => Value(f(a))
-      case (nonValue: NonValue) => nonValue
-    })
+    mapCell(_ map f)
 
   def filter(p: A => Boolean): RowExtractor[A, K, Sz] =
-    new MappedRowExtractor[A, A, K, Sz](this, {
-      case Value(a) if p(a) => NA
-      case other => other
-    })
+    mapCell(_ filter p)
 
   def recover(pf: PartialFunction[NonValue, A]): RowExtractor[A, K, Sz] =
-    recoverWith { nonValue => pf.andThen(Value(_)).applyOrElse[NonValue, Cell[A]](nonValue, a => a) }
+    mapCell(_ recover pf)
 
-  def recoverWith(f: NonValue => Cell[A]): RowExtractor[A, K, Sz] =
-    new MappedRowExtractor[A, A, K, Sz](this, {
-      case (nonValue: NonValue) => f(nonValue)
-      case value => value
-    })
+  def recoverWith(pf: PartialFunction[NonValue, Cell[A]]): RowExtractor[A, K, Sz] =
+    mapCell(_ recoverWith pf)
 }
 
 private final class MappedRowExtractor[A, B, K, Sz <: Size](val e: RowExtractor[A, K, Sz], f: Cell[A] => Cell[B])

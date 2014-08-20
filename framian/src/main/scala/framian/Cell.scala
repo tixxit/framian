@@ -158,6 +158,28 @@ sealed trait Cell[+A] {
   @inline final def filterNot(p: A => Boolean): Cell[A] =
     if (isNonValue || !p(this.get)) this else NA
 
+  /** If this cell is a [[NonValue]] and `pf` is defined for it, then this
+    * will return `Value(pf(this))`, otherwise it will return this cell as-is.
+    *
+    * @param pf the partial function to map the non-value.
+    * @see [[recoverWith]]
+    */
+  final def recover[A0 >: A](pf: PartialFunction[NonValue, A0]): Cell[A0] = this match {
+    case (nonValue: NonValue) if pf isDefinedAt nonValue => Value(pf(nonValue))
+    case value => value
+  }
+
+  /** If this cell is a [[NonValue]] and `pf` is defined for it, then this
+    * will return `pf(this)`, otherwise it will return this cell as-is.
+    *
+    * @param pf the partial function to map the non-value.
+    * @see [[recover]]
+    */
+  final def recoverWith[A0 >: A](pf: PartialFunction[NonValue, Cell[A0]]): Cell[A0] = this match {
+    case (nonValue: NonValue) if pf isDefinedAt nonValue => pf(nonValue)
+    case value => value
+  }
+
   /** Returns true if this [[Cell]]'s value is available and
     * meaningful ''and'' the predicate `p` returns true when applied
     * to that value. Otherwise, returns false.
