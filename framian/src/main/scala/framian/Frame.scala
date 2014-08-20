@@ -544,7 +544,7 @@ object Frame {
 
   /**
    * Given an HList of `(Col, Series[Row, V])` pairs, this will build a
-   * `Frame[Row, Col]`, outer-joining all of the series together as the columns
+   * `Frame[Row, Col]`, outer-merging all of the series together as the columns
    * of the frame.
    *
    * The use of `Generic.Aux` allows us to use auto-tupling (urgh) to allow
@@ -561,7 +561,7 @@ object Frame {
 
   /**
    * Given an HList of `(Row, Series[Col, V])` pairs, this will build a
-   * `Frame[Row, Col]`, outer-joining all of the series together as the rows
+   * `Frame[Row, Col]`, outer-merging all of the series together as the rows
    * of the frame.
    *
    * The use of `Generic.Aux` allows us to use auto-tupling (urgh) to allow
