@@ -251,34 +251,42 @@ trait Frame[Row, Col] {
 
   /**
    * Maps each row to a value using `rows`, then maps the result with the
-   * column key using `f` and stores it in a new row `to`.
+   * column key using `f` and stores it in the row `to`. If `to` doesn't exist
+   * then a new row will be appended onto the frame, otherwise the row(s) with
+   * key `to` will be removed first.
    */
   def mapWithIndex[A, B: ClassTag](rows: Rows[Row, A], to: Row)(f: (Col, A) => B): Frame[Row, Col] =
     transpose.mapWithIndex(rows.toCols, to)(f).transpose
 
   /**
    * Maps each column to a value using `cols`, then maps the result with the row
-   * key using `f` and stores it in a new column `to`.
+   * key using `f` and stores it in the column `to`. If `to` doesn't exist
+   * then a new column will be appended onto the frame, otherwise the
+   * columns(s) with key `to` will be removed first.
    */
   def mapWithIndex[A, B: ClassTag](cols: Cols[Col, A], to: Col)(f: (Row, A) => B): Frame[Row, Col] =
-    merge(to, Frame.extract(rowIndex, columnsAsSeries, cols).mapValuesWithKeys(f))(Merge.Outer)
+    dropColumns(to).merge(to, Frame.extract(rowIndex, columnsAsSeries, cols).mapValuesWithKeys(f))(Merge.Outer)
 
   /**
    * Extracts a row from this frame using [[Rows]], then merges it back into
-   * this frame as the row `to`.
+   * this frame as the row `to`. If `to` doesn't exist then a new row will be
+   * appended onto the frame, otherwise the row(s) with key `to` will be
+   * removed first.
    */
   def map[A, B: ClassTag](rows: Rows[Row, A], to: Row)(f: A => B): Frame[Row, Col] =
     transpose.map(rows.toCols, to)(f).transpose
 
   /**
    * Extracts a column from this frame using [[Cols]], then merges it back into
-   * this frame as the column `to`.
+   * this frame as the column `to`. If `to` doesn't exist then a new column
+   * will be appended onto the frame, otherwise the columns(s) with key `to`
+   * will be removed first.
    *
    * This is equivalent to, but may be more efficient than
    * `frame.merge(to, frame.get(cols))(Merge.Outer)`.
    */
   def map[A, B: ClassTag](cols: Cols[Col, A], to: Col)(f: A => B): Frame[Row, Col] =
-    merge(to, Frame.extract(rowIndex, columnsAsSeries, cols.map(f)))(Merge.Outer)
+    dropColumns(to).merge(to, Frame.extract(rowIndex, columnsAsSeries, cols.map(f)))(Merge.Outer)
 
   /**
    * Filter this frame using `cols` extract values and the predicate `p`. If,
