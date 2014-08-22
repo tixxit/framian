@@ -444,4 +444,80 @@ class FrameSpec extends Specification {
         Series(1 -> ("c", 3))
     }
   }
+
+  "map" should {
+    "append column when to is new" in {
+      f0.map(Cols(1).as[Int], to = 2)(_ + 2) must_== Frame.fromRows(
+        "a" :: 1 :: 3 :: HNil,
+        "b" :: 2 :: 4 :: HNil,
+        "c" :: 3 :: 5 :: HNil)
+    }
+
+    "replace column when `to` exists" in {
+      f0.map(Cols(1).as[Int], to = 1)(_ + 2) must_== Frame.fromRows(
+        "a" :: 3 :: HNil,
+        "b" :: 4 :: HNil,
+        "c" :: 5 :: HNil)
+    }
+  }
+
+  "reduce" should {
+    "reduce rows" in {
+      f0.reduce(Cols(1).as[Double], 2)(reduce.Mean) must_==
+        f0.merge(2, Series(0 -> 2D, 1 -> 2D, 2 -> 2D))(Merge.Outer)
+    }
+
+    "reduce cols" in {
+      f0.transpose.reduce(Rows(1).as[Double], 2)(reduce.Mean) must_==
+        f0.merge(2, Series(0 -> 2D, 1 -> 2D, 2 -> 2D))(Merge.Outer).transpose
+    }
+
+    "replace column when `to` exists" in {
+      f0.reduce(Cols(1).as[Int], to = 1)(reduce.Sum) must_== Frame.fromRows(
+        "a" :: 6 :: HNil,
+        "b" :: 6 :: HNil,
+        "c" :: 6 :: HNil)
+
+      f0.transpose.reduce(Rows(1).as[Int], to = 1)(reduce.Sum) must_== Frame.fromColumns(
+        "a" :: 6 :: HNil,
+        "b" :: 6 :: HNil,
+        "c" :: 6 :: HNil)
+    }
+
+    "respect NMs in reducer" in {
+      val f = Series.fromCells(1 -> Value(1), 2 -> NM, 3 -> Value(3)).toFrame("x")
+      f.reduce(Cols("x").as[Int], "y")(reduce.Sum) must_==
+        f.merge("y", Series(1 -> NM, 2 -> NM, 3 -> NM))(Merge.Outer)
+    }
+
+    "respect NAs in reducer" in {
+      val f = Series.fromCells[Int, Int](1 -> NA, 2 -> NA).toFrame("x")
+      f.reduce(Cols("x").as[Int], "y")(reduce.Max) must_==
+        f.merge("y", Series(1 -> NA, 2 -> NA))(Merge.Outer)
+    }
+  }
+
+  "reduceByKey" should {
+    val f = Frame.mergeColumns(
+      "x" -> Series.fromCells(0 -> Value(1), 2 -> Value(5), 2 -> Value(6)),
+      "y" -> Series.fromCells(0 -> Value(2), 0 -> Value(3), 1 -> NM, 1 -> Value(2)))
+
+    "reduce rows/cols" in {
+      f.reduceByKey(Cols("x").as[Int], "z")(reduce.Sum) must_==
+        f.join("z", Series.fromCells(0 -> Value(1), 1 -> Value(0), 2 -> Value(11)))(Join.Outer)
+
+      f.transpose.reduceByKey(Rows("x").as[Int], "z")(reduce.Sum) must_==
+        f.join("z", Series.fromCells(0 -> Value(1), 1 -> Value(0), 2 -> Value(11)))(Join.Outer).transpose
+    }
+
+    "respect NMs from reducer" in {
+      f.reduceByKey(Cols("y").as[Int], "z")(reduce.Sum) must_==
+        f.join("z", Series.fromCells(0 -> Value(5), 1 -> NM, 2 -> Value(0)))(Join.Outer)
+    }
+
+    "respect NAs from reducer" in {
+      f.reduceByKey(Cols("x").as[Int], "z")(reduce.Max) must_==
+        f.join("z", Series.fromCells(0 -> Value(1), 1 -> NA, 2 -> Value(6)))(Join.Outer)
+    }
+  }
 }

@@ -357,8 +357,7 @@ trait Frame[Row, Col] {
    * }}}
    */
   def reduce[A, B: ClassTag](cols: Cols[Col, A], to: Col)(reducer: Reducer[A, B]): Frame[Row, Col] = {
-    val series = get(cols)
-    val cell = series.reduce(reducer)
+    val cell = get(cols).reduce(reducer)
     val result = Series(rowIndex, Column.wrap(_ => cell))
     dropColumns(to).merge(to, result)(Merge.Outer)
   }
@@ -380,6 +379,24 @@ trait Frame[Row, Col] {
    */
   def reduce[A, B: ClassTag](rows: Rows[Row, A], to: Row)(reducer: Reducer[A, B]): Frame[Row, Col] =
     transpose.reduce(rows.toCols, to)(reducer).transpose
+
+  /**
+   * Reduces this frame, by row key groups, using `cols` and joins the result
+   * back into the frame. Within each row key group, the reduced result is
+   * duplicated for each row. If `to` exists it will be replaced, otherwise it
+   * will be added to the end of the columns.
+   */
+  def reduceByKey[A, B: ClassTag](cols: Cols[Col, A], to: Col)(reducer: Reducer[A, B]): Frame[Row, Col] =
+    dropColumns(to).join(to, get(cols).reduceByKey(reducer))(Join.Outer)
+
+  /**
+   * Reduces this frame, by column key groups, using `rows` and joins the
+   * result back into the frame. Within each column key group, the reduced
+   * result is duplicated for each column. If `to` exists it will be replaced,
+   * otherwise it will be added to the end of the rows.
+   */
+  def reduceByKey[A, B: ClassTag](rows: Rows[Row, A], to: Row)(reducer: Reducer[A, B]): Frame[Row, Col] =
+    transpose.reduceByKey(rows.toCols, to)(reducer).transpose
 
   override def hashCode: Int = {
     val values = columnsAsSeries.iterator flatMap { case (colKey, cell) =>
