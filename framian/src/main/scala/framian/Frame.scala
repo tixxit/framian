@@ -37,7 +37,10 @@ import framian.reduce.Reducer
 import Index.GenericJoin.Skip
 
 trait Frame[Row, Col] {
+  /** The row keys' index. */
   def rowIndex: Index[Row]
+
+  /** The column keys' index. */
   def colIndex: Index[Col]
 
   implicit def rowClassTag = rowIndex.classTag
@@ -45,7 +48,10 @@ trait Frame[Row, Col] {
   implicit def colClassTag = colIndex.classTag
   implicit def colOrder = colIndex.order
 
+  /** A column-oriented view of this frame. Largely used internally. */
   def columnsAsSeries: Series[Col, UntypedColumn]
+
+  /** A row-oriented view of this frame. Largely used internally. */
   def rowsAsSeries: Series[Row, UntypedColumn]
 
   /**
@@ -65,13 +71,6 @@ trait Frame[Row, Col] {
     columnsAsSeries.iterator.collectFirst {
       case (id, Value(column)) if Series(rowIndex, column.cast[Any]).hasValues => id
     }.isEmpty
-
-  def reduce[A, B: ClassTag](cols: Cols[Col, A], to: Col)(reducer: Reducer[A, B]): Frame[Row, Col] = {
-    val series = get(cols)
-    val cell = series.reduce(reducer)
-    val result = Series(rowIndex, Column.wrap(_ => cell))
-    this.merge(to, result)(Merge.Outer)
-  }
 
   private def columnsAs[V: ColumnTyper]: Vector[(Col, Series[Row, V])] =
     columnsAsSeries.denseIterator.map { case (key, col) =>
@@ -209,15 +208,17 @@ trait Frame[Row, Col] {
 
   def column[T: ColumnTyper](c: Col): Series[Row, T] = get(Cols(c).as[T])
 
+  def getRow(key: Row): Option[Rec[Col]] = rowIndex.get(key) map Rec.fromRow(this)
+
+  def getCol(key: Col): Option[Rec[Row]] = colIndex.get(key) map Rec.fromCol(this)
+
+  // Cols/Rows based ops.
+
   def get[A](rows: Rows[Row, A]): Series[Col, A] =
     Frame.extract(colIndex, rowsAsSeries, rows)
 
   def get[A](cols: Cols[Col, A]): Series[Row, A] =
     Frame.extract(rowIndex, columnsAsSeries, cols)
-
-  def getRow(key: Row): Option[Rec[Col]] = rowIndex.get(key) map Rec.fromRow(this)
-
-  def getCol(key: Col): Option[Rec[Row]] = colIndex.get(key) map Rec.fromCol(this)
 
   /**
    * Re-indexes the frame using the extractor `cols` to define the new row
@@ -339,6 +340,46 @@ trait Frame[Row, Col] {
    */
   def group[A: Order: ClassTag](rows: Rows[Row, A]): Frame[Row, A] =
     withColIndex(Frame.group(colIndex, rowsAsSeries, rows))
+
+  /**
+   * Reduces this frame using `cols` and joins the result back into the frame.
+   * This doesn't remove any rows from the frame; the reduced result is
+   * duplicated for each row. This will replace the `to` column if it exists,
+   * otherwise it creates a new column `to` at the end.
+   *
+   * {{{
+   * scala&gt; val f = Frame.fromRows("a" :: 2 :: HNil, "b" :: 3 :: HNil)
+   * scala&gt; f.reduce(Cols(1).as[Int], 1)(reduce.Sum)
+   * res0: Frame[Int, Int] =
+   *     0 . 1
+   * 0 : a | 5
+   * 1 : b | 5
+   * }}}
+   */
+  def reduce[A, B: ClassTag](cols: Cols[Col, A], to: Col)(reducer: Reducer[A, B]): Frame[Row, Col] = {
+    val series = get(cols)
+    val cell = series.reduce(reducer)
+    val result = Series(rowIndex, Column.wrap(_ => cell))
+    dropColumns(to).merge(to, result)(Merge.Outer)
+  }
+
+  /**
+   * Reduces this frame using `rows` and joins the result back into the frame.
+   * This doesn't remove any columns from the frame; the reduced result is
+   * duplicated for each column. This will replace the `to` row if it exists,
+   * otherwise it creates a new row `to` at the end.
+   *
+   * {{{
+   * scala&gt; val f = Frame.fromColumns("a" :: 2 :: HNil, "b" :: 3 :: HNil)
+   * scala&gt; f.reduce(Cols(1).as[Int], 1)(reduce.Sum)
+   * res0: framian.Frame[Int,Int] =
+   *     0 . 1
+   * 0 : a | b
+   * 1 : 5 | 5
+   * }}}
+   */
+  def reduce[A, B: ClassTag](rows: Rows[Row, A], to: Row)(reducer: Reducer[A, B]): Frame[Row, Col] =
+    transpose.reduce(rows.toCols, to)(reducer).transpose
 
   override def hashCode: Int = {
     val values = columnsAsSeries.iterator flatMap { case (colKey, cell) =>
