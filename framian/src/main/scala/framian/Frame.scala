@@ -558,6 +558,8 @@ object Frame {
    * The use of `Generic.Aux` allows us to use auto-tupling (urgh) to allow
    * things like `Frame.fromColumns("a" -> seriesA, "b" -> seriesB)`, rather
    * than having to use explicit `HList`s.
+   *
+   * @usecase def fromColumns[Row, Col](cols: (Col, Series[Row, _])*): Frame[Row, Col]
    */
   def fromColumns[S, L <: HList, Col, Row](cols: S)(implicit
       gen: Generic.Aux[S, L],
@@ -575,6 +577,8 @@ object Frame {
    * The use of `Generic.Aux` allows us to use auto-tupling (urgh) to allow
    * things like `Frame.fromColumns("a" -> seriesA, "b" -> seriesB)`, rather
    * than having to use explicit `HList`s.
+   *
+   * @usecase def fromRows[Row, Col](rows: (Row, Series[Col, _])*): Frame[Row, Col]
    */
   def fromRows[S, L <: HList, Col, Row](rows: S)(implicit
       gen: Generic.Aux[S, L],
