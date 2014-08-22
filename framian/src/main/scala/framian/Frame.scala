@@ -129,14 +129,11 @@ trait Frame[Row, Col] {
     Index.group(rowIndex)(grouper).result()
   }
 
-  def withColIndex[C1](ci: Index[C1]): Frame[Row, C1]
-  def withRowIndex[R1](ri: Index[R1]): Frame[R1, Col]
+  /** Replaces the column index with `index`. */
+  def withColIndex[C1](index: Index[C1]): Frame[Row, C1]
 
-  def filter(f: Row => Boolean) = filterRowIndex(f)
-  def filterRowIndex(f: Row => Boolean) = {
-    val filteredRowIndex = rowIndex.filter { case (row, _) => f(row) }
-    withRowIndex(filteredRowIndex)
-  }
+  /** Replaces the row index with `index`. */
+  def withRowIndex[R1](index: Index[R1]): Frame[R1, Col]
 
   /**
    * Put the columns in sorted order. This affects only the traversal order of
@@ -161,6 +158,18 @@ trait Frame[Row, Col] {
    */
   def reverseRows: Frame[Row, Col] =
     withRowIndex(rowIndex.reverse)
+
+  /**
+   * Removes rows whose row key is true for the predicate `p`.
+   */
+  def filterRowKeys(p: Row => Boolean) =
+    withRowIndex(rowIndex.filter { case (row, _) => p(row) })
+
+  /**
+   * Removes rows whose row key is true for the predicate `p`.
+   */
+  def filterColKeys(p: Col => Boolean) =
+    withColIndex(colIndex.filter { case (col, _) => p(col) })
 
   /**
    * Map the row index using `f`. This retains the traversal order of the rows.
@@ -224,9 +233,17 @@ trait Frame[Row, Col] {
 
   // Cols/Rows based ops.
 
+  /**
+   * Extract values from the columns of the series using `rows` and returns
+   * them in a [[Series]].
+   */
   def get[A](rows: Rows[Row, A]): Series[Col, A] =
     Frame.extract(colIndex, rowsAsSeries, rows)
 
+  /**
+   * Extract values from the rows of the series using `cols` and returns them
+   * in a [[Series]].
+   */
   def get[A](cols: Cols[Col, A]): Series[Row, A] =
     Frame.extract(rowIndex, columnsAsSeries, cols)
 
@@ -480,59 +497,28 @@ trait Frame[Row, Col] {
     collapse(keys, cols).mkString("\n")
   }
 
-  private def genericJoin[T](
-    getIndex: T => Index[Row],
-    reindexColumns: (Array[Row], Array[Int], Array[Int]) => T => Seq[(Col, UntypedColumn)]
-  )(that: T)(genericJoiner: Index.GenericJoin[Row]): Frame[Row, Col] = {
-    // TODO: This should use simpler things, like:
-    //   this.reindex(lIndex).withRowIndex(newRowIndex) ++
-    //   that.reindex(rIndex).withRowIndex(newRowIndex)
-    val res: genericJoiner.State = Index.cogroup(this.rowIndex, getIndex(that))(genericJoiner)
-    val (keys, lIndex, rIndex) = res.result()
-    val newRowIndex = Index.ordered(keys)
-    val cols0 = this.columnsAsSeries.denseIterator.map { case (key, col) =>
-      (key, col.setNA(Skip).reindex(lIndex))
-    } .toSeq
-    val cols1 = reindexColumns(keys, lIndex, rIndex)(that)
-    val (newColIndex, cols) = (cols0 ++ cols1).unzip
-
-    ColOrientedFrame(newRowIndex, Index(newColIndex.toArray), Column.fromArray(cols.toArray))
+  private def genericJoin(that: Frame[Row, Col])(cogrouper: Index.GenericJoin[Row]): Frame[Row, Col] = {
+    val state = Index.cogroup(this.rowIndex, that.rowIndex)(cogrouper)
+    val (keys, lIndex, rIndex) = state.result()
+    val lCols = this.columnsAsSeries.mapValues(_.setNA(Skip).reindex(lIndex))
+    val rCols = that.columnsAsSeries.mapValues(_.setNA(Skip).reindex(rIndex))
+    ColOrientedFrame(Index.ordered(keys), lCols ++ rCols)
   }
 
   def merge(that: Frame[Row, Col])(mergeStrategy: Merge): Frame[Row, Col] =
-    genericJoin[Frame[Row, Col]](
-      { frame: Frame[Row, Col] => frame.rowIndex },
-      { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => frame: Frame[Row, Col] =>
-        frame.columnsAsSeries.denseIterator.map { case (key, col) =>
-          (key, col.setNA(Skip).reindex(rIndex))
-        } .toSeq }
-    )(that)(Merger[Row](mergeStrategy)(rowIndex.classTag))
+    genericJoin(that)(Merger(mergeStrategy))
 
   def merge[T: ClassTag: ColumnTyper](col: Col, that: Series[Row, T])(mergeStrategy: Merge): Frame[Row, Col] =
-    genericJoin[Series[Row, T]](
-      { series: Series[Row, T] => series.index },
-      { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => series: Series[Row, T] =>
-        Seq((col, TypedColumn(series.column.setNA(Skip).reindex(rIndex)))) }
-    )(that)(Merger[Row](mergeStrategy)(rowIndex.classTag))
+    genericJoin(that.toFrame(col))(Merger(mergeStrategy))
 
   def merge[L <: HList](them: L)(merge: Merge)(implicit folder: Frame.SeriesMergeFolder[L, Row, Col]): Frame[Row, Col] =
     them.foldLeft(this)(Frame.mergeSeries)
 
   def join(that: Frame[Row, Col])(joinStrategy: Join): Frame[Row, Col] =
-    genericJoin[Frame[Row, Col]](
-      { frame: Frame[Row, Col] => frame.rowIndex },
-      { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => frame: Frame[Row, Col] =>
-        frame.columnsAsSeries.denseIterator.map { case (key, col) =>
-          (key, col.setNA(Skip).reindex(rIndex))
-        } .toSeq }
-    )(that)(Joiner[Row](joinStrategy)(rowIndex.classTag))
+    genericJoin(that)(Joiner(joinStrategy))
 
   def join[T: ClassTag: ColumnTyper](col: Col, that: Series[Row, T])(joinStrategy: Join): Frame[Row, Col] =
-    genericJoin[Series[Row, T]](
-      { series: Series[Row, T] => series.index },
-      { (keys: Array[Row], lIndex: Array[Int], rIndex: Array[Int]) => series: Series[Row, T] =>
-        Seq((col, TypedColumn(series.column.setNA(Skip).reindex(rIndex)))) }
-    )(that)(Joiner[Row](joinStrategy)(rowIndex.classTag))
+    genericJoin(that.toFrame(col))(Joiner(joinStrategy))
 
   def join[L <: HList](them: L)(join: Join)(implicit folder: Frame.SeriesJoinFolder[L, Row, Col]): Frame[Row, Col] =
     them.foldLeft(this)(Frame.joinSeries)
