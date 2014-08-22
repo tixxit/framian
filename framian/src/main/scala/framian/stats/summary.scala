@@ -18,7 +18,7 @@ object summary {
   def apply[Row, Col](f: Frame[Row, Col]): Frame[Col, String] = {
     import f.{ colClassTag, colOrder }
 
-    Frame.fromColumns(
+    Frame.mergeColumns(
       Mean -> f.reduceFrame(reduce.Mean[Number]),
       Median -> f.reduceFrame(reduce.Median[Number]),
       Max -> f.reduceFrame(reduce.Max[Number]),

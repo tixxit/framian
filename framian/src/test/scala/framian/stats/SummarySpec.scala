@@ -29,13 +29,13 @@ class SummarySpec extends Specification {
     }
 
     "summarize dense frame" in {
-      val input = Frame.fromGeneric(
+      val input = Frame.fromRows(
         1 :: 2 :: HNil,
         3 :: 3 :: HNil,
         2 :: 4 :: HNil
       )
 
-      val expected = Frame.fromGeneric(
+      val expected = Frame.fromRows(
         2 :: 2 :: 3 :: 1 :: HNil,
         3 :: 3 :: 4 :: 2 :: HNil
       ).withColIndex(statsIndex)
@@ -44,7 +44,7 @@ class SummarySpec extends Specification {
     }
 
     "summarize sparse frame" in {
-      val input = Frame.fromColumns(
+      val input = Frame.mergeColumns(
         0 -> Series.fromCells[Int, Int](0 -> NA, 1 -> Value(3), 2 -> Value(2), 3 -> NA, 4 -> Value(1)),
         1 -> Series.fromCells[Int, Int](0 -> Value(2), 1 -> NM, 2 -> NM, 3 -> Value(4), 4 -> Value(3))
       )

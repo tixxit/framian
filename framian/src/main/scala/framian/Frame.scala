@@ -504,18 +504,41 @@ object Frame {
    * types. For example,
    *
    * {{{
-   * case class Person(name: String, age: Int)
-   * val Alice = Person("Alice", 42)
-   * val Bob = Person("Alice", 23)
-   * Frame.fromGeneric(Alice, Bob)
+   * scala&gt; case class Person(name: String, age: Int)
+   * scala&gt; val Alice = Person("Alice", 42)
+   * scala&gt; val Bob = Person("Alice", 23)
+   * scala&gt; Frame.fromRows(Alice, Bob)
+   * res0: Frame[Int, Int] =
+   *     0     . 1
+   * 0 : Alice | 42
+   * 1 : Bob   | 23
    * }}}
    *
    * TODO: This should really take the row too (eg. `rows: (Row, A)*`).
    */
-  def fromGeneric[A, Col: ClassTag](rows: A*)(implicit pop: RowPopulator[A, Int, Col]): Frame[Int, Col] =
+  def fromRows[A, Col: ClassTag](rows: A*)(implicit pop: RowPopulator[A, Int, Col]): Frame[Int, Col] =
     pop.frame(rows.zipWithIndex.foldLeft(pop.init) { case (state, (data, row)) =>
       pop.populate(state, row, data)
     })
+
+  /**
+   * Construct a Frame whose columns are populated from some type `A`. Column
+   * populators may exist for things like JSON objects or Shapeless Generic
+   * types. For example,
+   *
+   * {{{
+   * scala&gt; case class Person(name: String, age: Int)
+   * scala&gt; val Alice = Person("Alice", 42)
+   * scala&gt; val Bob = Person("Alice", 23)
+   * scala&gt; Frame.fromRows(Alice, Bob)
+   * res0: Frame[Int, Int] =
+   *     0     . 1
+   * 0 : Alice | Bob
+   * 1 : 42    | 23
+   * }}}
+   */
+  def fromColumns[A, Row: ClassTag](cols: A*)(implicit pop: RowPopulator[A, Int, Row]): Frame[Row, Int] =
+    fromRows[A, Row](cols: _*).transpose
 
   // Here by dragons, devoid of form...
 
@@ -541,7 +564,7 @@ object Frame {
   /** A left fold on an HList that creates a Frame from a set of [[Series]]. */
   type SeriesMergeFolder[L <: HList, Row, Col] = LeftFolder.Aux[L, Frame[Row, Col], mergeSeries.type, Frame[Row, Col]]
 
-  /** Implicit to help with inference of Row/Col in fromColumns/fromRows. Please ignore... */
+  /** Implicit to help with inference of Row/Col in mergeColumn/mergeRows. Please ignore... */
   trait KeySeriesPair[L <: HList, Row, Col]
   object KeySeriesPair {
     import shapeless.::
@@ -556,12 +579,12 @@ object Frame {
    * of the frame.
    *
    * The use of `Generic.Aux` allows us to use auto-tupling (urgh) to allow
-   * things like `Frame.fromColumns("a" -> seriesA, "b" -> seriesB)`, rather
+   * things like `Frame.mergeColumns("a" -> seriesA, "b" -> seriesB)`, rather
    * than having to use explicit `HList`s.
    *
-   * @usecase def fromColumns[Row, Col](cols: (Col, Series[Row, _])*): Frame[Row, Col]
+   * @usecase def mergeColumn[Row, Col](cols: (Col, Series[Row, _])*): Frame[Row, Col]
    */
-  def fromColumns[S, L <: HList, Col, Row](cols: S)(implicit
+  def mergeColumns[S, L <: HList, Col, Row](cols: S)(implicit
       gen: Generic.Aux[S, L],
       ev: KeySeriesPair[L, Row, Col],
       folder: SeriesMergeFolder[L, Row, Col],
@@ -575,12 +598,12 @@ object Frame {
    * of the frame.
    *
    * The use of `Generic.Aux` allows us to use auto-tupling (urgh) to allow
-   * things like `Frame.fromColumns("a" -> seriesA, "b" -> seriesB)`, rather
+   * things like `Frame.mergeRows("a" -> seriesA, "b" -> seriesB)`, rather
    * than having to use explicit `HList`s.
    *
-   * @usecase def fromRows[Row, Col](rows: (Row, Series[Col, _])*): Frame[Row, Col]
+   * @usecase def mergeRows[Row, Col](rows: (Row, Series[Col, _])*): Frame[Row, Col]
    */
-  def fromRows[S, L <: HList, Col, Row](rows: S)(implicit
+  def mergeRows[S, L <: HList, Col, Row](rows: S)(implicit
       gen: Generic.Aux[S, L],
       ev: KeySeriesPair[L, Col, Row],
       folder: SeriesMergeFolder[L, Col, Row],
