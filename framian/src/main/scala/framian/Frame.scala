@@ -129,6 +129,8 @@ trait Frame[Row, Col] {
     Index.group(rowIndex)(grouper).result()
   }
 
+  // Row/Column Index manipulation.
+
   /** Replaces the column index with `index`. */
   def withColIndex[C1](index: Index[C1]): Frame[Row, C1]
 
@@ -187,32 +189,28 @@ trait Frame[Row, Col] {
   /**
    * Retain only the cols in `cols`, dropping all others.
    */
-  def retainColumns(cols: Col*): Frame[Row, Col] = {
-    val keep = cols.toSet
-    withColIndex(colIndex filter { case (key, _) => keep(key) })
-  }
+  def retainColumns(cols: Col*): Frame[Row, Col] =
+    filterColKeys(cols.toSet)
 
   /**
    * Retain only the rows in `rows`, dropping all others.
    */
-  def retainRows(rows: Row*): Frame[Row, Col] = {
-    val keep = rows.toSet
-    withRowIndex(rowIndex filter { case (key, _) => keep(key) })
-  }
+  def retainRows(rows: Row*): Frame[Row, Col] =
+    filterRowKeys(rows.toSet)
 
   /**
    * Drop the columns `cols` from the column index. This simply removes the
    * columns from the column index and does not modify the actual columns.
    */
   def dropColumns(cols: Col*): Frame[Row, Col] =
-    withColIndex(Index(colIndex.filter { case (col, _) => !cols.contains(col) } .toSeq: _*))
+    filterColKeys(k => !cols.contains(k))
 
   /**
    * Drop the rows `rows` from the row index. This simply removes the rows
    * from the index and does not modify the actual columns.
    */
   def dropRows(rows: Row*): Frame[Row, Col] =
-    withRowIndex(Index(rowIndex.filter { case (row, _) => !rows.contains(row) } .toSeq: _*))
+    filterRowKeys(k => !rows.contains(k))
 
   /**
    * Returns the value of the cell at row `rowKey` and column `colKey` as the
@@ -225,7 +223,11 @@ trait Frame[Row, Col] {
     a <- col.cast[A].apply(row)
   } yield a
 
-  def column[T: ColumnTyper](c: Col): Series[Row, T] = get(Cols(c).as[T])
+  /** Returns a single column from this `Frame` cast to type `T`. */
+  def column[T: ColumnTyper](col: Col): Series[Row, T] = get(Cols(col).as[T])
+
+  /** Returns a single row from this `Frame` cast to type `T`. */
+  def row[T: ColumnTyper](row: Row): Series[Col, T] = get(Rows(row).as[T])
 
   def getRow(key: Row): Option[Rec[Col]] = rowIndex.get(key) map Rec.fromRow(this)
 
@@ -509,7 +511,7 @@ trait Frame[Row, Col] {
     genericJoin(that)(Merger(mergeStrategy))
 
   def merge[T: ClassTag: ColumnTyper](col: Col, that: Series[Row, T])(mergeStrategy: Merge): Frame[Row, Col] =
-    genericJoin(that.toFrame(col))(Merger(mergeStrategy))
+    merge(that.toFrame(col))(mergeStrategy)
 
   def merge[L <: HList](them: L)(merge: Merge)(implicit folder: Frame.SeriesMergeFolder[L, Row, Col]): Frame[Row, Col] =
     them.foldLeft(this)(Frame.mergeSeries)
@@ -518,10 +520,14 @@ trait Frame[Row, Col] {
     genericJoin(that)(Joiner(joinStrategy))
 
   def join[T: ClassTag: ColumnTyper](col: Col, that: Series[Row, T])(joinStrategy: Join): Frame[Row, Col] =
-    genericJoin(that.toFrame(col))(Joiner(joinStrategy))
+    join(that.toFrame(col))(joinStrategy)
 
   def join[L <: HList](them: L)(join: Join)(implicit folder: Frame.SeriesJoinFolder[L, Row, Col]): Frame[Row, Col] =
     them.foldLeft(this)(Frame.joinSeries)
+}
+
+trait SeriesLike[S, K, V] {
+  def to(s: S): Series[K, V]
 }
 
 object Frame {
