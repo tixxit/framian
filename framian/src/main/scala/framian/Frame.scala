@@ -150,11 +150,6 @@ trait Frame[Row, Col] {
    */
   def sortRows: Frame[Row, Col] = withRowIndex(rowIndex.sorted)
 
-  def orderRowsBy[O](rowOrder: Seq[O])(f: Row => O)(implicit order: Order[Row]): Frame[Row, Col] =
-    val orderLookup = rowOrder.zipWithIndex.toMap
-    mapRowIndex { row => (orderLookup(f(row)), row) }.orderRows.mapRowIndex(_._2)
-  }
-
   /**
    * Reverse the traversal order of the columns in this frame.
    */
@@ -170,14 +165,14 @@ trait Frame[Row, Col] {
   /**
    * Map the row index using `f`. This retains the traversal order of the rows.
    */
-  def mapRowIndex[R: Order: ClassTag](f: Row => R): Frame[R, Col] =
+  def mapRowKeys[R: Order: ClassTag](f: Row => R): Frame[R, Col] =
     this.withRowIndex(rowIndex.map { case (k, v) => (f(k), v) })
 
   /**
    * Map the column index using `f`. This retains the traversal order of the
    * columns.
    */
-  def mapColIndex[C: Order: ClassTag](f: Col => C): Frame[Row, C] =
+  def mapColKeys[C: Order: ClassTag](f: Col => C): Frame[Row, C] =
     this.withColIndex(colIndex.map { case (k, v) => (f(k), v) })
 
   /**
