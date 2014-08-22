@@ -181,12 +181,6 @@ trait Frame[Row, Col] {
   }
 
   /**
-    * Add an arbitrary sequence of values to your frame as a column.
-    */
-  def addColumn[T: ClassTag](col: Col, column: Seq[T]): Frame[Row, Col] =
-    this.merge(col, Series(rowIndex, Column.fromArray(column.toArray)))(Merge.Outer)
-
-  /**
    * Drop the columns `cols` from the column index. This simply removes the
    * columns from the column index and does not modify the actual columns.
    */
@@ -200,6 +194,11 @@ trait Frame[Row, Col] {
   def dropRows(rows: Row*): Frame[Row, Col] =
     withRowIndex(Index(rowIndex.filter { case (row, _) => !rows.contains(row) } .toSeq: _*))
 
+  /**
+   * Returns the value of the cell at row `rowKey` and column `colKey` as the
+   * type `A`. If the value doesn't exist, then [[NA]] is returned. If the
+   * value is not meaningful as an instance of `A`, then [[NM]] is returned.
+   */
   def apply[A: ColumnTyper](rowKey: Row, colKey: Col): Cell[A] = for {
     col <- columnsAsSeries(colKey)
     row <- Cell.fromOption(rowIndex get rowKey)
