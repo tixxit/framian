@@ -319,9 +319,19 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   }
 
   /**
-   * Merges 2 series together, taking the first non-NA or NM value.
+   * Concatenates `that` onto the end of `this` [[Series]].
    */
   def ++[VV >: V: ClassTag](that: Series[K, VV]): Series[K, VV] = {
+    val bldr = Series.newUnorderedBuilder[K, VV]
+    this.foreach(bldr.append)
+    that.foreach(bldr.append)
+    bldr.result()
+  }
+
+  /**
+   * Merges 2 series together, taking the first non-NA or NM value.
+   */
+  def orElse[VV >: V: ClassTag](that: Series[K, VV]): Series[K, VV] = {
     val merger = Merger[K](Merge.Outer)
     val (keys, lIndices, rIndices) = Index.cogroup(this.index, that.index)(merger).result()
     val lCol = this.column
@@ -1085,7 +1095,7 @@ object Series {
     new AbstractSeriesBuilder[K, V] {
       def result(): Series[K, V] =
         Series(
-          Index.unordered(this.keyBldr.result()),
+          Index(this.keyBldr.result()),
           this.colBldr.result())
     }
 
