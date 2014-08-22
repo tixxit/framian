@@ -94,8 +94,8 @@ class FrameSpec extends Specification {
       f0.column[Int](1).toFrame("123").hashCode must_!= f1.column[Int](1).toFrame("123").hashCode
     }
 
-    "order columns" in {
-      people.orderColumns must_== Frame.fromRows(
+    "sort columns" in {
+      people.sortColumns must_== Frame.fromRows(
           32 :: "Manager"  :: "Bob" :: HNil,
           24 :: "Employee" :: "Alice" :: HNil,
           44 :: "Employee"  :: "Charlie" :: HNil)
@@ -103,8 +103,8 @@ class FrameSpec extends Specification {
         .withRowIndex(Index.fromKeys("Bob", "Alice", "Charlie"))
     }
 
-    "order rows" in {
-      people.orderRows must_== Frame.fromRows(
+    "sort rows" in {
+      people.sortRows must_== Frame.fromRows(
           "Alice"   :: 24 :: "Employee" :: HNil,
           "Bob"     :: 32 :: "Manager"  :: HNil,
           "Charlie" :: 44 :: "Employee"  :: HNil)

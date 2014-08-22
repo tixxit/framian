@@ -138,16 +138,32 @@ trait Frame[Row, Col] {
     withRowIndex(filteredRowIndex)
   }
 
-  def orderColumns: Frame[Row, Col] = withColIndex(colIndex.sorted)
-  def orderRows: Frame[Row, Col] = withRowIndex(rowIndex.sorted)
-  def orderRowsBy[O](rowOrder: Seq[O])(f: Row => O)(implicit order: Order[Row]): Frame[Row, Col] = {
+  /**
+   * Put the columns in sorted order. This affects only the traversal order of
+   * the columns.
+   */
+  def sortColumns: Frame[Row, Col] = withColIndex(colIndex.sorted)
+
+  /**
+   * Put the rows in sorted order. This affects only the traversal order of the
+   * rows.
+   */
+  def sortRows: Frame[Row, Col] = withRowIndex(rowIndex.sorted)
+
+  def orderRowsBy[O](rowOrder: Seq[O])(f: Row => O)(implicit order: Order[Row]): Frame[Row, Col] =
     val orderLookup = rowOrder.zipWithIndex.toMap
     mapRowIndex { row => (orderLookup(f(row)), row) }.orderRows.mapRowIndex(_._2)
   }
 
+  /**
+   * Reverse the traversal order of the columns in this frame.
+   */
   def reverseColumns: Frame[Row, Col] =
     withColIndex(colIndex.reverse)
 
+  /**
+   * Reverse the traversal order of the rows in this frame.
+   */
   def reverseRows: Frame[Row, Col] =
     withRowIndex(rowIndex.reverse)
 
@@ -165,19 +181,19 @@ trait Frame[Row, Col] {
     this.withColIndex(colIndex.map { case (k, v) => (f(k), v) })
 
   /**
-   * Retain only the rows in `rows`, dropping all others.
-   */
-  def retainRows(rows: Row*): Frame[Row, Col] = {
-    val keep = rows.toSet
-    withRowIndex(rowIndex filter { case (key, _) => keep(key) })
-  }
-
-  /**
    * Retain only the cols in `cols`, dropping all others.
    */
   def retainColumns(cols: Col*): Frame[Row, Col] = {
     val keep = cols.toSet
     withColIndex(colIndex filter { case (key, _) => keep(key) })
+  }
+
+  /**
+   * Retain only the rows in `rows`, dropping all others.
+   */
+  def retainRows(rows: Row*): Frame[Row, Col] = {
+    val keep = rows.toSet
+    withRowIndex(rowIndex filter { case (key, _) => keep(key) })
   }
 
   /**
