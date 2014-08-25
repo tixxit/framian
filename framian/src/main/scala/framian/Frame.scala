@@ -258,7 +258,7 @@ trait Frame[Row, Col] {
    * [[Cols]] with some other value. For example,
    *
    * {{{
-   * frame.reindex(cols.map(Value(_)).recoverWith(nonValue => nonValue))
+   * frame.reindex(cols.map(Value(_)).recover { case nonValue => nonValue })
    * }}}
    */
   def reindex[A: Order: ClassTag](cols: Cols[Col, A]): Frame[A, Col] =
@@ -273,7 +273,7 @@ trait Frame[Row, Col] {
    * [[Rows]] with some other value. For example,
    *
    * {{{
-   * frame.reindex(rows.map(Value(_)).recoverWith(nonValue => nonValue))
+   * frame.reindex(rows.map(Value(_)).recover { case nonValue => nonValue })
    * }}}
    */
   def reindex[A: Order: ClassTag](rows: Rows[Row, A]): Frame[Row, A] =
