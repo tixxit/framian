@@ -21,8 +21,6 @@
 
 package framian
 
-import scala.language.higherKinds
-
 import scala.collection.SortedMap
 import scala.reflect.ClassTag
 

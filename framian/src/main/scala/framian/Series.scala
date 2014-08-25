@@ -21,8 +21,6 @@
 
 package framian
 
-import language.higherKinds
-
 import scala.annotation.tailrec
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable.{ ArrayBuilder, Builder }
