@@ -167,16 +167,16 @@ object Index {
     }
   }
 
-  def ordered[K: Order: ClassTag](keys: Array[K]): OrderedIndex[K] =
+  private[framian] def ordered[K: Order: ClassTag](keys: Array[K]): OrderedIndex[K] =
     ordered(keys, Array.range(0, keys.length))
 
-  def ordered[K: Order: ClassTag](keys: Array[K], indices: Array[Int]): OrderedIndex[K] =
+  private[framian] def ordered[K: Order: ClassTag](keys: Array[K], indices: Array[Int]): OrderedIndex[K] =
     new OrderedIndex(keys, indices)
 
-  def unordered[K: Order: ClassTag](keys: Array[K]): Index[K] =
+  private[framian] def unordered[K: Order: ClassTag](keys: Array[K]): Index[K] =
     unordered(keys, Array.range(0, keys.length))
 
-  def unordered[K: Order: ClassTag](keys: Array[K], indices: Array[Int]): Index[K] = {
+  private[framian] def unordered[K: Order: ClassTag](keys: Array[K], indices: Array[Int]): Index[K] = {
     import spire.syntax.std.array._
 
     require(keys.length == indices.length)
@@ -344,7 +344,7 @@ object Index {
   }
 }
 
-final class UnorderedIndex[K: Order: ClassTag](
+final class UnorderedIndex[K: Order: ClassTag] private[framian] (
       private[framian] val keys: Array[K],
       private[framian] val indices: Array[Int],
       ord: Array[Int])
@@ -375,7 +375,7 @@ final class UnorderedIndex[K: Order: ClassTag](
     new UnorderedIndex(keys, is, ord)
 }
 
-final class OrderedIndex[K: Order: ClassTag](
+final class OrderedIndex[K: Order: ClassTag] private[framian] (
       private[framian] val keys: Array[K],
       private[framian] val indices: Array[Int])
     extends Index[K] {
