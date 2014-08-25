@@ -35,20 +35,20 @@ trait RowExtractor[A, K, Sz <: Size] {
   def prepare(cols: Series[K, UntypedColumn], keys: List[K]): Option[P]
   def extract(row: Int, p: P): Cell[A]
 
-  def mapCell[B](f: Cell[A] => Cell[B]): RowExtractor[B, K, Sz] =
+  def cellMap[B](f: Cell[A] => Cell[B]): RowExtractor[B, K, Sz] =
     new MappedRowExtractor[A, B, K, Sz](this, f)
 
   def map[B](f: A => B): RowExtractor[B, K, Sz] =
-    mapCell(_ map f)
+    cellMap(_ map f)
 
   def filter(p: A => Boolean): RowExtractor[A, K, Sz] =
-    mapCell(_ filter p)
+    cellMap(_ filter p)
 
   def recover(pf: PartialFunction[NonValue, A]): RowExtractor[A, K, Sz] =
-    mapCell(_ recover pf)
+    cellMap(_ recover pf)
 
   def recoverWith(pf: PartialFunction[NonValue, Cell[A]]): RowExtractor[A, K, Sz] =
-    mapCell(_ recoverWith pf)
+    cellMap(_ recoverWith pf)
 }
 
 private final class MappedRowExtractor[A, B, K, Sz <: Size](val e: RowExtractor[A, K, Sz], f: Cell[A] => Cell[B])

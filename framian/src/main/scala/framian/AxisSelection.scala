@@ -41,7 +41,7 @@ trait AxisSelection[K, A] {
     }
   }
 
-  def mapCell[B](f: Cell[A] => Cell[B]): AxisSelection[K, B]
+  def cellMap[B](f: Cell[A] => Cell[B]): AxisSelection[K, B]
 
   def map[B](f: A => B): AxisSelection[K, B]
   def filter(f: A => Boolean): AxisSelection[K, A]
@@ -50,15 +50,15 @@ trait AxisSelection[K, A] {
 }
 
 trait AxisSelectionLike[K, A, This[K, A] <: AxisSelectionLike[K, A, This]] extends AxisSelection[K, A] {
-  def mapCell[B](f: Cell[A] => Cell[B]): This[K, B]
+  def cellMap[B](f: Cell[A] => Cell[B]): This[K, B]
   def orElse(that: This[K, A]): This[K, A]
   def flatMap[B](f: A => This[K, B]): This[K, B]
   def zipWith[B, C](that: This[K, B])(f: (A, B) => C): This[K, C]
 
-  def map[B](f: A => B): This[K, B] = mapCell(_ map f)
-  def filter(p: A => Boolean): This[K, A] = mapCell(_ filter p)
-  def recoverWith(pf: PartialFunction[NonValue, Cell[A]]): This[K, A] = mapCell(_ recoverWith pf)
-  def recover(pf: PartialFunction[NonValue, A]): This[K, A] = mapCell(_ recover pf)
+  def map[B](f: A => B): This[K, B] = cellMap(_ map f)
+  def filter(p: A => Boolean): This[K, A] = cellMap(_ filter p)
+  def recoverWith(pf: PartialFunction[NonValue, Cell[A]]): This[K, A] = cellMap(_ recoverWith pf)
+  def recover(pf: PartialFunction[NonValue, A]): This[K, A] = cellMap(_ recover pf)
   def zip[B](that: This[K, B]): This[K, (A, B)] = zipWith(that)(_ -> _)
 }
 
@@ -121,8 +121,8 @@ trait AxisSelectionCompanion[Sel[K, A] <: AxisSelectionLike[K, A, Sel]] {
     val extractor: RowExtractor[A, K, Variable]
     def fold[B](all: => B)(f: List[K] => B): B = all
 
-    def mapCell[B](f: Cell[A] => Cell[B]): All[K, B] =
-      All(extractor mapCell f)
+    def cellMap[B](f: Cell[A] => Cell[B]): All[K, B] =
+      All(extractor cellMap f)
 
     def as[B](implicit extractor0: RowExtractor[B, K, Variable]): Sel[K, B] =
       All(extractor0)
@@ -140,8 +140,8 @@ trait AxisSelectionCompanion[Sel[K, A] <: AxisSelectionLike[K, A, Sel]] {
 
     def fold[B](all: => B)(f: List[K] => B): B = f(keys)
 
-    def mapCell[B](f: Cell[A] => Cell[B]): Pick[K, S, B] =
-      Pick(keys, extractor mapCell f)
+    def cellMap[B](f: Cell[A] => Cell[B]): Pick[K, S, B] =
+      Pick(keys, extractor cellMap f)
 
     def variable: Pick[K, Variable, A] = this.asInstanceOf[Pick[K, Variable, A]]
 
@@ -158,8 +158,8 @@ trait AxisSelectionCompanion[Sel[K, A] <: AxisSelectionLike[K, A, Sel]] {
   trait WrappedAxisSelection[K, A] extends Bridge[K, A] { self: Sel[K, A] =>
     def sel: AxisSelection[K, A]
 
-    def mapCell[B](f: Cell[A] => Cell[B]): Sel[K, B] =
-      Wrapped(sel.mapCell(f))
+    def cellMap[B](f: Cell[A] => Cell[B]): Sel[K, B] =
+      Wrapped(sel.cellMap(f))
 
     def extractorFor(cols: Series[K, UntypedColumn]): (Int => Cell[A]) =
       sel.extractorFor(cols)
@@ -170,12 +170,12 @@ trait AxisSelectionCompanion[Sel[K, A] <: AxisSelectionLike[K, A, Sel]] {
 
   object ops {
     trait Op[K, A] extends AxisSelection[K, A] {
-      def mapCell[B](f: Cell[A] => Cell[B]): AxisSelection[K, B]
+      def cellMap[B](f: Cell[A] => Cell[B]): AxisSelection[K, B]
 
-      def map[B](f: A => B): AxisSelection[K, B] = mapCell(_ map f)
-      def filter(p: A => Boolean): AxisSelection[K, A] = mapCell(_ filter p)
-      def recoverWith(pf: PartialFunction[NonValue, Cell[A]]): AxisSelection[K, A] = mapCell(_ recoverWith pf)
-      def recover(pf: PartialFunction[NonValue, A]): AxisSelection[K, A] = mapCell(_ recover pf)
+      def map[B](f: A => B): AxisSelection[K, B] = cellMap(_ map f)
+      def filter(p: A => Boolean): AxisSelection[K, A] = cellMap(_ filter p)
+      def recoverWith(pf: PartialFunction[NonValue, Cell[A]]): AxisSelection[K, A] = cellMap(_ recoverWith pf)
+      def recover(pf: PartialFunction[NonValue, A]): AxisSelection[K, A] = cellMap(_ recover pf)
     }
 
     case class Zipped[K, A, B, C](
@@ -191,7 +191,7 @@ trait AxisSelectionCompanion[Sel[K, A] <: AxisSelectionLike[K, A, Sel]] {
         { row => combine(get1(row), get2(row)) }
       }
 
-      def mapCell[D](f: Cell[C] => Cell[D]): AxisSelection[K, D] =
+      def cellMap[D](f: Cell[C] => Cell[D]): AxisSelection[K, D] =
         Zipped[K, A, B, D](fst, snd, { (a, b) => f(combine(a, b)) })
     }
 
@@ -208,8 +208,8 @@ trait AxisSelectionCompanion[Sel[K, A] <: AxisSelectionLike[K, A, Sel]] {
         { row => get(row).map(k).flatMap(_.extractorFor(cols)(row)) }
       }
 
-      def mapCell[C](f: Cell[B] => Cell[C]): AxisSelection[K, C] =
-        Bind[K, A, C](sel, { a => k(a).mapCell(f) })
+      def cellMap[C](f: Cell[B] => Cell[C]): AxisSelection[K, C] =
+        Bind[K, A, C](sel, { a => k(a).cellMap(f) })
     }
   }
 
