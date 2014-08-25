@@ -86,7 +86,7 @@ sealed abstract class Index[K](implicit val order: Order[K], val classTag: Class
       if (j < keys.length && keys(j) === k) findUpper(j + 1)
       else j
 
-    val i = search(k)
+    val i = Searching.search(keys, k)
     if (i >= 0) {
       val lb = findLower(i)
       val ub = findUpper(i + 1)
@@ -116,6 +116,14 @@ sealed abstract class Index[K](implicit val order: Order[K], val classTag: Class
   private[framian] def keys: Array[K]
   private[framian] def indices: Array[Int]
   private[framian] def withIndices(is: Array[Int]): Index[K]
+
+  override def equals(that: Any): Boolean = that match {
+    case (that: Index[_]) => this.to[Vector] == that.to[Vector]
+    case _ => false
+  }
+
+  override def hashCode: Int =
+    to[Vector].hashCode * 677
 }
 
 object Index {

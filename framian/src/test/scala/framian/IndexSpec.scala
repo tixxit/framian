@@ -85,6 +85,11 @@ class IndexSpec extends Specification {
       idx1.toList must_== List("a" -> 0, "a" -> 1, "b" -> 2, "b" -> 3, "c" -> 4, "c" -> 5)
       idx2.toList must_== List("a" -> 4, "a" -> 5, "b" -> 2, "b" -> 3, "c" -> 0, "c" -> 1)
     }
+
+    "get all rows for single key as Index" in {
+      val idx = Index("b" -> 0, "c" -> 2, "a" -> 0, "b" -> 1)
+      idx.getAll("b") must_== Index("b" -> 0, "b" -> 1)
+    }
   }
 
   "Index.Grouper" should {
