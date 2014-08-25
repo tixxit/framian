@@ -526,10 +526,6 @@ trait Frame[Row, Col] {
     them.foldLeft(this)(Frame.joinSeries)
 }
 
-trait SeriesLike[S, K, V] {
-  def to(s: S): Series[K, V]
-}
-
 object Frame {
 
   /**
