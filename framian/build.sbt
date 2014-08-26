@@ -5,8 +5,12 @@ name := "framian"
 libraryDependencies ++= {
   import Dependencies._
   Seq(
-    Compile.spire, Compile.jodaTime, Compile.jodaConvert,
-    Test.discipline, Test.specs2, Test.scalaCheck, Test.spireLaws)
+    Compile.spire,
+    Test.discipline,
+    Test.specs2,
+    Test.scalaCheck,
+    Test.spireLaws
+  )
 }
 
 libraryDependencies += (

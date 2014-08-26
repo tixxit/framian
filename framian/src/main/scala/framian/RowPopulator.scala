@@ -79,7 +79,7 @@ object RowPopulator extends RowPopulatorLowPriorityImplicits {
       val cols = pop.columns(state.tail).toArray
       val rowIndex = Index(state.head.reverse.toArray)
       val colIndex = Index(Array.range(0, cols.size))
-      Frame.fromColumns(rowIndex, colIndex, Column.fromArray(cols))
+      ColOrientedFrame(rowIndex, colIndex, Column.fromArray(cols))
     }
   }
 

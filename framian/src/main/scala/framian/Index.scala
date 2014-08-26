@@ -86,7 +86,7 @@ sealed abstract class Index[K](implicit val order: Order[K], val classTag: Class
       if (j < keys.length && keys(j) === k) findUpper(j + 1)
       else j
 
-    val i = search(k)
+    val i = Searching.search(keys, k)
     if (i >= 0) {
       val lb = findLower(i)
       val ub = findUpper(i + 1)
@@ -108,13 +108,6 @@ sealed abstract class Index[K](implicit val order: Order[K], val classTag: Class
   }
 
   def sorted: OrderedIndex[K] = Index.ordered(keys, indices)
-  /*def sortWith(f: ((K, Int), (K, Int)) => Boolean) = {
-    val ind = keys.zip(indices)
-    val sorted = ind.sortWith(f)
-    val (ks, ids) = sorted.unzip
-
-    Index.unordered(keys, indices)
-  }*/
 
   def resetIndices: Index[K]
 
@@ -123,6 +116,14 @@ sealed abstract class Index[K](implicit val order: Order[K], val classTag: Class
   private[framian] def keys: Array[K]
   private[framian] def indices: Array[Int]
   private[framian] def withIndices(is: Array[Int]): Index[K]
+
+  override def equals(that: Any): Boolean = that match {
+    case (that: Index[_]) => this.to[Vector] == that.to[Vector]
+    case _ => false
+  }
+
+  override def hashCode: Int =
+    to[Vector].hashCode * 677
 }
 
 object Index {
@@ -131,6 +132,8 @@ object Index {
       def apply(): Builder[(K, Int), Index[K]] = new IndexBuilder[K]
       def apply(from: Index[_]): Builder[(K, Int), Index[K]] = apply()
     }
+
+  def newBuilder[K: Order: ClassTag]: IndexBuilder[K] = new IndexBuilder
 
   def empty[K: Order: ClassTag]: Index[K] = new OrderedIndex[K](new Array[K](0), new Array[Int](0))
 
@@ -164,16 +167,16 @@ object Index {
     }
   }
 
-  def ordered[K: Order: ClassTag](keys: Array[K]): OrderedIndex[K] =
+  private[framian] def ordered[K: Order: ClassTag](keys: Array[K]): OrderedIndex[K] =
     ordered(keys, Array.range(0, keys.length))
 
-  def ordered[K: Order: ClassTag](keys: Array[K], indices: Array[Int]): OrderedIndex[K] =
+  private[framian] def ordered[K: Order: ClassTag](keys: Array[K], indices: Array[Int]): OrderedIndex[K] =
     new OrderedIndex(keys, indices)
 
-  def unordered[K: Order: ClassTag](keys: Array[K]): Index[K] =
+  private[framian] def unordered[K: Order: ClassTag](keys: Array[K]): Index[K] =
     unordered(keys, Array.range(0, keys.length))
 
-  def unordered[K: Order: ClassTag](keys: Array[K], indices: Array[Int]): Index[K] = {
+  private[framian] def unordered[K: Order: ClassTag](keys: Array[K], indices: Array[Int]): Index[K] = {
     import spire.syntax.std.array._
 
     require(keys.length == indices.length)
@@ -200,7 +203,7 @@ object Index {
     new UnorderedIndex(keys0, indices0, flip(order0))
   }
 
-  private final class IndexBuilder[K: Order: ClassTag] extends Builder[(K, Int), Index[K]] {
+  final class IndexBuilder[K: Order: ClassTag] extends Builder[(K, Int), Index[K]] {
     val keys = ArrayBuilder.make[K]()
     val indices = ArrayBuilder.make[Int]()
 
@@ -208,21 +211,22 @@ object Index {
     var isNonEmpty = false
     var prev: K = _
 
-    def +=(elem: (K, Int)) = {
-      val k = elem._1
-
+    def add(k: K, i: Int): this.type = {
       if (isOrdered && isNonEmpty && prev > k) {
         isOrdered = false
       }
 
       keys += k
-      indices += elem._2
+      indices += i
 
       prev = k
       isNonEmpty = true
 
       this
     }
+
+    def +=(elem: (K, Int)) =
+      add(elem._1, elem._2)
 
     def clear(): Unit = {
       isOrdered = true
@@ -340,7 +344,7 @@ object Index {
   }
 }
 
-final class UnorderedIndex[K: Order: ClassTag](
+final class UnorderedIndex[K: Order: ClassTag] private[framian] (
       private[framian] val keys: Array[K],
       private[framian] val indices: Array[Int],
       ord: Array[Int])
@@ -371,7 +375,7 @@ final class UnorderedIndex[K: Order: ClassTag](
     new UnorderedIndex(keys, is, ord)
 }
 
-final class OrderedIndex[K: Order: ClassTag](
+final class OrderedIndex[K: Order: ClassTag] private[framian] (
       private[framian] val keys: Array[K],
       private[framian] val indices: Array[Int])
     extends Index[K] {

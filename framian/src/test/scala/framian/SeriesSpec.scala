@@ -44,11 +44,27 @@ class SeriesSpec extends Specification with ScalaCheck {
   }
 
   "++" should {
+    "concatenate on series after the other" in {
+      val s0 = Series.fromCells(1 -> Value("a"), 1 -> Value("b"), 2 -> Value("e"))
+      val s1 = Series.fromCells(0 -> Value("c"), 1 -> Value("d"))
+      (s0 ++ s1) must_== Series.fromCells(
+          1 -> Value("a"), 1 -> Value("b"), 2 -> Value("e"), 0 -> Value("c"), 1 -> Value("d"))
+    }
+
+    "respect original traversal order" in{
+      val s0 = Series.fromCells(2 -> Value("a"), 1 -> Value("b"))
+      val s1 = Series.fromCells(1 -> Value("c"), 0 -> Value("d"))
+      (s0 ++ s1) must_== Series.fromCells(
+          2 -> Value("a"), 1 -> Value("b"), 1 -> Value("c"), 0 -> Value("d"))
+    }
+  }
+
+  "orElse" should {
 
     "merge series with different number of rows" in {
       val s0 = Series.fromCells(1 -> Value("a"), 1 -> Value("b"), 2 -> Value("e"))
       val s1 = Series.fromCells(0 -> Value("c"), 1 -> Value("d"))
-      (s0 ++ s1) must_== Series.fromCells(0 -> Value("c"), 1 -> Value("a"), 1 -> Value("b"), 2 -> Value("e"))
+      (s0 orElse s1) must_== Series.fromCells(0 -> Value("c"), 1 -> Value("a"), 1 -> Value("b"), 2 -> Value("e"))
     }
 
     "always let Value take precedence over all" in {
@@ -56,7 +72,7 @@ class SeriesSpec extends Specification with ScalaCheck {
       val seriesB = Series.fromCells("a" -> NM, "b" -> Value("b"), "c" -> NA)
       val seriesC = Series.fromCells("a" -> NA, "b" -> NM, "c" -> Value("c"))
 
-      val mergedSeries = seriesA ++ seriesB ++ seriesC
+      val mergedSeries = seriesA orElse seriesB orElse seriesC
       mergedSeries("a") must_== Value("a")
       mergedSeries("b") must_== Value("b")
       mergedSeries("c") must_== Value("c")
@@ -65,8 +81,8 @@ class SeriesSpec extends Specification with ScalaCheck {
     "merge series from left to right and maintain all keys" in {
       val seriesOne = Series.fromCells("a" -> Value("a1"), "b" -> Value("b1"), "c" -> NM)
       val seriesOther = Series.fromCells("b" -> Value("b2"), "c" -> Value("c2"), "x" -> Value("x2"), "y" -> NA)
-      val mergedSeriesOne = seriesOne ++ seriesOther
-      val mergedSeriesOther = seriesOther ++ seriesOne
+      val mergedSeriesOne = seriesOne orElse seriesOther
+      val mergedSeriesOther = seriesOther orElse seriesOne
 
       // Ensure all keys are available, grouping by (one |+| other)
       mergedSeriesOne("a") must_== Value("a1")

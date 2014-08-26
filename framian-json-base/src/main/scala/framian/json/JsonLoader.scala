@@ -110,6 +110,6 @@ trait JsonLoader extends JsonModule {
 
         value.getOrElse(Iterable.empty) ++ fields ++ indices
       })
-    Frame(Index(Array.range(0, objs.size)), columns.toList: _*)
+    ColOrientedFrame(Index(Array.range(0, objs.size)), Series(columns.toSeq: _*))
   }
 }
