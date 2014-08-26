@@ -47,7 +47,7 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.1.1/framian/src/main/scala/framian/columns.scala" target="_blank">columns.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.2.0/framian/src/main/scala/framian/ColumnBuilder.scala" target="_blank">ColumnBuilder.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.collection.mutable.Builder" class="extype" target="_top">Builder</a>[<a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.ColumnBuilder.V">V</span>], <a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.ColumnBuilder.V">V</span>]], <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.collection.generic.Growable" class="extype" target="_top">Growable</a>[<a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.ColumnBuilder.V">V</span>]], <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.collection.generic.Clearable" class="extype" target="_top">Clearable</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
@@ -93,7 +93,7 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="framian.ColumnBuilder#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;()(implicitevidence$2:scala.reflect.ClassTag[V]):framian.ColumnBuilder[V]"></a>
+      <a id="&lt;init&gt;()(implicitevidence$1:scala.reflect.ClassTag[V]):framian.ColumnBuilder[V]"></a>
       <a id="&lt;init&gt;:ColumnBuilder[V]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -104,7 +104,7 @@
         <span class="name">ColumnBuilder</span><span class="params">()</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.ColumnBuilder.V">V</span>]</span>)</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.ColumnBuilder@&lt;init&gt;()(implicitevidence$2:scala.reflect.ClassTag[V]):framian.ColumnBuilder[V]" title="Permalink" target="_top">
+      <a href="../index.html#framian.ColumnBuilder@&lt;init&gt;()(implicitevidence$1:scala.reflect.ClassTag[V]):framian.ColumnBuilder[V]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -607,7 +607,7 @@
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="scala.collection.mutable.Builder#mapResult" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="mapResult[NewTo&lt;:&lt;?&gt;](f:&lt;?&gt;):scala.collection.mutable.Builder[Elem,NewTo]"></a>
+      <a id="mapResult[NewTo](f:To=&gt;NewTo):scala.collection.mutable.Builder[Elem,NewTo]"></a>
       <a id="mapResult[NewTo]((Column[V])⇒NewTo):Builder[Cell[V],NewTo]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -691,6 +691,23 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="framian.ColumnBuilder">ColumnBuilder</a> → Builder</dd></dl></div>
+    </li><li name="framian.ColumnBuilder#sizeHint" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="sizeHint(size:Int):Unit"></a>
+      <a id="sizeHint(Int):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">sizeHint</span><span class="params">(<span name="size">size: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.ColumnBuilder@sizeHint(size:Int):Unit" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="framian.ColumnBuilder">ColumnBuilder</a> → Builder</dd></dl></div>
     </li><li name="scala.collection.mutable.Builder#sizeHint" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="sizeHint(coll:scala.collection.TraversableLike[_,_],delta:Int):Unit"></a>
       <a id="sizeHint(TraversableLike[_,_],Int):Unit"></a>
@@ -725,25 +742,8 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Builder</dd></dl></div>
-    </li><li name="scala.collection.mutable.Builder#sizeHint" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="sizeHint(size:Int):Unit"></a>
-      <a id="sizeHint(Int):Unit"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">sizeHint</span><span class="params">(<span name="size">size: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.ColumnBuilder@sizeHint(size:Int):Unit" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Builder</dd></dl></div>
     </li><li name="scala.collection.mutable.Builder#sizeHintBounded" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="sizeHintBounded(size:&lt;?&gt;,boundingColl:&lt;?&gt;):Unit"></a>
+      <a id="sizeHintBounded(size:Int,boundingColl:scala.collection.TraversableLike[_,_]):Unit"></a>
       <a id="sizeHintBounded(Int,TraversableLike[_,_]):Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">

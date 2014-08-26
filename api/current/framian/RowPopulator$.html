@@ -43,13 +43,13 @@
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <span class="name">RowPopulator</span><span class="result"> extends <a href="RowPopulatorLow0.html" class="extype" name="framian.RowPopulatorLow0">RowPopulatorLow0</a></span>
+        <span class="name">RowPopulator</span><span class="result"> extends <a href="RowPopulatorLowPriorityImplicits.html" class="extype" name="framian.RowPopulatorLowPriorityImplicits">RowPopulatorLowPriorityImplicits</a></span>
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.1.1/framian/src/main/scala/framian/RowPopulator.scala" target="_blank">RowPopulator.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.2.0/framian/src/main/scala/framian/RowPopulator.scala" target="_blank">RowPopulator.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="RowPopulatorLow0.html" class="extype" name="framian.RowPopulatorLow0">RowPopulatorLow0</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="RowPopulatorLowPriorityImplicits.html" class="extype" name="framian.RowPopulatorLowPriorityImplicits">RowPopulatorLowPriorityImplicits</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
         
 
@@ -67,7 +67,7 @@
                 <span class="filtertype">Inherited<br />
                 </span>
                 <ol id="linearization">
-                  <li class="in" name="framian.RowPopulator"><span>RowPopulator</span></li><li class="in" name="framian.RowPopulatorLow0"><span>RowPopulatorLow0</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  <li class="in" name="framian.RowPopulator"><span>RowPopulator</span></li><li class="in" name="framian.RowPopulatorLowPriorityImplicits"><span>RowPopulatorLowPriorityImplicits</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                 </ol>
               </div><div id="ancestors">
             <span class="filtertype"></span>
@@ -89,7 +89,41 @@
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="framian.RowPopulator.HListRowPopulator" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+              <ol><li name="framian.RowPopulator.HListColPopulator" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="HListColPopulator[L&lt;:shapeless.HList]extendsAnyRef"></a>
+      <a id="HListColPopulator[L&lt;:HList]:HListColPopulator[L]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="RowPopulator$$HListColPopulator.html"><span class="name">HListColPopulator</span></a><span class="tparams">[<span name="L">L &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.RowPopulator$@HListColPopulator[L&lt;:shapeless.HList]extendsAnyRef" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.RowPopulator.HListColPopulator0" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="HListColPopulator0extendsAnyRef"></a>
+      <a id="HListColPopulator0:HListColPopulator0"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="RowPopulator$$HListColPopulator0.html"><span class="name">HListColPopulator0</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.RowPopulator$@HListColPopulator0extendsAnyRef" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.RowPopulator.HListRowPopulator" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="HListRowPopulator[Row,L&lt;:shapeless.HList]extendsRowPopulator[L,Row,Int]"></a>
       <a id="HListRowPopulator[Row,L&lt;:HList]:HListRowPopulator[Row,L]"></a>
       <h4 class="signature">
@@ -164,8 +198,25 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="framian.RowPopulator.HListColPopulator" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="HListColPopulator"></a>
+      <a id="HListColPopulator:HListColPopulator"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="RowPopulator$$HListColPopulator$.html"><span class="name">HListColPopulator</span></a><span class="result"> extends <a href="RowPopulator$$HListColPopulator0.html" class="extype" name="framian.RowPopulator.HListColPopulator0">HListColPopulator0</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.RowPopulator$@HListColPopulator" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      
     </li><li name="framian.RowPopulator#HListRowPopulator" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="HListRowPopulator[Row,L&lt;:shapeless.HList](implicitevidence$1:spire.algebra.Order[Row],implicitevidence$2:scala.reflect.ClassTag[Row],implicitpop:framian.HListColPopulator[L]):framian.RowPopulator.HListRowPopulator[Row,L]"></a>
+      <a id="HListRowPopulator[Row,L&lt;:shapeless.HList](implicitevidence$1:spire.algebra.Order[Row],implicitevidence$2:scala.reflect.ClassTag[Row],implicitpop:framian.RowPopulator.HListColPopulator[L]):framian.RowPopulator.HListRowPopulator[Row,L]"></a>
       <a id="HListRowPopulator[Row,L&lt;:HList](Order[Row],ClassTag[Row],HListColPopulator[L]):HListRowPopulator[Row,L]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -173,10 +224,10 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">HListRowPopulator</span><span class="tparams">[<span name="Row">Row</span>, <span name="L">L &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Order">Order</span>[<span class="extype" name="framian.RowPopulator.HListRowPopulator.Row">Row</span>]</span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.RowPopulator.HListRowPopulator.Row">Row</span>]</span>, <span name="pop">pop: <a href="HListColPopulator.html" class="extype" name="framian.HListColPopulator">HListColPopulator</a>[<span class="extype" name="framian.RowPopulator.HListRowPopulator.L">L</span>]</span>)</span><span class="result">: <a href="RowPopulator$$HListRowPopulator.html" class="extype" name="framian.RowPopulator.HListRowPopulator">HListRowPopulator</a>[<span class="extype" name="framian.RowPopulator.HListRowPopulator.Row">Row</span>, <span class="extype" name="framian.RowPopulator.HListRowPopulator.L">L</span>]</span>
+        <span class="name">HListRowPopulator</span><span class="tparams">[<span name="Row">Row</span>, <span name="L">L &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Order">Order</span>[<span class="extype" name="framian.RowPopulator.HListRowPopulator.Row">Row</span>]</span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.RowPopulator.HListRowPopulator.Row">Row</span>]</span>, <span name="pop">pop: <a href="RowPopulator$$HListColPopulator.html" class="extype" name="framian.RowPopulator.HListColPopulator">HListColPopulator</a>[<span class="extype" name="framian.RowPopulator.HListRowPopulator.L">L</span>]</span>)</span><span class="result">: <a href="RowPopulator$$HListRowPopulator.html" class="extype" name="framian.RowPopulator.HListRowPopulator">HListRowPopulator</a>[<span class="extype" name="framian.RowPopulator.HListRowPopulator.Row">Row</span>, <span class="extype" name="framian.RowPopulator.HListRowPopulator.L">L</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.RowPopulator$@HListRowPopulator[Row,L&lt;:shapeless.HList](implicitevidence$1:spire.algebra.Order[Row],implicitevidence$2:scala.reflect.ClassTag[Row],implicitpop:framian.HListColPopulator[L]):framian.RowPopulator.HListRowPopulator[Row,L]" title="Permalink" target="_top">
+      <a href="../index.html#framian.RowPopulator$@HListRowPopulator[Row,L&lt;:shapeless.HList](implicitevidence$1:spire.algebra.Order[Row],implicitevidence$2:scala.reflect.ClassTag[Row],implicitpop:framian.RowPopulator.HListColPopulator[L]):framian.RowPopulator.HListRowPopulator[Row,L]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -278,7 +329,7 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="framian.RowPopulatorLow0#generic" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+    </li><li name="framian.RowPopulatorLowPriorityImplicits#generic" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="generic[A,B,Row,Col](implicitgeneric:shapeless.Generic.Aux[A,B],implicitpop:framian.RowPopulator[B,Row,Col]):framian.RowPopulator[A,Row,Col]{typeState=pop.State}"></a>
       <a id="generic[A,B,Row,Col](Aux[A,B],RowPopulator[B,Row,Col]):RowPopulator[A,Row,Col]{typeState=pop.State}"></a>
       <h4 class="signature">
@@ -287,14 +338,14 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">generic</span><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>, <span name="Row">Row</span>, <span name="Col">Col</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="generic">generic: <span class="extype" name="shapeless.Generic.Aux">Aux</span>[<span class="extype" name="framian.RowPopulatorLow0.generic.A">A</span>, <span class="extype" name="framian.RowPopulatorLow0.generic.B">B</span>]</span>, <span name="pop">pop: <a href="RowPopulator.html" class="extype" name="framian.RowPopulator">RowPopulator</a>[<span class="extype" name="framian.RowPopulatorLow0.generic.B">B</span>, <span class="extype" name="framian.RowPopulatorLow0.generic.Row">Row</span>, <span class="extype" name="framian.RowPopulatorLow0.generic.Col">Col</span>]</span>)</span><span class="result">: <a href="RowPopulator.html" class="extype" name="framian.RowPopulator">RowPopulator</a>[<span class="extype" name="framian.RowPopulatorLow0.generic.A">A</span>, <span class="extype" name="framian.RowPopulatorLow0.generic.Row">Row</span>, <span class="extype" name="framian.RowPopulatorLow0.generic.Col">Col</span>] { type State = pop.State }</span>
+        <span class="name">generic</span><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>, <span name="Row">Row</span>, <span name="Col">Col</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="generic">generic: <span class="extype" name="shapeless.Generic.Aux">Aux</span>[<span class="extype" name="framian.RowPopulatorLowPriorityImplicits.generic.A">A</span>, <span class="extype" name="framian.RowPopulatorLowPriorityImplicits.generic.B">B</span>]</span>, <span name="pop">pop: <a href="RowPopulator.html" class="extype" name="framian.RowPopulator">RowPopulator</a>[<span class="extype" name="framian.RowPopulatorLowPriorityImplicits.generic.B">B</span>, <span class="extype" name="framian.RowPopulatorLowPriorityImplicits.generic.Row">Row</span>, <span class="extype" name="framian.RowPopulatorLowPriorityImplicits.generic.Col">Col</span>]</span>)</span><span class="result">: <a href="RowPopulator.html" class="extype" name="framian.RowPopulator">RowPopulator</a>[<span class="extype" name="framian.RowPopulatorLowPriorityImplicits.generic.A">A</span>, <span class="extype" name="framian.RowPopulatorLowPriorityImplicits.generic.Row">Row</span>, <span class="extype" name="framian.RowPopulatorLowPriorityImplicits.generic.Col">Col</span>] { type State = pop.State }</span>
       </span>
       </h4><span class="permalink">
       <a href="../index.html#framian.RowPopulator$@generic[A,B,Row,Col](implicitgeneric:shapeless.Generic.Aux[A,B],implicitpop:framian.RowPopulator[B,Row,Col]):framian.RowPopulator[A,Row,Col]{typeState=pop.State}" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="RowPopulatorLow0.html" class="extype" name="framian.RowPopulatorLow0">RowPopulatorLow0</a></dd></dl></div>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="RowPopulatorLowPriorityImplicits.html" class="extype" name="framian.RowPopulatorLowPriorityImplicits">RowPopulatorLowPriorityImplicits</a></dd></dl></div>
     </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <a id="getClass():Class[_]"></a>
@@ -509,8 +560,8 @@
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="framian.RowPopulatorLow0">
-              <h3>Inherited from <a href="RowPopulatorLow0.html" class="extype" name="framian.RowPopulatorLow0">RowPopulatorLow0</a></h3>
+        <div class="parent" name="framian.RowPopulatorLowPriorityImplicits">
+              <h3>Inherited from <a href="RowPopulatorLowPriorityImplicits.html" class="extype" name="framian.RowPopulatorLowPriorityImplicits">RowPopulatorLowPriorityImplicits</a></h3>
             </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">

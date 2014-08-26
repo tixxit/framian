@@ -47,7 +47,7 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.1.1/framian/src/main/scala/framian/Frame.scala" target="_blank">Frame.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>A polymorphic function for joining many <a href="Series.html" class="extype" name="framian.Series">Series</a> into a <code>Frame</code>.</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.2.0/framian/src/main/scala/framian/Frame.scala" target="_blank">Frame.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><span class="extype" name="shapeless.Poly2">Poly2</span>, <span class="extype" name="shapeless.Poly">Poly</span>, <span class="extype" name="shapeless.PolyApply">PolyApply</span>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
@@ -107,7 +107,7 @@
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Poly2</dd></dl></div>
     </li><li name="shapeless.Poly2.CaseBuilder" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="CaseBuilder[A&lt;:&lt;?&gt;,B&lt;:&lt;?&gt;]extendsAnyRef"></a>
+      <a id="CaseBuilder[A,B]extendsAnyRef"></a>
       <a id="CaseBuilder[A,B]:CaseBuilder[A,B]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -141,7 +141,7 @@
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Poly</dd></dl></div>
     </li><li name="shapeless.Poly.ProductCase" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="ProductCase[L&lt;:&lt;?&gt;]=shapeless.poly.Case[Poly.this.type,L]"></a>
+      <a id="ProductCase[L&lt;:shapeless.HList]=shapeless.poly.Case[Poly.this.type,L]"></a>
       <a id="ProductCase[L&lt;:HList]:ProductCase[L]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -216,7 +216,7 @@
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="shapeless.Poly#andThen" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="andThen(f:&lt;?&gt;):shapeless.poly.Compose[f.type,Poly.this.type]"></a>
+      <a id="andThen(f:shapeless.Poly):shapeless.poly.Compose[f.type,Poly.this.type]"></a>
       <a id="andThen(Poly):Compose[f.type,joinSeries.this.type]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -658,7 +658,7 @@
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Poly2</dd></dl></div>
     </li><li name="shapeless.Poly#caseAt" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="caseAt[L&lt;:&lt;?&gt;](implicitc:&lt;?&gt;):Poly.this.ProductCase[L]"></a>
+      <a id="caseAt[L&lt;:shapeless.HList](implicitc:Poly.this.ProductCase[L]):Poly.this.ProductCase[L]"></a>
       <a id="caseAt[L&lt;:HList](ProductCase[L]):ProductCase[L]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -674,23 +674,6 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Poly</dd></dl></div>
-    </li><li name="framian.Frame.joinSeries#caseT" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="caseT[T,Row,Col](implicitevidence$29:scala.reflect.ClassTag[T],implicitevidence$30:framian.ColumnTyper[T],implicitevidence$31:scala.reflect.ClassTag[Row],implicitevidence$32:spire.algebra.Order[Row],implicitevidence$33:framian.ColumnTyper[Row],implicitevidence$34:scala.reflect.ClassTag[Col],implicitevidence$35:spire.algebra.Order[Col],implicitevidence$36:framian.ColumnTyper[Col]):framian.Frame.joinSeries.Case[(List[Col],framian.Frame[Row,Col]),framian.Series[Row,T]]{typeResult=(List[Col],framian.Frame[Row,Col])}"></a>
-      <a id="caseT[T,Row,Col](ClassTag[T],ColumnTyper[T],ClassTag[Row],Order[Row],ColumnTyper[Row],ClassTag[Col],Order[Col],ColumnTyper[Col]):Case[(List[Col],Frame[Row,Col]),Series[Row,T]]{typeResult=(List[Col],framian.Frame[Row,Col])}"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">implicit </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">caseT</span><span class="tparams">[<span name="T">T</span>, <span name="Row">Row</span>, <span name="Col">Col</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.joinSeries.caseT.T">T</span>]</span>, <span name="arg1">arg1: <a href="ColumnTyper.html" class="extype" name="framian.ColumnTyper">ColumnTyper</a>[<span class="extype" name="framian.Frame.joinSeries.caseT.T">T</span>]</span>, <span name="arg2">arg2: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.joinSeries.caseT.Row">Row</span>]</span>, <span name="arg3">arg3: <span class="extype" name="spire.algebra.Order">Order</span>[<span class="extype" name="framian.Frame.joinSeries.caseT.Row">Row</span>]</span>, <span name="arg4">arg4: <a href="ColumnTyper.html" class="extype" name="framian.ColumnTyper">ColumnTyper</a>[<span class="extype" name="framian.Frame.joinSeries.caseT.Row">Row</span>]</span>, <span name="arg5">arg5: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.joinSeries.caseT.Col">Col</span>]</span>, <span name="arg6">arg6: <span class="extype" name="spire.algebra.Order">Order</span>[<span class="extype" name="framian.Frame.joinSeries.caseT.Col">Col</span>]</span>, <span name="arg7">arg7: <a href="ColumnTyper.html" class="extype" name="framian.ColumnTyper">ColumnTyper</a>[<span class="extype" name="framian.Frame.joinSeries.caseT.Col">Col</span>]</span>)</span><span class="result">: <a href="#Case[A,B]=shapeless.poly.Case[Poly2.this.type,shapeless.::[A,shapeless.::[B,shapeless.HNil]]]" class="extmbr" name="framian.Frame.joinSeries.Case">Case</a>[(<span class="extype" name="scala.List">List</span>[<span class="extype" name="framian.Frame.joinSeries.caseT.Col">Col</span>], <a href="Frame.html" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.joinSeries.caseT.Row">Row</span>, <span class="extype" name="framian.Frame.joinSeries.caseT.Col">Col</span>]), <a href="Series.html" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.Frame.joinSeries.caseT.Row">Row</span>, <span class="extype" name="framian.Frame.joinSeries.caseT.T">T</span>]] { type Result = (List[Col], framian.Frame[Row,Col]) }</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Frame$$joinSeries$@caseT[T,Row,Col](implicitevidence$29:scala.reflect.ClassTag[T],implicitevidence$30:framian.ColumnTyper[T],implicitevidence$31:scala.reflect.ClassTag[Row],implicitevidence$32:spire.algebra.Order[Row],implicitevidence$33:framian.ColumnTyper[Row],implicitevidence$34:scala.reflect.ClassTag[Col],implicitevidence$35:spire.algebra.Order[Col],implicitevidence$36:framian.ColumnTyper[Col]):framian.Frame.joinSeries.Case[(List[Col],framian.Frame[Row,Col]),framian.Series[Row,T]]{typeResult=(List[Col],framian.Frame[Row,Col])}" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      
     </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a>
       <a id="clone():AnyRef"></a>
@@ -714,8 +697,25 @@
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="framian.Frame.joinSeries#colSeriesPair" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="colSeriesPair[A,Row,Col](implicitevidence$55:scala.reflect.ClassTag[A],implicitevidence$56:framian.ColumnTyper[A]):framian.Frame.joinSeries.Case[framian.Frame[Row,Col],(Col,framian.Series[Row,A])]{typeResult=framian.Frame[Row,Col]}"></a>
+      <a id="colSeriesPair[A,Row,Col](ClassTag[A],ColumnTyper[A]):Case[Frame[Row,Col],(Col,Series[Row,A])]{typeResult=framian.Frame[Row,Col]}"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">colSeriesPair</span><span class="tparams">[<span name="A">A</span>, <span name="Row">Row</span>, <span name="Col">Col</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.joinSeries.colSeriesPair.A">A</span>]</span>, <span name="arg1">arg1: <a href="ColumnTyper.html" class="extype" name="framian.ColumnTyper">ColumnTyper</a>[<span class="extype" name="framian.Frame.joinSeries.colSeriesPair.A">A</span>]</span>)</span><span class="result">: <a href="#Case[A,B]=shapeless.poly.Case[Poly2.this.type,shapeless.::[A,shapeless.::[B,shapeless.HNil]]]" class="extmbr" name="framian.Frame.joinSeries.Case">Case</a>[<a href="Frame.html" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.joinSeries.colSeriesPair.Row">Row</span>, <span class="extype" name="framian.Frame.joinSeries.colSeriesPair.Col">Col</span>], (<span class="extype" name="framian.Frame.joinSeries.colSeriesPair.Col">Col</span>, <a href="Series.html" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.Frame.joinSeries.colSeriesPair.Row">Row</span>, <span class="extype" name="framian.Frame.joinSeries.colSeriesPair.A">A</span>])] { type Result = framian.Frame[Row,Col] }</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Frame$$joinSeries$@colSeriesPair[A,Row,Col](implicitevidence$55:scala.reflect.ClassTag[A],implicitevidence$56:framian.ColumnTyper[A]):framian.Frame.joinSeries.Case[framian.Frame[Row,Col],(Col,framian.Series[Row,A])]{typeResult=framian.Frame[Row,Col]}" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      
     </li><li name="shapeless.Poly#compose" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="compose(f:&lt;?&gt;):shapeless.poly.Compose[Poly.this.type,f.type]"></a>
+      <a id="compose(f:shapeless.Poly):shapeless.poly.Compose[Poly.this.type,f.type]"></a>
       <a id="compose(Poly):Compose[joinSeries.this.type,f.type]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -925,7 +925,7 @@
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="shapeless.Poly#use" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="use[T&lt;:&lt;?&gt;,L&lt;:&lt;?&gt;,R&lt;:&lt;?&gt;](t:&lt;?&gt;)(implicitcb:&lt;?&gt;):Poly.this.ProductCase.Aux[L,R]"></a>
+      <a id="use[T,L&lt;:shapeless.HList,R](t:T)(implicitcb:Poly.this.CaseBuilder[T,L,R]):Poly.this.ProductCase.Aux[L,R]"></a>
       <a id="use[T,L&lt;:HList,R](T)(joinSeries.CaseBuilder[T,L,R]):Aux[L,R]"></a>
       <h4 class="signature">
       <span class="modifier_kind">

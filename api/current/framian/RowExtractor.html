@@ -43,11 +43,11 @@
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <span class="name">RowExtractor</span><span class="tparams">[<span name="A">A</span>, <span name="Col">Col</span>, <span name="RowSize">RowSize &lt;: <a href="Size.html" class="extype" name="framian.Size">Size</a></span>]</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+        <span class="name">RowExtractor</span><span class="tparams">[<span name="A">A</span>, <span name="K">K</span>, <span name="Sz">Sz &lt;: <a href="Size.html" class="extype" name="framian.Size">Size</a></span>]</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.1.1/framian/src/main/scala/framian/RowExtractor.scala" target="_blank">RowExtractor.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.2.0/framian/src/main/scala/framian/RowExtractor.scala" target="_blank">RowExtractor.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div><div class="toggleContainer block">
@@ -120,35 +120,35 @@
         <div id="values" class="values members">
               <h3>Abstract Value Members</h3>
               <ol><li name="framian.RowExtractor#extract" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="extract[Row](frame:framian.Frame[Row,Col],key:Row,row:Int,p:RowExtractor.this.P):framian.Cell[A]"></a>
-      <a id="extract[Row](Frame[Row,Col],Row,Int,P):Cell[A]"></a>
+      <a id="extract(row:Int,p:RowExtractor.this.P):framian.Cell[A]"></a>
+      <a id="extract(Int,P):Cell[A]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">extract</span><span class="tparams">[<span name="Row">Row</span>]</span><span class="params">(<span name="frame">frame: <a href="Frame.html" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.RowExtractor.extract.Row">Row</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>]</span>, <span name="key">key: <span class="extype" name="framian.RowExtractor.extract.Row">Row</span></span>, <span name="row">row: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="p">p: <a href="#P" class="extmbr" name="framian.RowExtractor.P">P</a></span>)</span><span class="result">: <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.RowExtractor.A">A</span>]</span>
+        <span class="name">extract</span><span class="params">(<span name="row">row: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="p">p: <a href="#P" class="extmbr" name="framian.RowExtractor.P">P</a></span>)</span><span class="result">: <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.RowExtractor.A">A</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.RowExtractor@extract[Row](frame:framian.Frame[Row,Col],key:Row,row:Int,p:RowExtractor.this.P):framian.Cell[A]" title="Permalink" target="_top">
+      <a href="../index.html#framian.RowExtractor@extract(row:Int,p:RowExtractor.this.P):framian.Cell[A]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
       
     </li><li name="framian.RowExtractor#prepare" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="prepare[Row](frame:framian.Frame[Row,Col],cols:List[Col]):Option[RowExtractor.this.P]"></a>
-      <a id="prepare[Row](Frame[Row,Col],List[Col]):Option[P]"></a>
+      <a id="prepare(cols:framian.Series[K,framian.UntypedColumn],keys:List[K]):Option[RowExtractor.this.P]"></a>
+      <a id="prepare(Series[K,UntypedColumn],List[K]):Option[P]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">prepare</span><span class="tparams">[<span name="Row">Row</span>]</span><span class="params">(<span name="frame">frame: <a href="Frame.html" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.RowExtractor.prepare.Row">Row</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>]</span>, <span name="cols">cols: <span class="extype" name="scala.List">List</span>[<span class="extype" name="framian.RowExtractor.Col">Col</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="#P" class="extmbr" name="framian.RowExtractor.P">P</a>]</span>
+        <span class="name">prepare</span><span class="params">(<span name="cols">cols: <a href="Series.html" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.RowExtractor.K">K</span>, <a href="UntypedColumn.html" class="extype" name="framian.UntypedColumn">UntypedColumn</a>]</span>, <span name="keys">keys: <span class="extype" name="scala.List">List</span>[<span class="extype" name="framian.RowExtractor.K">K</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="#P" class="extmbr" name="framian.RowExtractor.P">P</a>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.RowExtractor@prepare[Row](frame:framian.Frame[Row,Col],cols:List[Col]):Option[RowExtractor.this.P]" title="Permalink" target="_top">
+      <a href="../index.html#framian.RowExtractor@prepare(cols:framian.Series[K,framian.UntypedColumn],keys:List[K]):Option[RowExtractor.this.P]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -209,20 +209,20 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
-            This member is added by an implicit conversion from <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>] to
-            <span class="extype" name="scala.Predef.any2stringadd">any2stringadd</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>]] performed by method any2stringadd in scala.Predef.
+            This member is added by an implicit conversion from <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>] to
+            <span class="extype" name="scala.Predef.any2stringadd">any2stringadd</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>]] performed by method any2stringadd in scala.Predef.
             
           </dd><dt>Definition Classes</dt><dd>any2stringadd</dd></dl></div>
     </li><li name="scala.Predef.ArrowAssoc#-&gt;" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="-&gt;[B](y:B):(A,B)"></a>
-      <a id="-&gt;[B](B):(RowExtractor[A,Col,RowSize],B)"></a>
+      <a id="-&gt;[B](B):(RowExtractor[A,K,Sz],B)"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $minus$greater" class="implicit">-&gt;</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="y">y: <span class="extype" name="scala.Predef.ArrowAssoc.-&gt;.B">B</span></span>)</span><span class="result">: (<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>], <span class="extype" name="scala.Predef.ArrowAssoc.-&gt;.B">B</span>)</span>
+        <span title="gt4s: $minus$greater" class="implicit">-&gt;</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="y">y: <span class="extype" name="scala.Predef.ArrowAssoc.-&gt;.B">B</span></span>)</span><span class="result">: (<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>], <span class="extype" name="scala.Predef.ArrowAssoc.-&gt;.B">B</span>)</span>
       </span>
       </h4><span class="permalink">
       <a href="../index.html#framian.RowExtractor@-&gt;[B](y:B):(A,B)" title="Permalink" target="_top">
@@ -230,8 +230,8 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
-            This member is added by an implicit conversion from <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>] to
-            <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>]] performed by method ArrowAssoc in scala.Predef.
+            This member is added by an implicit conversion from <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>] to
+            <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>]] performed by method ArrowAssoc in scala.Predef.
             
           </dd><dt>Definition Classes</dt><dd>ArrowAssoc</dd><dt>Annotations</dt><dd>
                 <span class="name">@inline</span><span class="args">()</span>
@@ -271,6 +271,23 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="framian.RowExtractor#cellMap" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="cellMap[B](f:framian.Cell[A]=&gt;framian.Cell[B]):framian.RowExtractor[B,K,Sz]"></a>
+      <a id="cellMap[B]((Cell[A])⇒Cell[B]):RowExtractor[B,K,Sz]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">cellMap</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.RowExtractor.A">A</span>]) ⇒ <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.RowExtractor.cellMap.B">B</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.cellMap.B">B</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.RowExtractor@cellMap[B](f:framian.Cell[A]=&gt;framian.Cell[B]):framian.RowExtractor[B,K,Sz]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      
     </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a>
       <a id="clone():AnyRef"></a>
@@ -296,14 +313,14 @@
         </dd></dl></div>
     </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ensuring(cond:A=&gt;Boolean,msg:=&gt;Any):A"></a>
-      <a id="ensuring((RowExtractor[A,Col,RowSize])⇒Boolean,⇒Any):RowExtractor[A,Col,RowSize]"></a>
+      <a id="ensuring((RowExtractor[A,K,Sz])⇒Boolean,⇒Any):RowExtractor[A,K,Sz]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: (<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>]) ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>, <span name="msg">msg: ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>]</span>
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: (<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>]) ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>, <span name="msg">msg: ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../index.html#framian.RowExtractor@ensuring(cond:A=&gt;Boolean,msg:=&gt;Any):A" title="Permalink" target="_top">
@@ -311,20 +328,20 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
-            This member is added by an implicit conversion from <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>] to
-            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>]] performed by method Ensuring in scala.Predef.
+            This member is added by an implicit conversion from <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>] to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>]] performed by method Ensuring in scala.Predef.
             
           </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
     </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ensuring(cond:A=&gt;Boolean):A"></a>
-      <a id="ensuring((RowExtractor[A,Col,RowSize])⇒Boolean):RowExtractor[A,Col,RowSize]"></a>
+      <a id="ensuring((RowExtractor[A,K,Sz])⇒Boolean):RowExtractor[A,K,Sz]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: (<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>]) ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>]</span>
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: (<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>]) ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../index.html#framian.RowExtractor@ensuring(cond:A=&gt;Boolean):A" title="Permalink" target="_top">
@@ -332,20 +349,20 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
-            This member is added by an implicit conversion from <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>] to
-            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>]] performed by method Ensuring in scala.Predef.
+            This member is added by an implicit conversion from <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>] to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>]] performed by method Ensuring in scala.Predef.
             
           </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
     </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ensuring(cond:Boolean,msg:=&gt;Any):A"></a>
-      <a id="ensuring(Boolean,⇒Any):RowExtractor[A,Col,RowSize]"></a>
+      <a id="ensuring(Boolean,⇒Any):RowExtractor[A,K,Sz]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>, <span name="msg">msg: ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>]</span>
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>, <span name="msg">msg: ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../index.html#framian.RowExtractor@ensuring(cond:Boolean,msg:=&gt;Any):A" title="Permalink" target="_top">
@@ -353,20 +370,20 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
-            This member is added by an implicit conversion from <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>] to
-            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>]] performed by method Ensuring in scala.Predef.
+            This member is added by an implicit conversion from <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>] to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>]] performed by method Ensuring in scala.Predef.
             
           </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
     </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ensuring(cond:Boolean):A"></a>
-      <a id="ensuring(Boolean):RowExtractor[A,Col,RowSize]"></a>
+      <a id="ensuring(Boolean):RowExtractor[A,K,Sz]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>]</span>
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../index.html#framian.RowExtractor@ensuring(cond:Boolean):A" title="Permalink" target="_top">
@@ -374,8 +391,8 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
-            This member is added by an implicit conversion from <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>] to
-            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>]] performed by method Ensuring in scala.Predef.
+            This member is added by an implicit conversion from <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>] to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>]] performed by method Ensuring in scala.Predef.
             
           </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
     </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
@@ -412,6 +429,23 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="framian.RowExtractor#filter" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="filter(p:A=&gt;Boolean):framian.RowExtractor[A,K,Sz]"></a>
+      <a id="filter((A)⇒Boolean):RowExtractor[A,K,Sz]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">filter</span><span class="params">(<span name="p">p: (<span class="extype" name="framian.RowExtractor.A">A</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.RowExtractor@filter(p:A=&gt;Boolean):framian.RowExtractor[A,K,Sz]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <a id="finalize():Unit"></a>
@@ -452,8 +486,8 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
-            This member is added by an implicit conversion from <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>] to
-            <span class="extype" name="scala.Predef.StringFormat">StringFormat</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>]] performed by method StringFormat in scala.Predef.
+            This member is added by an implicit conversion from <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>] to
+            <span class="extype" name="scala.Predef.StringFormat">StringFormat</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>]] performed by method StringFormat in scala.Predef.
             
           </dd><dt>Definition Classes</dt><dd>StringFormat</dd><dt>Annotations</dt><dd>
                 <span class="name">@inline</span><span class="args">()</span>
@@ -510,6 +544,23 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="framian.RowExtractor#map" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="map[B](f:A=&gt;B):framian.RowExtractor[B,K,Sz]"></a>
+      <a id="map[B]((A)⇒B):RowExtractor[B,K,Sz]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">map</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="framian.RowExtractor.A">A</span>) ⇒ <span class="extype" name="framian.RowExtractor.map.B">B</span></span>)</span><span class="result">: <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.map.B">B</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.RowExtractor@map[B](f:A=&gt;B):framian.RowExtractor[B,K,Sz]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
       <a id="ne(AnyRef):Boolean"></a>
@@ -561,6 +612,40 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="framian.RowExtractor#recover" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="recover(pf:PartialFunction[framian.NonValue,A]):framian.RowExtractor[A,K,Sz]"></a>
+      <a id="recover(PartialFunction[NonValue,A]):RowExtractor[A,K,Sz]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">recover</span><span class="params">(<span name="pf">pf: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.PartialFunction" class="extype" target="_top">PartialFunction</a>[<a href="NonValue.html" class="extype" name="framian.NonValue">NonValue</a>, <span class="extype" name="framian.RowExtractor.A">A</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.RowExtractor@recover(pf:PartialFunction[framian.NonValue,A]):framian.RowExtractor[A,K,Sz]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.RowExtractor#recoverWith" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="recoverWith(pf:PartialFunction[framian.NonValue,framian.Cell[A]]):framian.RowExtractor[A,K,Sz]"></a>
+      <a id="recoverWith(PartialFunction[NonValue,Cell[A]]):RowExtractor[A,K,Sz]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">recoverWith</span><span class="params">(<span name="pf">pf: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.PartialFunction" class="extype" target="_top">PartialFunction</a>[<a href="NonValue.html" class="extype" name="framian.NonValue">NonValue</a>, <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.RowExtractor.A">A</span>]]</span>)</span><span class="result">: <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.RowExtractor@recoverWith(pf:PartialFunction[framian.NonValue,framian.Cell[A]]):framian.RowExtractor[A,K,Sz]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
       <a id="synchronized[T0](⇒T0):T0"></a>
@@ -666,14 +751,14 @@
         </dd></dl></div>
     </li><li name="scala.Predef.ArrowAssoc#→" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="→[B](y:B):(A,B)"></a>
-      <a id="→[B](B):(RowExtractor[A,Col,RowSize],B)"></a>
+      <a id="→[B](B):(RowExtractor[A,K,Sz],B)"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $u2192" class="implicit">→</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="y">y: <span class="extype" name="scala.Predef.ArrowAssoc.→.B">B</span></span>)</span><span class="result">: (<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>], <span class="extype" name="scala.Predef.ArrowAssoc.→.B">B</span>)</span>
+        <span title="gt4s: $u2192" class="implicit">→</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="y">y: <span class="extype" name="scala.Predef.ArrowAssoc.→.B">B</span></span>)</span><span class="result">: (<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>], <span class="extype" name="scala.Predef.ArrowAssoc.→.B">B</span>)</span>
       </span>
       </h4><span class="permalink">
       <a href="../index.html#framian.RowExtractor@→[B](y:B):(A,B)" title="Permalink" target="_top">
@@ -681,8 +766,8 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
-            This member is added by an implicit conversion from <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>] to
-            <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>]] performed by method ArrowAssoc in scala.Predef.
+            This member is added by an implicit conversion from <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>] to
+            <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>]] performed by method ArrowAssoc in scala.Predef.
             
           </dd><dt>Definition Classes</dt><dd>ArrowAssoc</dd></dl></div>
     </li></ol>
@@ -701,19 +786,19 @@
             </div>
         <div class="conversion" name="scala.Predef.any2stringadd">
               <h3>Inherited by implicit conversion any2stringadd from
-                <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>] to <span class="extype" name="scala.Predef.any2stringadd">any2stringadd</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>]]
+                <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>] to <span class="extype" name="scala.Predef.any2stringadd">any2stringadd</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>]]
               </h3>
             </div><div class="conversion" name="scala.Predef.StringFormat">
               <h3>Inherited by implicit conversion StringFormat from
-                <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>] to <span class="extype" name="scala.Predef.StringFormat">StringFormat</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>]]
+                <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>] to <span class="extype" name="scala.Predef.StringFormat">StringFormat</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>]]
               </h3>
             </div><div class="conversion" name="scala.Predef.Ensuring">
               <h3>Inherited by implicit conversion Ensuring from
-                <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>] to <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>]]
+                <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>] to <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>]]
               </h3>
             </div><div class="conversion" name="scala.Predef.ArrowAssoc">
               <h3>Inherited by implicit conversion ArrowAssoc from
-                <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>] to <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.Col">Col</span>, <span class="extype" name="framian.RowExtractor.RowSize">RowSize</span>]]
+                <a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>] to <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="framian.RowExtractor">RowExtractor</a>[<span class="extype" name="framian.RowExtractor.A">A</span>, <span class="extype" name="framian.RowExtractor.K">K</span>, <span class="extype" name="framian.RowExtractor.Sz">Sz</span>]]
               </h3>
             </div>
         </div>

@@ -47,7 +47,7 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.1.1/framian/src/main/scala/framian/Series.scala" target="_blank">Series.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.2.0/framian/src/main/scala/framian/Series.scala" target="_blank">Series.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
@@ -189,7 +189,7 @@
         <img src="../lib/permalink.png" />
       </a>
     </span>
-      <p class="shortcomment cmt">Merges 2 series together, taking the first non-NA or NM value.</p>
+      <p class="shortcomment cmt">Concatenates <code>that</code> onto the end of <code>this</code> <a href="" class="extype" name="framian.Series">Series</a>.</p>
     </li><li name="scala.Predef.ArrowAssoc#-&gt;" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="-&gt;[B](y:B):(A,B)"></a>
       <a id="-&gt;[B](B):(Series[K,V],B)"></a>
@@ -231,7 +231,7 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="framian.Series#apply" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="framian.Series#apply" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="apply(key:K):framian.Cell[V]"></a>
       <a id="apply(K):Cell[V]"></a>
       <h4 class="signature">
@@ -247,7 +247,10 @@
         <img src="../lib/permalink.png" />
       </a>
     </span>
-      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@inline</span><span class="args">()</span>
+              
+        </dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -265,6 +268,46 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="framian.Series#cellAt" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="cellAt(i:Int):framian.Cell[V]"></a>
+      <a id="cellAt(Int):Cell[V]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">cellAt</span><span class="params">(<span name="i">i: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.Series.V">V</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Series@cellAt(i:Int):framian.Cell[V]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@inline</span><span class="args">()</span>
+              
+        </dd></dl></div>
+    </li><li name="framian.Series#cells" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="cells:Vector[framian.Cell[V]]"></a>
+      <a id="cells:Vector[Cell[V]]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">cells</span><span class="result">: <span class="extype" name="scala.Vector">Vector</span>[<a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.Series.V">V</span>]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Series@cells:Vector[framian.Cell[V]]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Return the cells of this series as a vector in index order.</p><div class="fullcomment"><div class="comment cmt"><p>Return the cells of this series as a vector in index order.</p><p>The series may be sparse, so the vector contains <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>s
+rather than just plain values.
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a sparse vector of the values of the series.</p></dd></dl><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="#values:Vector[V]" class="extmbr" name="framian.Series#values">values</a>
+</p></span><span class="cmt"><p><a href="#keys:Vector[K]" class="extmbr" name="framian.Series#keys">keys</a></p></span></dd></dl></div>
     </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a>
       <a id="clone():AnyRef"></a>
@@ -323,7 +366,7 @@
     </span>
       
     </li><li name="framian.Series#compacted" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="compacted[V](implicitevidence$9:scala.reflect.ClassTag[V]):framian.Series[K,V]"></a>
+      <a id="compacted[V](implicitevidence$11:scala.reflect.ClassTag[V]):framian.Series[K,V]"></a>
       <a id="compacted[V](ClassTag[V]):Series[K,V]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -334,7 +377,7 @@
         <span class="name">compacted</span><span class="tparams">[<span name="V">V</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Series.compacted.V">V</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.Series.K">K</span>, <span class="extype" name="framian.Series.compacted.V">V</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Series@compacted[V](implicitevidence$9:scala.reflect.ClassTag[V]):framian.Series[K,V]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Series@compacted[V](implicitevidence$11:scala.reflect.ClassTag[V]):framian.Series[K,V]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -402,29 +445,6 @@ skip over any non value cells if, in fact, the series is sparse.
 the <code>Iterator</code> returned by <a href="#iterator:Iterator[(K,framian.Cell[V])]" class="extmbr" name="framian.Series#iterator">iterator</a></p><pre>series.iterator.collect { <span class="kw">case</span> (k, Value(v)) <span class="kw">=&gt;</span> k -&gt; v} == series.denseIterator</pre><p>however, this method uses a more efficient access pattern
 to the underlying data.
 </p></span></dd><dt>See also</dt><dd><span class="cmt"><p><a href="#iterator:Iterator[(K,framian.Cell[V])]" class="extmbr" name="framian.Series#iterator">iterator</a></p></span></dd></dl></div>
-    </li><li name="framian.Series#denseValues" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="denseValues:Vector[V]"></a>
-      <a id="denseValues:Vector[V]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">denseValues</span><span class="result">: <span class="extype" name="scala.Vector">Vector</span>[<span class="extype" name="framian.Series.V">V</span>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Series@denseValues:Vector[V]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Returns the values of this series as a vector in index order.</p><div class="fullcomment"><div class="comment cmt"><p>Returns the values of this series as a vector in index order.</p><p>If the series is dense, this returns the values directly,
-rather than wrapped in <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>. If the series is infact sparse,
-the <a href="NonValue.html" class="extype" name="framian.NonValue">NonValue</a>s are ignored.
-</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a dense vector of the values of the series.</p></dd></dl><dl class="attributes block"> <dt>Note</dt><dd><span class="cmt"><p>The <code>Vector</code> returned by this method is related to
-the <code>Vector</code> returned by <a href="#values:Vector[framian.Cell[V]]" class="extmbr" name="framian.Series#values">values</a></p><pre>series.values.collect { <span class="kw">case</span> Value(v) <span class="kw">=&gt;</span> v } == series.denseValues</pre><p>however, this method uses a more efficient access pattern
-to the underlying data.
-</p></span></dd><dt>See also</dt><dd><span class="cmt"><p><a href="#values:Vector[framian.Cell[V]]" class="extmbr" name="framian.Series#values">values</a></p></span></dd></dl></div>
     </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ensuring(cond:A=&gt;Boolean,msg:=&gt;Any):A"></a>
       <a id="ensuring((Series[K,V])⇒Boolean,⇒Any):Series[K,V]"></a>
@@ -579,40 +599,100 @@ to the underlying data.
     </span>
       <p class="shortcomment cmt">Returns the <a href="reduce/Exists.html" class="extype" name="framian.reduce.Exists">reduce.Exists</a> reduction of this series by key.</p><div class="fullcomment"><div class="comment cmt"><p>Returns the <a href="reduce/Exists.html" class="extype" name="framian.reduce.Exists">reduce.Exists</a> reduction of this series by key.</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>the <a href="reduce/Exists.html" class="extype" name="framian.reduce.Exists">reduce.Exists</a> reduction of this series by key.</p></dd></dl><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="#forall(p:V=&gt;Boolean):Boolean" class="extmbr" name="framian.Series#forall">forall</a>
 </p></span><span class="cmt"><p><a href="reduce/Exists.html" class="extype" name="framian.reduce.Exists">reduce.Exists</a></p></span></dd></dl></div>
-    </li><li name="framian.Series#filterKeys" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="filterKeys(p:K=&gt;Boolean):framian.Series[K,V]"></a>
-      <a id="filterKeys((K)⇒Boolean):Series[K,V]"></a>
+    </li><li name="framian.Series#filterByCells" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="filterByCells(p:framian.Cell[V]=&gt;Boolean)(implicitev:scala.reflect.ClassTag[V]):framian.Series[K,V]"></a>
+      <a id="filterByCells((Cell[V])⇒Boolean)(ClassTag[V]):Series[K,V]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">filterKeys</span><span class="params">(<span name="p">p: (<span class="extype" name="framian.Series.K">K</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.Series.K">K</span>, <span class="extype" name="framian.Series.V">V</span>]</span>
+        <span class="name">filterByCells</span><span class="params">(<span name="p">p: (<a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.Series.V">V</span>]) ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="ev">ev: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Series.V">V</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.Series.K">K</span>, <span class="extype" name="framian.Series.V">V</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Series@filterKeys(p:K=&gt;Boolean):framian.Series[K,V]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Series@filterByCells(p:framian.Cell[V]=&gt;Boolean)(implicitev:scala.reflect.ClassTag[V]):framian.Series[K,V]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
-      <p class="shortcomment cmt">Filter the this series by its keys.</p>
-    </li><li name="framian.Series#filterValues" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="filterValues(p:framian.Cell[V]=&gt;Boolean):framian.Series[K,V]"></a>
-      <a id="filterValues((Cell[V])⇒Boolean):Series[K,V]"></a>
+      <p class="shortcomment cmt">Select all key-cell pairs of this series where the cells
+satisfy a predicate.</p><div class="fullcomment"><div class="comment cmt"><p>Select all key-cell pairs of this series where the cells
+satisfy a predicate.</p><p>This method preserves the orderedness of the underlying index.
+</p></div><dl class="paramcmts block"><dt class="param">p</dt><dd class="cmt"><p>the predicate used to test cells.</p></dd><dt>returns</dt><dd class="cmt"><p>a new series consisting of all key-call pairs of this
+  series where the cells satisfy the given predicate <code>p</code>.</p></dd></dl><dl class="attributes block"> <dt>Note</dt><dd><span class="cmt"><p>This method is a specialized and optimized version of
+<a href="#filterEntries(p:(K,framian.Cell[V])=&gt;Boolean)(implicitev:scala.reflect.ClassTag[V]):framian.Series[K,V]" class="extmbr" name="framian.Series#filterEntries">filterEntries</a>, where</p><pre>s.filterEntries { (_, c) <span class="kw">=&gt;</span> p(c) } == s.filterByCells(p)</pre></span></dd><dt>See also</dt><dd><span class="cmt"><p><a href="#filterByValues(p:V=&gt;Boolean)(implicitev:scala.reflect.ClassTag[V]):framian.Series[K,V]" class="extmbr" name="framian.Series#filterByValues">filterByValues</a></p></span><span class="cmt"><p><a href="#filterByKeys(p:K=&gt;Boolean)(implicitev:scala.reflect.ClassTag[V]):framian.Series[K,V]" class="extmbr" name="framian.Series#filterByKeys">filterByKeys</a></p></span><span class="cmt"><p><a href="#filterEntries(p:(K,framian.Cell[V])=&gt;Boolean)(implicitev:scala.reflect.ClassTag[V]):framian.Series[K,V]" class="extmbr" name="framian.Series#filterEntries">filterEntries</a></p></span></dd></dl></div>
+    </li><li name="framian.Series#filterByKeys" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="filterByKeys(p:K=&gt;Boolean)(implicitev:scala.reflect.ClassTag[V]):framian.Series[K,V]"></a>
+      <a id="filterByKeys((K)⇒Boolean)(ClassTag[V]):Series[K,V]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">filterValues</span><span class="params">(<span name="p">p: (<a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.Series.V">V</span>]) ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.Series.K">K</span>, <span class="extype" name="framian.Series.V">V</span>]</span>
+        <span class="name">filterByKeys</span><span class="params">(<span name="p">p: (<span class="extype" name="framian.Series.K">K</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="ev">ev: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Series.V">V</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.Series.K">K</span>, <span class="extype" name="framian.Series.V">V</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Series@filterValues(p:framian.Cell[V]=&gt;Boolean):framian.Series[K,V]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Series@filterByKeys(p:K=&gt;Boolean)(implicitev:scala.reflect.ClassTag[V]):framian.Series[K,V]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
-      <p class="shortcomment cmt">Filter the values of this series only.</p>
+      <p class="shortcomment cmt">Select all key-cell pairs of this series where the keys
+satisfy a predicate.</p><div class="fullcomment"><div class="comment cmt"><p>Select all key-cell pairs of this series where the keys
+satisfy a predicate.</p><p>This method preserves the orderedness of the underlying index.
+</p></div><dl class="paramcmts block"><dt class="param">p</dt><dd class="cmt"><p>the predicate used to test keys.</p></dd><dt>returns</dt><dd class="cmt"><p>a new series consisting of all key-call pairs of this
+  series where the keys satisfy the given predicate <code>p</code>.</p></dd></dl><dl class="attributes block"> <dt>Note</dt><dd><span class="cmt"><p>This method is a specialized and optimized version of
+<a href="#filterEntries(p:(K,framian.Cell[V])=&gt;Boolean)(implicitev:scala.reflect.ClassTag[V]):framian.Series[K,V]" class="extmbr" name="framian.Series#filterEntries">filterEntries</a>, where</p><pre>s.filterEntries { (k, _) <span class="kw">=&gt;</span> p(k) } == s.filterByKeys(p)</pre></span></dd><dt>See also</dt><dd><span class="cmt"><p><a href="#filterByValues(p:V=&gt;Boolean)(implicitev:scala.reflect.ClassTag[V]):framian.Series[K,V]" class="extmbr" name="framian.Series#filterByValues">filterByValues</a></p></span><span class="cmt"><p><a href="#filterByCells(p:framian.Cell[V]=&gt;Boolean)(implicitev:scala.reflect.ClassTag[V]):framian.Series[K,V]" class="extmbr" name="framian.Series#filterByCells">filterByCells</a></p></span><span class="cmt"><p><a href="#filterEntries(p:(K,framian.Cell[V])=&gt;Boolean)(implicitev:scala.reflect.ClassTag[V]):framian.Series[K,V]" class="extmbr" name="framian.Series#filterEntries">filterEntries</a></p></span></dd></dl></div>
+    </li><li name="framian.Series#filterByValues" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="filterByValues(p:V=&gt;Boolean)(implicitev:scala.reflect.ClassTag[V]):framian.Series[K,V]"></a>
+      <a id="filterByValues((V)⇒Boolean)(ClassTag[V]):Series[K,V]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">filterByValues</span><span class="params">(<span name="p">p: (<span class="extype" name="framian.Series.V">V</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="ev">ev: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Series.V">V</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.Series.K">K</span>, <span class="extype" name="framian.Series.V">V</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Series@filterByValues(p:V=&gt;Boolean)(implicitev:scala.reflect.ClassTag[V]):framian.Series[K,V]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Selects all key-value pairs of this series where the values
+satisfy a predicate.</p><div class="fullcomment"><div class="comment cmt"><p>Selects all key-value pairs of this series where the values
+satisfy a predicate.</p><p>This method preserves the orderedness of the underlying index.
+It also assumes this series is dense, so any non values will
+also be filtered out. The column that backs the new series
+will be dense.
+</p></div><dl class="paramcmts block"><dt class="param">p</dt><dd class="cmt"><p>the predicate used to test values.</p></dd><dt>returns</dt><dd class="cmt"><p>a new series consisting of all key-value pairs of this
+  series where the values satisfy the given predicate <code>p</code>.</p></dd></dl><dl class="attributes block"> <dt>Note</dt><dd><span class="cmt"><p>This method is a specialized and optimized version of
+<a href="#filterEntries(p:(K,framian.Cell[V])=&gt;Boolean)(implicitev:scala.reflect.ClassTag[V]):framian.Series[K,V]" class="extmbr" name="framian.Series#filterEntries">filterEntries</a>, where</p><pre>s.filterEntries {
+  <span class="kw">case</span> (_, Value(v)) <span class="kw">=&gt;</span> p(v)
+  <span class="kw">case</span> _ <span class="kw">=&gt;</span> <span class="kw">false</span>
+} == s.filterByValues(p)</pre></span></dd><dt>See also</dt><dd><span class="cmt"><p><a href="#filterByCells(p:framian.Cell[V]=&gt;Boolean)(implicitev:scala.reflect.ClassTag[V]):framian.Series[K,V]" class="extmbr" name="framian.Series#filterByCells">filterByCells</a></p></span><span class="cmt"><p><a href="#filterByKeys(p:K=&gt;Boolean)(implicitev:scala.reflect.ClassTag[V]):framian.Series[K,V]" class="extmbr" name="framian.Series#filterByKeys">filterByKeys</a></p></span><span class="cmt"><p><a href="#filterEntries(p:(K,framian.Cell[V])=&gt;Boolean)(implicitev:scala.reflect.ClassTag[V]):framian.Series[K,V]" class="extmbr" name="framian.Series#filterEntries">filterEntries</a></p></span></dd></dl></div>
+    </li><li name="framian.Series#filterEntries" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="filterEntries(p:(K,framian.Cell[V])=&gt;Boolean)(implicitev:scala.reflect.ClassTag[V]):framian.Series[K,V]"></a>
+      <a id="filterEntries((K,Cell[V])⇒Boolean)(ClassTag[V]):Series[K,V]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">filterEntries</span><span class="params">(<span name="p">p: (<span class="extype" name="framian.Series.K">K</span>, <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.Series.V">V</span>]) ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="ev">ev: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Series.V">V</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.Series.K">K</span>, <span class="extype" name="framian.Series.V">V</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Series@filterEntries(p:(K,framian.Cell[V])=&gt;Boolean)(implicitev:scala.reflect.ClassTag[V]):framian.Series[K,V]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Select all key-cell pairs of this series where the pairs
+satisfy a predicate.</p><div class="fullcomment"><div class="comment cmt"><p>Select all key-cell pairs of this series where the pairs
+satisfy a predicate.</p><p>This method preserves the orderedness of the underlying index.
+</p></div><dl class="paramcmts block"><dt class="param">p</dt><dd class="cmt"><p>the predicate used to test key-cell pairs.</p></dd><dt>returns</dt><dd class="cmt"><p>a new series consisting of all key-cell pairs of this
+  series where the pairs satisfy the given predicate <code>p</code>.</p></dd></dl><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="#filterByValues(p:V=&gt;Boolean)(implicitev:scala.reflect.ClassTag[V]):framian.Series[K,V]" class="extmbr" name="framian.Series#filterByValues">filterByValues</a>
+</p></span><span class="cmt"><p><a href="#filterByCells(p:framian.Cell[V]=&gt;Boolean)(implicitev:scala.reflect.ClassTag[V]):framian.Series[K,V]" class="extmbr" name="framian.Series#filterByCells">filterByCells</a></p></span><span class="cmt"><p><a href="#filterByKeys(p:K=&gt;Boolean)(implicitev:scala.reflect.ClassTag[V]):framian.Series[K,V]" class="extmbr" name="framian.Series#filterByKeys">filterByKeys</a></p></span></dd></dl></div>
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <a id="finalize():Unit"></a>
@@ -846,6 +926,113 @@ the value is both available and meaningful.
     </span>
       <p class="shortcomment cmt">Returns the <a href="reduce/ForAll.html" class="extype" name="framian.reduce.ForAll">reduce.ForAll</a> reduction of this series by key.</p><div class="fullcomment"><div class="comment cmt"><p>Returns the <a href="reduce/ForAll.html" class="extype" name="framian.reduce.ForAll">reduce.ForAll</a> reduction of this series by key.</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>the <a href="reduce/ForAll.html" class="extype" name="framian.reduce.ForAll">reduce.ForAll</a> reduction of this series by key.</p></dd></dl><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="#exists(p:V=&gt;Boolean):Boolean" class="extmbr" name="framian.Series#exists">exists</a>
 </p></span><span class="cmt"><p><a href="reduce/ForAll.html" class="extype" name="framian.reduce.ForAll">reduce.ForAll</a></p></span></dd></dl></div>
+    </li><li name="framian.Series#foreach" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="foreach[U](f:(K,framian.Cell[V])=&gt;U):Unit"></a>
+      <a id="foreach[U]((K,Cell[V])⇒U):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">foreach</span><span class="tparams">[<span name="U">U</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="framian.Series.K">K</span>, <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.Series.V">V</span>]) ⇒ <span class="extype" name="framian.Series.foreach.U">U</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Series@foreach[U](f:(K,framian.Cell[V])=&gt;U):Unit" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Applies a function <code>f</code> to all key-cell pairs of the series.</p><div class="fullcomment"><div class="comment cmt"><p>Applies a function <code>f</code> to all key-cell pairs of the series.</p><p>The series is traversed in index order.
+</p></div><dl class="paramcmts block"><dt class="param">f</dt><dd class="cmt"><p>the function that is applied for its side-effect
+           to every key-cell pair. The result of the
+           function <code>f</code> is discarded</p></dd></dl><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="#foreachValues[U](f:V=&gt;U):Unit" class="extmbr" name="framian.Series#foreachValues">foreachValues</a>
+</p></span><span class="cmt"><p><a href="#foreachKeys[U](f:K=&gt;U):Unit" class="extmbr" name="framian.Series#foreachKeys">foreachKeys</a></p></span><span class="cmt"><p><a href="#foreachDense[U](f:(K,V)=&gt;U):Unit" class="extmbr" name="framian.Series#foreachDense">foreachDense</a></p></span><span class="cmt"><p><a href="#foreachCells[U](f:framian.Cell[V]=&gt;U):Unit" class="extmbr" name="framian.Series#foreachCells">foreachCells</a></p></span></dd></dl></div>
+    </li><li name="framian.Series#foreachCells" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="foreachCells[U](f:framian.Cell[V]=&gt;U):Unit"></a>
+      <a id="foreachCells[U]((Cell[V])⇒U):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">foreachCells</span><span class="tparams">[<span name="U">U</span>]</span><span class="params">(<span name="f">f: (<a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.Series.V">V</span>]) ⇒ <span class="extype" name="framian.Series.foreachCells.U">U</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Series@foreachCells[U](f:framian.Cell[V]=&gt;U):Unit" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Applies a function <code>f</code> to all cells of the series.</p><div class="fullcomment"><div class="comment cmt"><p>Applies a function <code>f</code> to all cells of the series.</p><p>The series is traversed in index order.
+</p></div><dl class="paramcmts block"><dt class="param">f</dt><dd class="cmt"><p>the function that is applied for its side-effect
+           to every cell. The result of the
+           function <code>f</code> is discarded</p></dd></dl><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="#foreachValues[U](f:V=&gt;U):Unit" class="extmbr" name="framian.Series#foreachValues">foreachValues</a>
+</p></span><span class="cmt"><p><a href="#foreachKeys[U](f:K=&gt;U):Unit" class="extmbr" name="framian.Series#foreachKeys">foreachKeys</a></p></span><span class="cmt"><p><a href="#foreachDense[U](f:(K,V)=&gt;U):Unit" class="extmbr" name="framian.Series#foreachDense">foreachDense</a></p></span><span class="cmt"><p><a href="#foreach[U](f:(K,framian.Cell[V])=&gt;U):Unit" class="extmbr" name="framian.Series#foreach">foreach</a></p></span></dd></dl></div>
+    </li><li name="framian.Series#foreachDense" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="foreachDense[U](f:(K,V)=&gt;U):Unit"></a>
+      <a id="foreachDense[U]((K,V)⇒U):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">foreachDense</span><span class="tparams">[<span name="U">U</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="framian.Series.K">K</span>, <span class="extype" name="framian.Series.V">V</span>) ⇒ <span class="extype" name="framian.Series.foreachDense.U">U</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Series@foreachDense[U](f:(K,V)=&gt;U):Unit" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Applies a function <code>f</code> to all key-value pairs of the series.</p><div class="fullcomment"><div class="comment cmt"><p>Applies a function <code>f</code> to all key-value pairs of the series.</p><p>The series is traversed in index order.</p><p>This method assumes that the series is dense, so it will skip
+over any non value cells if, in fact, the series is sparse.
+</p></div><dl class="paramcmts block"><dt class="param">f</dt><dd class="cmt"><p>the function that is applied for its side-effect
+           to every key-value pair. The result of the
+           function <code>f</code> is discarded</p></dd></dl><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="#foreachValues[U](f:V=&gt;U):Unit" class="extmbr" name="framian.Series#foreachValues">foreachValues</a>
+</p></span><span class="cmt"><p><a href="#foreachKeys[U](f:K=&gt;U):Unit" class="extmbr" name="framian.Series#foreachKeys">foreachKeys</a></p></span><span class="cmt"><p><a href="#foreachCells[U](f:framian.Cell[V]=&gt;U):Unit" class="extmbr" name="framian.Series#foreachCells">foreachCells</a></p></span><span class="cmt"><p><a href="#foreach[U](f:(K,framian.Cell[V])=&gt;U):Unit" class="extmbr" name="framian.Series#foreach">foreach</a></p></span></dd></dl></div>
+    </li><li name="framian.Series#foreachKeys" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="foreachKeys[U](f:K=&gt;U):Unit"></a>
+      <a id="foreachKeys[U]((K)⇒U):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">foreachKeys</span><span class="tparams">[<span name="U">U</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="framian.Series.K">K</span>) ⇒ <span class="extype" name="framian.Series.foreachKeys.U">U</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Series@foreachKeys[U](f:K=&gt;U):Unit" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Applies a function <code>f</code> to all keys of the series.</p><div class="fullcomment"><div class="comment cmt"><p>Applies a function <code>f</code> to all keys of the series.</p><p>The series is traversed in index order.
+</p></div><dl class="paramcmts block"><dt class="param">f</dt><dd class="cmt"><p>the function that is applied for its side-effect
+           to every key. The result of the
+           function <code>f</code> is discarded</p></dd></dl><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="#foreachValues[U](f:V=&gt;U):Unit" class="extmbr" name="framian.Series#foreachValues">foreachValues</a>
+</p></span><span class="cmt"><p><a href="#foreachDense[U](f:(K,V)=&gt;U):Unit" class="extmbr" name="framian.Series#foreachDense">foreachDense</a></p></span><span class="cmt"><p><a href="#foreachCells[U](f:framian.Cell[V]=&gt;U):Unit" class="extmbr" name="framian.Series#foreachCells">foreachCells</a></p></span><span class="cmt"><p><a href="#foreach[U](f:(K,framian.Cell[V])=&gt;U):Unit" class="extmbr" name="framian.Series#foreach">foreach</a></p></span></dd></dl></div>
+    </li><li name="framian.Series#foreachValues" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="foreachValues[U](f:V=&gt;U):Unit"></a>
+      <a id="foreachValues[U]((V)⇒U):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">foreachValues</span><span class="tparams">[<span name="U">U</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="framian.Series.V">V</span>) ⇒ <span class="extype" name="framian.Series.foreachValues.U">U</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Series@foreachValues[U](f:V=&gt;U):Unit" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Applies a function <code>f</code> to all values of the series.</p><div class="fullcomment"><div class="comment cmt"><p>Applies a function <code>f</code> to all values of the series.</p><p>The series is traversed in index order.</p><p>This method assumes that the series is dense, so it will skip
+over any non value cells if, in fact, the series is sparse.
+</p></div><dl class="paramcmts block"><dt class="param">f</dt><dd class="cmt"><p>the function that is applied for its side-effect
+           to every value. The result of the
+           function <code>f</code> is discarded</p></dd></dl><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="#foreachKeys[U](f:K=&gt;U):Unit" class="extmbr" name="framian.Series#foreachKeys">foreachKeys</a>
+</p></span><span class="cmt"><p><a href="#foreachDense[U](f:(K,V)=&gt;U):Unit" class="extmbr" name="framian.Series#foreachDense">foreachDense</a></p></span><span class="cmt"><p><a href="#foreachCells[U](f:framian.Cell[V]=&gt;U):Unit" class="extmbr" name="framian.Series#foreachCells">foreachCells</a></p></span><span class="cmt"><p><a href="#foreach[U](f:(K,framian.Cell[V])=&gt;U):Unit" class="extmbr" name="framian.Series#foreach">foreach</a></p></span></dd></dl></div>
     </li><li name="scala.Predef.StringFormat#formatted" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="formatted(fmtstr:String):String"></a>
       <a id="formatted(String):String"></a>
@@ -976,7 +1163,7 @@ only <code>NA</code>s and/or <code>NM</code>s will return <code>false</code>.
       <p class="shortcomment cmt">Returns an iterator over the key-cell pairs of the series.</p><div class="fullcomment"><div class="comment cmt"><p>Returns an iterator over the key-cell pairs of the series.</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>an iterator over the key-cell pairs of the series.</p></dd></dl><dl class="attributes block"> <dt>Note</dt><dd><span class="cmt"><p>If the series is known to be dense, or the non values
 can ignored, then one should use <a href="#denseIterator:Iterator[(K,V)]" class="extmbr" name="framian.Series#denseIterator">denseIterator</a> instead.
 </p></span></dd><dt>See also</dt><dd><span class="cmt"><p><a href="#denseIterator:Iterator[(K,V)]" class="extmbr" name="framian.Series#denseIterator">denseIterator</a></p></span></dd></dl></div>
-    </li><li name="framian.Series#keyAt" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="framian.Series#keyAt" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="keyAt(i:Int):K"></a>
       <a id="keyAt(Int):K"></a>
       <h4 class="signature">
@@ -992,7 +1179,10 @@ can ignored, then one should use <a href="#denseIterator:Iterator[(K,V)]" class=
         <img src="../lib/permalink.png" />
       </a>
     </span>
-      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@inline</span><span class="args">()</span>
+              
+        </dd></dl></div>
     </li><li name="framian.Series#keys" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="keys:Vector[K]"></a>
       <a id="keys:Vector[K]"></a>
@@ -1010,8 +1200,8 @@ can ignored, then one should use <a href="#denseIterator:Iterator[(K,V)]" class=
       </a>
     </span>
       <p class="shortcomment cmt">Returns the keys of this series as a vector in index order.</p><div class="fullcomment"><div class="comment cmt"><p>Returns the keys of this series as a vector in index order.
-</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a vector of the keys of the series.</p></dd></dl><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="#values:Vector[framian.Cell[V]]" class="extmbr" name="framian.Series#values">values</a>
-</p></span></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a vector of the keys of the series.</p></dd></dl><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="#values:Vector[V]" class="extmbr" name="framian.Series#values">values</a>
+</p></span><span class="cmt"><p><a href="#cells:Vector[framian.Cell[V]]" class="extmbr" name="framian.Series#cells">cells</a></p></span></dd></dl></div>
     </li><li name="framian.Series#last" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="last:framian.Cell[V]"></a>
       <a id="last:Cell[V]"></a>
@@ -1085,7 +1275,7 @@ can ignored, then one should use <a href="#denseIterator:Iterator[(K,V)]" class=
       <p class="shortcomment cmt">Returns the <a href="reduce/LastN.html" class="extype" name="framian.reduce.LastN">reduce.LastN</a> reduction of this series by key.</p><div class="fullcomment"><div class="comment cmt"><p>Returns the <a href="reduce/LastN.html" class="extype" name="framian.reduce.LastN">reduce.LastN</a> reduction of this series by key.</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>the <a href="reduce/LastN.html" class="extype" name="framian.reduce.LastN">reduce.LastN</a> reduction of this series by key.</p></dd></dl><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="#firstN(n:Int):framian.Cell[List[V]]" class="extmbr" name="framian.Series#firstN">firstN</a>
 </p></span><span class="cmt"><p><a href="#last:framian.Cell[V]" class="extmbr" name="framian.Series#last">last</a></p></span><span class="cmt"><p><a href="reduce/LastN.html" class="extype" name="framian.reduce.LastN">reduce.LastN</a></p></span></dd></dl></div>
     </li><li name="framian.Series#mapKeys" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="mapKeys[L](f:K=&gt;L)(implicitevidence$7:spire.algebra.Order[L],implicitevidence$8:scala.reflect.ClassTag[L]):framian.Series[L,V]"></a>
+      <a id="mapKeys[L](f:K=&gt;L)(implicitevidence$8:spire.algebra.Order[L],implicitevidence$9:scala.reflect.ClassTag[L]):framian.Series[L,V]"></a>
       <a id="mapKeys[L]((K)⇒L)(Order[L],ClassTag[L]):Series[L,V]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1096,7 +1286,7 @@ can ignored, then one should use <a href="#denseIterator:Iterator[(K,V)]" class=
         <span class="name">mapKeys</span><span class="tparams">[<span name="L">L</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="framian.Series.K">K</span>) ⇒ <span class="extype" name="framian.Series.mapKeys.L">L</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Order">Order</span>[<span class="extype" name="framian.Series.mapKeys.L">L</span>]</span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Series.mapKeys.L">L</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.Series.mapKeys.L">L</span>, <span class="extype" name="framian.Series.V">V</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Series@mapKeys[L](f:K=&gt;L)(implicitevidence$7:spire.algebra.Order[L],implicitevidence$8:scala.reflect.ClassTag[L]):framian.Series[L,V]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Series@mapKeys[L](f:K=&gt;L)(implicitevidence$8:spire.algebra.Order[L],implicitevidence$9:scala.reflect.ClassTag[L]):framian.Series[L,V]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -1123,6 +1313,24 @@ as the old series.
 called every time a value is accessed. To prevent this, you must <code>compact</code>
 the Series.
 </p></div></div>
+    </li><li name="framian.Series#mapValuesWithKeys" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="mapValuesWithKeys[W](f:(K,V)=&gt;W)(implicitevidence$10:scala.reflect.ClassTag[W]):framian.Series[K,W]"></a>
+      <a id="mapValuesWithKeys[W]((K,V)⇒W)(ClassTag[W]):Series[K,W]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">mapValuesWithKeys</span><span class="tparams">[<span name="W">W</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="framian.Series.K">K</span>, <span class="extype" name="framian.Series.V">V</span>) ⇒ <span class="extype" name="framian.Series.mapValuesWithKeys.W">W</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Series.mapValuesWithKeys.W">W</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.Series.K">K</span>, <span class="extype" name="framian.Series.mapValuesWithKeys.W">W</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Series@mapValuesWithKeys[W](f:(K,V)=&gt;W)(implicitevidence$10:scala.reflect.ClassTag[W]):framian.Series[K,W]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Map the values of this series, using both the *key* and *value* of each
+cell.</p>
     </li><li name="framian.Series#max" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="max(implicitev0:spire.algebra.Order[V]):framian.Cell[V]"></a>
       <a id="max(Order[V]):Cell[V]"></a>
@@ -1335,6 +1543,23 @@ the Series.
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="framian.Series#orElse" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="orElse[VV&gt;:V](that:framian.Series[K,VV])(implicitevidence$4:scala.reflect.ClassTag[VV]):framian.Series[K,VV]"></a>
+      <a id="orElse[VV&gt;:V](Series[K,VV])(ClassTag[VV]):Series[K,VV]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">orElse</span><span class="tparams">[<span name="VV">VV &gt;: <span class="extype" name="framian.Series.V">V</span></span>]</span><span class="params">(<span name="that">that: <a href="" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.Series.K">K</span>, <span class="extype" name="framian.Series.orElse.VV">VV</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Series.orElse.VV">VV</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.Series.K">K</span>, <span class="extype" name="framian.Series.orElse.VV">VV</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Series@orElse[VV&gt;:V](that:framian.Series[K,VV])(implicitevidence$4:scala.reflect.ClassTag[VV]):framian.Series[K,VV]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Merges 2 series together, taking the first non-NA or NM value.</p>
     </li><li name="framian.Series#product" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="product(implicitev0:spire.algebra.MultiplicativeMonoid[V]):framian.Cell[V]"></a>
       <a id="product(MultiplicativeMonoid[V]):Cell[V]"></a>
@@ -1486,7 +1711,7 @@ equivalent to
 order (not sorted order). It will only roll over <code>NA</code>s whose key is within
 <code>delta</code> of the last valid value or <code>NM</code>. This bounds check is inclusive.</p><p>An example of this behaviour is as follows:</p><pre>Series(<span class="num">1</span> -&gt; <span class="lit">"a"</span>, <span class="num">2</span> -&gt; NA, <span class="num">3</span> -&gt; NA, <span class="num">4</span> -&gt; NM, <span class="num">5</span> -&gt; NA, <span class="num">6</span> -&gt; NA).rollForwardUpTo(<span class="num">1</span>D) ===
 Series(<span class="num">1</span> -&gt; <span class="lit">"a"</span>, <span class="num">2</span> -&gt; <span class="lit">"a"</span>, <span class="num">3</span> -&gt; NA, <span class="num">4</span> -&gt; NM, <span class="num">5</span> -&gt; NM, <span class="num">6</span> -&gt; NA)</pre></div></div>
-    </li><li name="framian.Series#size" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="framian.Series#size" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="size:Int"></a>
       <a id="size:Int"></a>
       <h4 class="signature">
@@ -1502,7 +1727,10 @@ Series(<span class="num">1</span> -&gt; <span class="lit">"a"</span>, <span clas
         <img src="../lib/permalink.png" />
       </a>
     </span>
-      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@inline</span><span class="args">()</span>
+              
+        </dd></dl></div>
     </li><li name="framian.Series#sorted" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="sorted:framian.Series[K,V]"></a>
       <a id="sorted:Series[K,V]"></a>
@@ -1646,7 +1874,7 @@ so the relative order within a key will remain the same.
     </span>
       
     </li><li name="framian.Series#toFrame" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="toFrame[C](col:C)(implicitevidence$5:spire.algebra.Order[C],implicitevidence$6:scala.reflect.ClassTag[C],implicittt:scala.reflect.ClassTag[V]):framian.Frame[K,C]"></a>
+      <a id="toFrame[C](col:C)(implicitevidence$6:spire.algebra.Order[C],implicitevidence$7:scala.reflect.ClassTag[C],implicittt:scala.reflect.ClassTag[V]):framian.Frame[K,C]"></a>
       <a id="toFrame[C](C)(Order[C],ClassTag[C],ClassTag[V]):Frame[K,C]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1657,7 +1885,7 @@ so the relative order within a key will remain the same.
         <span class="name">toFrame</span><span class="tparams">[<span name="C">C</span>]</span><span class="params">(<span name="col">col: <span class="extype" name="framian.Series.toFrame.C">C</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Order">Order</span>[<span class="extype" name="framian.Series.toFrame.C">C</span>]</span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Series.toFrame.C">C</span>]</span>, <span name="tt">tt: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Series.V">V</span>]</span>)</span><span class="result">: <a href="Frame.html" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Series.K">K</span>, <span class="extype" name="framian.Series.toFrame.C">C</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Series@toFrame[C](col:C)(implicitevidence$5:spire.algebra.Order[C],implicitevidence$6:scala.reflect.ClassTag[C],implicittt:scala.reflect.ClassTag[V]):framian.Frame[K,C]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Series@toFrame[C](col:C)(implicitevidence$6:spire.algebra.Order[C],implicitevidence$7:scala.reflect.ClassTag[C],implicittt:scala.reflect.ClassTag[V]):framian.Frame[K,C]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -1715,43 +1943,49 @@ so the relative order within a key will remain the same.
     </span>
       <p class="shortcomment cmt">Returns the <a href="reduce/Unique.html" class="extype" name="framian.reduce.Unique">reduce.Unique</a> reduction of this series by key.</p><div class="fullcomment"><div class="comment cmt"><p>Returns the <a href="reduce/Unique.html" class="extype" name="framian.reduce.Unique">reduce.Unique</a> reduction of this series by key.</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>the <a href="reduce/Unique.html" class="extype" name="framian.reduce.Unique">reduce.Unique</a> reduction of this series by key.</p></dd></dl><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="reduce/Unique.html" class="extype" name="framian.reduce.Unique">reduce.Unique</a>
 </p></span></dd></dl></div>
-    </li><li name="framian.Series#valueAt" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="valueAt(i:Int):framian.Cell[V]"></a>
-      <a id="valueAt(Int):Cell[V]"></a>
+    </li><li name="framian.Series#valueAt" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="valueAt(i:Int):V"></a>
+      <a id="valueAt(Int):V"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">valueAt</span><span class="params">(<span name="i">i: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.Series.V">V</span>]</span>
+        <span class="name">valueAt</span><span class="params">(<span name="i">i: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <span class="extype" name="framian.Series.V">V</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Series@valueAt(i:Int):framian.Cell[V]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Series@valueAt(i:Int):V" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
-      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@inline</span><span class="args">()</span>
+              
+        </dd></dl></div>
     </li><li name="framian.Series#values" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="values:Vector[framian.Cell[V]]"></a>
-      <a id="values:Vector[Cell[V]]"></a>
+      <a id="values:Vector[V]"></a>
+      <a id="values:Vector[V]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">values</span><span class="result">: <span class="extype" name="scala.Vector">Vector</span>[<a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.Series.V">V</span>]]</span>
+        <span class="name">values</span><span class="result">: <span class="extype" name="scala.Vector">Vector</span>[<span class="extype" name="framian.Series.V">V</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Series@values:Vector[framian.Cell[V]]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Series@values:Vector[V]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
-      <p class="shortcomment cmt">Return the values of this series as a vector in index order.</p><div class="fullcomment"><div class="comment cmt"><p>Return the values of this series as a vector in index order.</p><p>The series may be sparse, so the vector contains <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>s
-rather than just plain values.
-</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a sparse vector of the values of the series.</p></dd></dl><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="#denseValues:Vector[V]" class="extmbr" name="framian.Series#denseValues">denseValues</a>
-</p></span></dd></dl></div>
+      <p class="shortcomment cmt">Returns the values of this series as a vector in index order.</p><div class="fullcomment"><div class="comment cmt"><p>Returns the values of this series as a vector in index order.</p><p>If the series is dense, this returns the values directly,
+rather than wrapped in <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>. If the series is infact sparse,
+the <a href="NonValue.html" class="extype" name="framian.NonValue">NonValue</a>s are ignored.
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a dense vector of the values of the series.</p></dd></dl><dl class="attributes block"> <dt>Note</dt><dd><span class="cmt"><p>The <code>Vector</code> returned by this method is related to
+the <code>Vector</code> returned by <a href="#values:Vector[V]" class="extmbr" name="framian.Series#values">values</a></p><pre>series.cells.collect { <span class="kw">case</span> Value(v) <span class="kw">=&gt;</span> v } == series.values</pre><p>however, this method uses a more efficient access pattern
+to the underlying data.
+</p></span></dd><dt>See also</dt><dd><span class="cmt"><p><a href="#values:Vector[V]" class="extmbr" name="framian.Series#values">values</a></p></span><span class="cmt"><p><a href="#keys:Vector[K]" class="extmbr" name="framian.Series#keys">keys</a></p></span></dd></dl></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <a id="wait():Unit"></a>
@@ -1840,7 +2074,7 @@ rather than just plain values.
       <p class="shortcomment cmt">Perform an inner join with <code>that</code> and group the values in tuples.</p><div class="fullcomment"><div class="comment cmt"><p>Perform an inner join with <code>that</code> and group the values in tuples.</p><p>Equivalent to calling <code>lhs.zipMap(rhs)((_, _))</code>.
 </p></div></div>
     </li><li name="framian.Series#zipMap" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="zipMap[W,X](that:framian.Series[K,W])(f:(V,W)=&gt;X)(implicitevidence$4:scala.reflect.ClassTag[X]):framian.Series[K,X]"></a>
+      <a id="zipMap[W,X](that:framian.Series[K,W])(f:(V,W)=&gt;X)(implicitevidence$5:scala.reflect.ClassTag[X]):framian.Series[K,X]"></a>
       <a id="zipMap[W,X](Series[K,W])((V,W)⇒X)(ClassTag[X]):Series[K,X]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1851,7 +2085,7 @@ rather than just plain values.
         <span class="name">zipMap</span><span class="tparams">[<span name="W">W</span>, <span name="X">X</span>]</span><span class="params">(<span name="that">that: <a href="" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.Series.K">K</span>, <span class="extype" name="framian.Series.zipMap.W">W</span>]</span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="framian.Series.V">V</span>, <span class="extype" name="framian.Series.zipMap.W">W</span>) ⇒ <span class="extype" name="framian.Series.zipMap.X">X</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Series.zipMap.X">X</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.Series.K">K</span>, <span class="extype" name="framian.Series.zipMap.X">X</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Series@zipMap[W,X](that:framian.Series[K,W])(f:(V,W)=&gt;X)(implicitevidence$4:scala.reflect.ClassTag[X]):framian.Series[K,X]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Series@zipMap[W,X](that:framian.Series[K,W])(f:(V,W)=&gt;X)(implicitevidence$5:scala.reflect.ClassTag[X]):framian.Series[K,X]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>

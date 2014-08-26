@@ -57,7 +57,7 @@ the collection, then this reduction should still return true.</p><p>This reducer
 encounters an available and meaningful value that satisfies the
 predicate <code>p</code>.
 </p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>the value type of the column to reduce.
-</p></dd></dl><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.1.1/framian/src/main/scala/framian/reduce/predicates.scala" target="_blank">predicates.scala</a></dd><div class="block">Example:
+</p></dd></dl><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.2.0/framian/src/main/scala/framian/reduce/predicates.scala" target="_blank">predicates.scala</a></dd><div class="block">Example:
                <ol><li class="cmt"><p></p><pre>Series.empty[<span class="std">Int</span>, <span class="std">Int</span>].reduce(<span class="kw">new</span> Exists[<span class="std">Int</span>](i <span class="kw">=&gt;</span> <span class="kw">true</span>)) == Value(<span class="kw">false</span>)
 
 Series(<span class="num">1</span> -&gt; <span class="num">1</span>, <span class="num">2</span> -&gt; <span class="num">2</span>).reduce(<span class="kw">new</span> Exists[<span class="std">Int</span>](i <span class="kw">=&gt;</span> i &lt; <span class="num">2</span>)) == Value(<span class="kw">true</span>)

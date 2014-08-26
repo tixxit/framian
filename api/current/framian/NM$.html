@@ -51,7 +51,7 @@
 For instance, if we divide by 0, then the result is not
 meaningful, but we wouldn't necessarily say that data is
 unavailable.
-</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.1.1/framian/src/main/scala/framian/Cell.scala" target="_blank">Cell.scala</a></dd><dt>See also</dt><dd><span class="cmt"><p><a href="Cell.html" class="extype" name="framian.Cell">Cell</a> <a href="NonValue.html" class="extype" name="framian.NonValue">NonValue</a> <a href="NA$.html" class="extype" name="framian.NA">NA</a> <a href="Value.html" class="extype" name="framian.Value">Value</a>
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.2.0/framian/src/main/scala/framian/Cell.scala" target="_blank">Cell.scala</a></dd><dt>See also</dt><dd><span class="cmt"><p><a href="Cell.html" class="extype" name="framian.Cell">Cell</a> <a href="NonValue.html" class="extype" name="framian.NonValue">NonValue</a> <a href="NA$.html" class="extype" name="framian.NA">NA</a> <a href="Value.html" class="extype" name="framian.Value">Value</a>
 </p></span></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Serializable" class="extype" target="_top">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Product" class="extype" target="_top">Product</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Equals" class="extype" target="_top">Equals</a>, <a href="NonValue.html" class="extype" name="framian.NonValue">NonValue</a>, <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Nothing" class="extype" target="_top">Nothing</a>], <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></div>
@@ -690,6 +690,48 @@ otherwise return the result of evaluating <code>alternative</code>.
                 <span class="name">@inline</span><span class="args">()</span>
               
         </dd><dt>See also</dt><dd><span class="cmt"><p><a href="Cell.html#getOrElse[B&gt;:A](default:=&gt;B):B" class="extmbr" name="framian.Cell#getOrElse">getOrElse</a>
+</p></span></dd></dl></div>
+    </li><li name="framian.Cell#recover" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="recover[A0&gt;:A](pf:PartialFunction[framian.NonValue,A0]):framian.Cell[A0]"></a>
+      <a id="recover[A0&gt;:Nothing](PartialFunction[NonValue,A0]):Cell[A0]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">recover</span><span class="tparams">[<span name="A0">A0 &gt;: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Nothing" class="extype" target="_top">Nothing</a></span>]</span><span class="params">(<span name="pf">pf: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.PartialFunction" class="extype" target="_top">PartialFunction</a>[<a href="NonValue.html" class="extype" name="framian.NonValue">NonValue</a>, <span class="extype" name="framian.Cell.recover.A0">A0</span>]</span>)</span><span class="result">: <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.Cell.recover.A0">A0</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.NM$@recover[A0&gt;:A](pf:PartialFunction[framian.NonValue,A0]):framian.Cell[A0]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">If this cell is a <a href="NonValue.html" class="extype" name="framian.NonValue">NonValue</a> and <code>pf</code> is defined for it, then this
+will return <code>Value(pf(this))</code>, otherwise it will return this cell as-is.</p><div class="fullcomment"><div class="comment cmt"><p>If this cell is a <a href="NonValue.html" class="extype" name="framian.NonValue">NonValue</a> and <code>pf</code> is defined for it, then this
+will return <code>Value(pf(this))</code>, otherwise it will return this cell as-is.
+</p></div><dl class="paramcmts block"><dt class="param">pf</dt><dd class="cmt"><p>the partial function to map the non-value.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Cell.html" class="extype" name="framian.Cell">Cell</a></dd><dt>See also</dt><dd><span class="cmt"><p><a href="Cell.html#recoverWith[A0&gt;:A](pf:PartialFunction[framian.NonValue,framian.Cell[A0]]):framian.Cell[A0]" class="extmbr" name="framian.Cell#recoverWith">recoverWith</a>
+</p></span></dd></dl></div>
+    </li><li name="framian.Cell#recoverWith" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="recoverWith[A0&gt;:A](pf:PartialFunction[framian.NonValue,framian.Cell[A0]]):framian.Cell[A0]"></a>
+      <a id="recoverWith[A0&gt;:Nothing](PartialFunction[NonValue,Cell[A0]]):Cell[A0]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">recoverWith</span><span class="tparams">[<span name="A0">A0 &gt;: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Nothing" class="extype" target="_top">Nothing</a></span>]</span><span class="params">(<span name="pf">pf: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.PartialFunction" class="extype" target="_top">PartialFunction</a>[<a href="NonValue.html" class="extype" name="framian.NonValue">NonValue</a>, <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.Cell.recoverWith.A0">A0</span>]]</span>)</span><span class="result">: <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.Cell.recoverWith.A0">A0</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.NM$@recoverWith[A0&gt;:A](pf:PartialFunction[framian.NonValue,framian.Cell[A0]]):framian.Cell[A0]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">If this cell is a <a href="NonValue.html" class="extype" name="framian.NonValue">NonValue</a> and <code>pf</code> is defined for it, then this
+will return <code>pf(this)</code>, otherwise it will return this cell as-is.</p><div class="fullcomment"><div class="comment cmt"><p>If this cell is a <a href="NonValue.html" class="extype" name="framian.NonValue">NonValue</a> and <code>pf</code> is defined for it, then this
+will return <code>pf(this)</code>, otherwise it will return this cell as-is.
+</p></div><dl class="paramcmts block"><dt class="param">pf</dt><dd class="cmt"><p>the partial function to map the non-value.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Cell.html" class="extype" name="framian.Cell">Cell</a></dd><dt>See also</dt><dd><span class="cmt"><p><a href="Cell.html#recover[A0&gt;:A](pf:PartialFunction[framian.NonValue,A0]):framian.Cell[A0]" class="extmbr" name="framian.Cell#recover">recover</a>
 </p></span></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
