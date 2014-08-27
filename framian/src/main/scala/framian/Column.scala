@@ -43,7 +43,7 @@ import framian.columns._
  * instance, ties a `Column` together with an [[Index]] to restrict the set of
  * rows being used.
  */
-trait Column[@spec(Int,Long,Float,Double) +A] extends ColumnLike[Column[A]] {
+trait Column[@spec(Int,Long,Float,Double) +A] extends ColumnLike[Column[A]] { self =>
 
   /** Returns `true` if a value is present at index `row`
     *
@@ -118,6 +118,15 @@ trait Column[@spec(Int,Long,Float,Double) +A] extends ColumnLike[Column[A]] {
   def reindex(index: Array[Int]): Column[A] = new ReindexColumn(index, this)
 
   def reindex(f: Int => Int): Column[A] = new ContramappedColumn(f, this)
+
+  /**
+   * Returns a [[Column]] whose cells have been transformed with `f`.
+   */
+  def cellMap[B](f: Cell[A] => Cell[B]): Column[B] = Column.wrap { row =>
+    f(self.apply(row))
+  }
+
+  def wrap[A](f: Int => Cell[A]): Column[A] = new WrappedColumn(f)
 
   /**
    * Force a specific row to be not available (`NA`).
