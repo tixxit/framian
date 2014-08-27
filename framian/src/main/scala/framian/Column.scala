@@ -126,8 +126,6 @@ trait Column[@spec(Int,Long,Float,Double) +A] extends ColumnLike[Column[A]] { se
     f(self.apply(row))
   }
 
-  def wrap[A](f: Int => Cell[A]): Column[A] = new WrappedColumn(f)
-
   /**
    * Force a specific row to be not available (`NA`).
    */
