@@ -101,3 +101,12 @@ trait SeriesGenerators {
     } yield Series.fromCells(t2s: _*)
 }
 object SeriesGenerators extends SeriesGenerators
+
+trait IndexGenerators {
+  def genIndex[K: Order: ClassTag](keyGen: Gen[K]): Gen[Index[K]] =
+    Gen.listOf(Gen.zip(keyGen, arbitrary[Int])).map(pairs => Index(pairs: _*))
+
+  implicit def arbIndex[K: Arbitrary: Order: ClassTag]: Arbitrary[Index[K]] =
+    Arbitrary(genIndex(arbitrary[K]))
+}
+object IndexGenerators extends IndexGenerators
