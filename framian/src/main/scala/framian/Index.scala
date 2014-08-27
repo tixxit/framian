@@ -118,7 +118,20 @@ sealed abstract class Index[K](implicit val order: Order[K], val classTag: Class
   private[framian] def withIndices(is: Array[Int]): Index[K]
 
   override def equals(that: Any): Boolean = that match {
-    case (that: Index[_]) => this.to[Vector] == that.to[Vector]
+    case (that: Index[_]) =>
+      if (this eq that) true
+      else if (this.size != that.size) false
+      else {
+        var isEq = true
+        var i = 0
+        val len = size
+        while (i < len && isEq) {
+          isEq = this.keyAt(i) == that.keyAt(i) && this.indexAt(i) == that.indexAt(i)
+          i += 1
+        }
+        isEq
+      }
+
     case _ => false
   }
 
