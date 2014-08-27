@@ -119,7 +119,19 @@ sealed abstract class Index[K](implicit val order: Order[K], val classTag: Class
 
   override def equals(that: Any): Boolean = that match {
     case (that: Index[_]) =>
-      (this eq that) || (this.size == that.size && this.to[Vector] == that.to[Vector])
+      if (this eq that) true
+      else if (this.size != that.size) false
+      else {
+        var isEq = true
+        var i = 0
+        val len = size
+        while (i < len && isEq) {
+          isEq = this.keyAt(i) == that.keyAt(i) && this.indexAt(i) == that.indexAt(i)
+          i += 1
+        }
+        isEq
+      }
+
     case _ => false
   }
 
