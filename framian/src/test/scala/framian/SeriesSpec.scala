@@ -189,6 +189,29 @@ class SeriesSpec extends Specification with ScalaCheck {
     }
   }
 
+  "cellMap" should {
+    "transform NAs and NMs" in {
+      val original = Series.fromCells("a" -> NA, "b" -> NM, "c" -> NA)
+      val expected = Series("a" -> 1, "b" -> 2, "c" -> 1)
+      original.cellMap {
+        case NA => Value(1)
+        case NM => Value(2)
+        case Value(_) => Value(3)
+      } must_== expected
+    }
+
+    "transform Values" in {
+      val original = Series("a" -> 1, "b" -> 2, "c" -> 3)
+      val expected = Series.fromCells("a" -> NA, "b" -> NM, "c" -> Value(5))
+      original.cellMap {
+        case Value(1) => NA
+        case Value(2) => NM
+        case Value(n) => Value(n + 2)
+        case NA | NM => NA
+      } must_== expected
+    }
+  }
+
   "zipMap" should {
 
     "zipMap empty Series" in {

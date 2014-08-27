@@ -446,6 +446,28 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     Series(index.resetIndices, bldr.result())
   }
 
+  /**
+   * Transforms the cells in this series using `f`.
+   */
+  def cellMap[W: ClassTag](f: Cell[V] => Cell[W]): Series[K, W] = {
+    val bldr = Column.builder[W]
+    index.foreach { (k, row) =>
+      bldr += f(column(row))
+    }
+    Series(index.resetIndices, bldr.result())
+  }
+
+  /**
+   * Transforms the cells, indexed by their key, in this series using `f`.
+   */
+  def cellMapWithKeys[W: ClassTag](f: (K, Cell[V]) => Cell[W]): Series[K, W] = {
+    val bldr = Column.builder[W]
+    index.foreach { (k, row) =>
+      bldr += f(k, column(row))
+    }
+    Series(index.resetIndices, bldr.result())
+  }
+
   /** Select all key-cell pairs of this series where the pairs
     * satisfy a predicate.
     *
