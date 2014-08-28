@@ -39,12 +39,59 @@ import spire.syntax.cfor._
 sealed abstract class Index[K](implicit val order: Order[K], val classTag: ClassTag[K])
     extends Iterable[(K, Int)] with IterableLike[(K, Int), Index[K]] {
 
+  /**
+   * Returns an empty `Index` with the same key type as this.
+   */
   def empty: Index[K] = Index.empty[K]
 
+  /**
+   * Returns the number of key/row pairs in this index.
+   */
   def size: Int
 
+  /**
+   * Returns an iterator, in traversal order, over the key/row pairs in this
+   * index.
+   */
   def iterator: Iterator[(K, Int)]
 
+  /**
+   * Returns the key/row pair at position `i`.
+   */
+  def apply(i: Int): (K, Int) = (keyAt(i), indexAt(i))
+
+  /**
+   * Returns the key at position `i`.
+   */
+  def keyAt(i: Int): K
+
+  /**
+   * Returns the row at position `i`.
+   */
+  def indexAt(i: Int): Int
+
+  /**
+   * Iterate over all key/row pairs in traversal order, calling `f` with each
+   * pair for its side-effects.
+   */
+  def foreach[U](f: (K, Int) => U): Unit
+
+  @tailrec private def findStart(k: K, i: Int): Int =
+    if (i > 0 && keys(i - 1) === k) findStart(k, i - 1)
+    else i
+
+  @tailrec private def findEnd(k: K, i: Int): Int =
+    if (i < keys.length && keys(i) === k) findEnd(k, i + 1)
+    else i
+
+  /**
+   * Returns the index (in traversal order) of the first key/row pair whose key
+   * is `k`. If no such key exist in this index, then the this returns
+   * `-i - 1`, where `i` is the position in the index where `k` could be
+   * inserted while still maintaining sorted order.
+   *
+   * @param k the key to search for
+   */
   def search(k: K): Int = {
     val i = Searching.search(keys, k)
     if (i < 0) {
@@ -55,47 +102,41 @@ sealed abstract class Index[K](implicit val order: Order[K], val classTag: Class
         -j - 1
       }
     } else {
-      indices(i)
+      indices(findStart(k, i))
     }
   }
 
-  def apply(i: Int): (K, Int) = (keyAt(i), indexAt(i))
-  def keyAt(i: Int): K
-  def indexAt(i: Int): Int
-
-  def foreach[U](f: (K, Int) => U): Unit
-
-  override def foreach[U](f: ((K, Int)) => U): Unit = foreach(Function.untupled(f))
-
-  override def seq: Index[K] = this
-
-  override protected def newBuilder: Builder[(K, Int), Index[K]] =
-    new Index.IndexBuilder
-
+  /**
+   * Returns the position of the first key/row pair with key `k`. If no key/row
+   * pair with key `k` exist in this index, then `None` is returned.
+   *
+   * @param k the key to search for
+   */
   def get(k: K): Option[Int] = {
     val i = search(k)
     if (i >= 0) Some(i) else None
   }
 
+  /**
+   * Returns an index with just the key/row pairs whose key is `k`. If there
+   * are no such pairs, then an empty index is returned.
+   *
+   * @param k the key of the key/row pairs returned
+   */
   def getAll(k: K): Index[K] = {
-    @tailrec def findLower(j: Int): Int =
-      if (j > 0 && keys(j - 1) === k) findLower(j - 1)
-      else j
-
-    @tailrec def findUpper(j: Int): Int =
-      if (j < keys.length && keys(j) === k) findUpper(j + 1)
-      else j
-
     val i = Searching.search(keys, k)
     if (i >= 0) {
-      val lb = findLower(i)
-      val ub = findUpper(i + 1)
+      val lb = findStart(k, i)
+      val ub = findEnd(k, i + 1)
       Index.ordered(keys.slice(lb, ub), indices.slice(lb, ub))
     } else {
       Index.empty[K]
     }
   }
 
+  /**
+   * Returns an index whose traversal order is the reverse of this one's.
+   */
   def reverse: Index[K] = {
     val keys0 = new Array[K](keys.length)
     val indices0 = new Array[Int](indices.length)
@@ -107,15 +148,53 @@ sealed abstract class Index[K](implicit val order: Order[K], val classTag: Class
     Index(keys0, indices0)
   }
 
+  /**
+   * Returns this [[Index]] in sorted order, by its keys. This operation runs
+   * in constant time, since it simply "forgets" the traversal ordering, if
+   * one exists.
+   */
   def sorted: OrderedIndex[K] = Index.ordered(keys, indices)
 
+  /**
+   * Returns a copy of this Index, but whose rows have been replaced with their
+   * index in the traversal order instead. For example,
+   *
+   * {{{
+   * val index = Index("b" -> 32, "c" -> 9, "a" -> -23)
+   * assert(index.resetIndices == Index("b" -> 0, "c" -> 1, "a" -> 2))
+   * }}}
+   */
   def resetIndices: Index[K]
 
-  protected[framian] def isOrdered: Boolean
+  /**
+   * Returns 2 arrays that match the key/row pairings, in traversal order.
+   * Namely, the following invariant should hold:
+   *
+   * {{{
+   * val index: Index[K] = ...
+   * val (keys, indices) = index.unzip
+   * val copy = Index(keys, indices)
+   * assert(index == copy)
+   * }}}
+   */
+  def unzip: (Array[K], Array[Int])
+
+  /**
+   * Returns `true` if this index is in sorted order.
+   */
+  def isOrdered: Boolean
+
   // These must contain both the keys and the indices, in sorted order.
   private[framian] def keys: Array[K]
   private[framian] def indices: Array[Int]
   private[framian] def withIndices(is: Array[Int]): Index[K]
+
+  override def foreach[U](f: ((K, Int)) => U): Unit = foreach(Function.untupled(f))
+
+  override def seq: Index[K] = this
+
+  override protected def newBuilder: Builder[(K, Int), Index[K]] =
+    new Index.IndexBuilder
 
   override def equals(that: Any): Boolean = that match {
     case (that: Index[_]) =>
@@ -382,7 +461,18 @@ final class UnorderedIndex[K: Order: ClassTag] private[framian] (
   def resetIndices: Index[K] =
     new UnorderedIndex(keys, Array.range(0, keys.size), ord)
 
-  protected[framian] def isOrdered = false
+  def unzip: (Array[K], Array[Int]) = {
+    val ks = new Array[K](ord.length)
+    val is = new Array[Int](ord.length)
+    cfor(0)(_ < ord.length, _ + 1) { i =>
+      val j = ord(i)
+      ks(i) = keys(j)
+      is(i) = indices(j)
+    }
+    (ks, is)
+  }
+
+  def isOrdered = false
 
   private[framian] def withIndices(is: Array[Int]): Index[K] =
     new UnorderedIndex(keys, is, ord)
@@ -407,7 +497,9 @@ final class OrderedIndex[K: Order: ClassTag] private[framian] (
   def resetIndices: Index[K] =
     new OrderedIndex(keys, Array.range(0, keys.size))
 
-  protected[framian] def isOrdered = true
+  def unzip: (Array[K], Array[Int]) = (keys.clone(), indices.clone())
+
+  def isOrdered = true
 
   private[framian] def withIndices(is: Array[Int]): Index[K] =
     new OrderedIndex(keys, is)
