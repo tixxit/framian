@@ -598,7 +598,7 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
 
   "lastN" should {
     "render the last N valid values in a series" in {
-      Series[String, Int]().last must_== NA
+      Series[String, Int]().lastN(2) must_== NA
       Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).lastN(2) must_== Value(List(2, 3))
       Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).lastN(2) must_== Value(List(1, 2))
       Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).lastN(2) must_== NA
@@ -612,7 +612,7 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
 
   "max" should {
     "render the maximum value in a series" in {
-      Series[String, Int]().last must_== NA
+      Series[String, Int]().max must_== NA
       Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).max must_== Value(3)
       Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).max must_== Value(2)
       Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).max must_== Value(1)
@@ -626,7 +626,7 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
 
   "min" should {
     "render the minimum value in a series" in {
-      Series[String, Int]().last must_== NA
+      Series[String, Int]().min must_== NA
       Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).min must_== Value(1)
       Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).min must_== Value(1)
       Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).min must_== Value(1)
@@ -635,6 +635,62 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
       Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).min must_== NM
       Series.fromCells[String, Int]("a" -> NM, "b" -> NA, "c" -> NA).min must_== NM
       Series.fromCells("a" -> NA, "b" -> Value(2), "c" -> Value(3)).min must_== Value(2)
+    }
+  }
+
+  "sum" should {
+    "render a sum of all values in a series" in {
+      Series[String, Int]().sum must_== Value(0)
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).sum must_== Value(6)
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).sum must_== Value(3)
+      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).sum must_== Value(1)
+      Series.fromCells[String, Int]("a" -> NA, "b" -> NA, "c" -> NA).sum must_== Value(0)
+      Series.fromCells[String, Int]("a" -> NM, "b" -> Value(2), "c" -> Value(3)).sum must_== NM
+      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).sum must_== NM
+      Series.fromCells[String, Int]("a" -> NM, "b" -> NA, "c" -> NA).sum must_== NM
+      Series.fromCells("a" -> NA, "b" -> Value(2), "c" -> Value(3)).sum must_== Value(5)
+    }
+  }
+
+  "sumNonEmpty" should {
+    "render a sum of all the values in non-empty series" in {
+      Series[String, Int]().sumNonEmpty must_== NA
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).sumNonEmpty must_== Value(6)
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).sumNonEmpty must_== Value(3)
+      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).sumNonEmpty must_== Value(1)
+      Series.fromCells[String, Int]("a" -> NA, "b" -> NA, "c" -> NA).sumNonEmpty must_== NA
+      Series.fromCells[String, Int]("a" -> NM, "b" -> Value(2), "c" -> Value(3)).sumNonEmpty must_== NM
+      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).sumNonEmpty must_== NM
+      Series.fromCells[String, Int]("a" -> NM, "b" -> NA, "c" -> NA).sumNonEmpty must_== NM
+      Series.fromCells("a" -> NA, "b" -> Value(2), "c" -> Value(3)).sumNonEmpty must_== Value(5)
+    }
+  }
+
+  "product" should {
+    "render a product of all values in a series" in {
+      Series[String, Int]().product must_== Value(1)
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).product must_== Value(6)
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).product must_== Value(2)
+      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).product must_== Value(1)
+      Series.fromCells[String, Int]("a" -> NA, "b" -> NA, "c" -> NA).product must_== Value(1)
+      Series.fromCells[String, Int]("a" -> NM, "b" -> Value(2), "c" -> Value(3)).product must_== NM
+      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).product must_== NM
+      Series.fromCells[String, Int]("a" -> NM, "b" -> NA, "c" -> NA).product must_== NM
+      Series.fromCells("a" -> NA, "b" -> Value(2), "c" -> Value(3)).product must_== Value(6)
+    }
+  }
+
+  "productNonEmpty" should {
+    "render a product of all the values in non-empty series" in {
+      Series[String, Int]().productNonEmpty must_== NA
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).productNonEmpty must_== Value(6)
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).productNonEmpty must_== Value(2)
+      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).productNonEmpty must_== Value(1)
+      Series.fromCells[String, Int]("a" -> NA, "b" -> NA, "c" -> NA).productNonEmpty must_== NA
+      Series.fromCells[String, Int]("a" -> NM, "b" -> Value(2), "c" -> Value(3)).productNonEmpty must_== NM
+      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).productNonEmpty must_== NM
+      Series.fromCells[String, Int]("a" -> NM, "b" -> NA, "c" -> NA).productNonEmpty must_== NM
+      Series.fromCells("a" -> NA, "b" -> Value(2), "c" -> Value(3)).productNonEmpty must_== Value(6)
     }
   }
 }
