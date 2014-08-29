@@ -69,7 +69,7 @@ object Boilerplate {
       |    ys
       |  }
       |
-      |  private def copyArray[A](xs: Array[A], len: Int): Array[A] = xs match {
+      |  def copyArray[A](xs: Array[A], len: Int): Array[A] = xs match {
       |    case (xs: Array[Boolean]) => java.util.Arrays.copyOf(xs, len)
       |    case (xs: Array[Double]) => java.util.Arrays.copyOf(xs, len)
       |    case (xs: Array[Float]) => java.util.Arrays.copyOf(xs, len)

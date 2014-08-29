@@ -22,6 +22,8 @@ sealed trait Column[+A] {
 
   def reindex(index: Array[Int]): Column[A]
 
+  def force(len: Int): Column[A]
+
   override def toString: String =
     (0 to 5).map(apply(_).toString).mkString("Column(", ", ", ")")
 }
@@ -67,6 +69,9 @@ case class EvalColumn[A](f: Int => Cell[A]) extends BoxedColumn[A] {
 
   def reindex(index: Array[Int]): Column[A] =
     DenseColumn.force(index andThen f, index.length)
+
+  def force(len: Int): Column[A] =
+    DenseColumn.force(f, len)
 }
 
 // Wraps a column and memoizes the results.
@@ -96,6 +101,17 @@ sealed trait EmptyColumn[A] extends BoxedColumn[A] {
       i += 1
     }
     NAColumn(nm.result())
+  }
+
+  def force(len: Int): Column[A] = this match {
+    case NAColumn(nm) =>
+      NAColumn(nm.filter(row => row >= 0 && row < len))
+    case NMColumn(na) =>
+      val nm = BitSet.newBuilder
+      (0 until len) foreach { i =>
+        if (!na(i)) nm += i
+      }
+      NAColumn(nm.result())
   }
 }
 
@@ -138,30 +154,55 @@ case class IntColumn(values: Array[Int], naValues: BitSet, nmValues: BitSet) ext
   def valueAt(row: Int): Int = values(row)
   def map[@sp(Int,Long,Double) B](f: Int => B): Column[B] = DenseColumn.mapInt(values, naValues, nmValues, f)
   def reindex(index: Array[Int]): Column[Int] = DenseColumn.reindexInt(index, values, naValues, nmValues)
+  def force(len: Int): Column[Int] = IntColumn(
+    java.util.Arrays.copyOf(values, len),
+    if (values.length < len) naValues ++ (values.length until len) else naValues,
+    nmValues.filter(_ < len)
+  )
 }
 
 case class LongColumn(values: Array[Long], naValues: BitSet, nmValues: BitSet) extends DenseColumn[Long] {
   def valueAt(row: Int): Long = values(row)
   def map[@sp(Int,Long,Double) B](f: Long => B): Column[B] = DenseColumn.mapLong(values, naValues, nmValues, f)
   def reindex(index: Array[Int]): Column[Long] = DenseColumn.reindexLong(index, values, naValues, nmValues)
+  def force(len: Int): Column[Long] = LongColumn(
+    java.util.Arrays.copyOf(values, len),
+    if (values.length < len) naValues ++ (values.length until len) else naValues,
+    nmValues.filter(_ < len)
+  )
 }
 
 case class DoubleColumn(values: Array[Double], naValues: BitSet, nmValues: BitSet) extends DenseColumn[Double] {
   def valueAt(row: Int): Double = values(row)
   def map[@sp(Int,Long,Double) B](f: Double => B): Column[B] = DenseColumn.mapDouble(values, naValues, nmValues, f)
   def reindex(index: Array[Int]): Column[Double] = DenseColumn.reindexDouble(index, values, naValues, nmValues)
+  def force(len: Int): Column[Double] = DoubleColumn(
+    java.util.Arrays.copyOf(values, len),
+    if (values.length < len) naValues ++ (values.length until len) else naValues,
+    nmValues.filter(_ < len)
+  )
 }
 
 case class AnyColumn[A](values: Array[Any], naValues: BitSet, nmValues: BitSet) extends DenseColumn[A] {
   def valueAt(row: Int): A = values(row).asInstanceOf[A]
   def map[@sp(Int,Long,Double) B](f: A => B): Column[B] = DenseColumn.mapAny(values, naValues, nmValues, f)
   def reindex(index: Array[Int]): Column[A] = DenseColumn.reindexAny(index, values, naValues, nmValues)
+  def force(len: Int): Column[A] = AnyColumn(
+    DenseColumn.copyArray(values, len),
+    if (values.length < len) naValues ++ (values.length until len) else naValues,
+    nmValues.filter(_ < len)
+  )
 }
 
 case class GenericColumn[A](values: Array[A], naValues: BitSet, nmValues: BitSet) extends DenseColumn[A] {
   def valueAt(row: Int): A = values(row)
   def map[@sp(Int,Long,Double) B](f: A => B): Column[B] = DenseColumn.mapGeneric(values, naValues, nmValues, f)
   def reindex(index: Array[Int]): Column[A] = DenseColumn.reindexGeneric(index, values, naValues, nmValues)
+  def force(len: Int): Column[A] = GenericColumn(
+    DenseColumn.copyArray(values, len),
+    if (values.length < len) naValues ++ (values.length until len) else naValues,
+    nmValues.filter(_ < len)
+  )
 }
 
 class ColumnMacros(val c: blackbox.Context) {
