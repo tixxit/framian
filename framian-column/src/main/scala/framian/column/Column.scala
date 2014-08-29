@@ -3,16 +3,20 @@ package column
 
 import scala.language.experimental.macros
 
+import scala.{specialized => sp }
+
 import scala.reflect.macros.blackbox
 
 import scala.collection.immutable.BitSet
 
-sealed trait Column[+A] extends (Int => Cell[A]) {
+sealed trait Column[+A] {
   def foldRow[B](row: Int)(na: B, nm: B, f: A => B): B = macro ColumnMacros.foldRowImpl[A, B]
+
+  def apply(row: Int): Cell[A]
 
   def cellMap[B](f: Cell[A] => Cell[B]): Column[B]
 
-  def map[B](f: A => B): Column[B]
+  def map[@sp(Int,Long,Double) B](f: A => B): Column[B]
   def filter(p: A => Boolean): Column[A]
 
   override def toString: String =
@@ -20,7 +24,7 @@ sealed trait Column[+A] extends (Int => Cell[A]) {
 }
 
 sealed trait BoxedColumn[A] extends Column[A] {
-  def map[B](f: A => B): Column[B] = cellMap {
+  def map[@sp(Int,Long,Double) B](f: A => B): Column[B] = cellMap {
     case Value(a) => Value(f(a))
     case (nonValue: NonValue) => nonValue
   }
@@ -44,11 +48,11 @@ sealed trait UnboxedColumn[A] extends Column[A] {
 
 object Column {
   def eval[A](get: Int => Cell[A]): Column[A] = EvalColumn(get)
-  def dense[A](values: Array[A]): Column[A] = values match {
-    case (values: Array[Double]) => DoubleColumn(values, BitSet.empty, BitSet.empty)
-    case (values: Array[Int]) => IntColumn(values, BitSet.empty, BitSet.empty)
-    case (values: Array[Long]) => LongColumn(values, BitSet.empty, BitSet.empty)
-    case _ => GenColumn[A](values, BitSet.empty, BitSet.empty)
+  def dense[A](values: Array[A], na: BitSet = BitSet.empty, nm: BitSet = BitSet.empty): Column[A] = values match {
+    case (values: Array[Double]) => DoubleColumn(values, na, nm)
+    case (values: Array[Int]) => IntColumn(values, na, nm)
+    case (values: Array[Long]) => LongColumn(values, na, nm)
+    case _ => GenColumn[A](values, na, nm)
   }
 }
 
@@ -75,17 +79,8 @@ case class EvalColumn[A](f: Int => Cell[A]) extends BoxedColumn[A] {
 //   }
 // }
 
-// Array-backed instances.
-// sealed trait DenseColumn[@spec(Int, Long, Double) A] {
-//   def values: Array[A]
-//   def naValues: BitSet
-//   def nmValues: BitSet
-// }
-// 
-// case class DoubleColumn(values: Array[Double], naValues: BitSet, nmValues: BitSet) extends FiniteColumn[Double]
-
 sealed trait EmptyColumn[A] extends BoxedColumn[A] {
-  def cellMap[B](f: Cell[A] => Cell[B]): Column[B] = EvalColumn(this andThen f)
+  def cellMap[B](f: Cell[A] => Cell[B]): Column[B] = EvalColumn((apply _) andThen f)
 }
 
 case class NAColumn[A](nmValues: BitSet) extends EmptyColumn[A] {
@@ -105,36 +100,52 @@ sealed trait DenseColumn[A] extends UnboxedColumn[A] {
   def isValueAt(row: Int): Boolean = valid(row) && !naValues(row) && !nmValues(row)
   def nonValueAt(row: Int): NonValue = if (nmValues(row)) NM else NA
 
-  def filter(p: A => Boolean): Column[A] = ???
+  def filter(p: A => Boolean): Column[A] = {
+    val na = BitSet.newBuilder
+    var i = 0
+    while (i < values.length) {
+      if (naValues(i) || (isValueAt(i) && !p(valueAt(i)))) {
+        na += i
+      }
+      i += 1
+    }
+    Column.dense(values, na.result(), nmValues).asInstanceOf[Column[A]]
+  }
 
-  def cellMap[B](f: Cell[A] => Cell[B]): Column[B] = ???
+  // Required, because cellmap can make an infinite column.
+  def cellMap[B](f: Cell[Int] => Cell[B]): Column[B] = Column.eval(apply _).cellMap(f)
 }
 
 object DenseColumn extends DenseColumnFunctions
 
 case class IntColumn(values: Array[Int], naValues: BitSet, nmValues: BitSet) extends DenseColumn[Int] {
   def valueAt(row: Int): Int = values(row)
-  def map[B](f: Int => B): Column[B] = DenseColumn.mapInt(values, naValues, nmValues, f)
+  def map[@sp(Int,Long,Double) B](f: Int => B): Column[B] = DenseColumn.mapInt(values, naValues, nmValues, f)
+  //def cellMap[B](f: Cell[Int] => Cell[B]): Column[B] = DenseColumn.cellMapInt(values, naValues, nmValues, f)
 }
 
 case class LongColumn(values: Array[Long], naValues: BitSet, nmValues: BitSet) extends DenseColumn[Long] {
   def valueAt(row: Int): Long = values(row)
-  def map[B](f: Long => B): Column[B] = DenseColumn.mapLong(values, naValues, nmValues, f)
+  def map[@sp(Int,Long,Double) B](f: Long => B): Column[B] = DenseColumn.mapLong(values, naValues, nmValues, f)
+  //def cellMap[B](f: Cell[Long] => Cell[B]): Column[B] = DenseColumn.cellMapLong(values, naValues, nmValues, f)
 }
 
 case class DoubleColumn(values: Array[Double], naValues: BitSet, nmValues: BitSet) extends DenseColumn[Double] {
   def valueAt(row: Int): Double = values(row)
-  def map[B](f: Double => B): Column[B] = DenseColumn.mapDouble(values, naValues, nmValues, f)
+  def map[@sp(Int,Long,Double) B](f: Double => B): Column[B] = DenseColumn.mapDouble(values, naValues, nmValues, f)
+  //def cellMap[B](f: Cell[Double] => Cell[B]): Column[B] = DenseColumn.cellMapDouble(values, naValues, nmValues, f)
 }
 
 case class AnyColumn[A](values: Array[Any], naValues: BitSet, nmValues: BitSet) extends DenseColumn[A] {
   def valueAt(row: Int): A = values(row).asInstanceOf[A]
-  def map[B](f: A => B): Column[B] = DenseColumn.mapAny(values, naValues, nmValues, f)
+  def map[@sp(Int,Long,Double) B](f: A => B): Column[B] = DenseColumn.mapAny(values, naValues, nmValues, f)
+  //def cellMap[B](f: Cell[A] => Cell[B]): Column[B] = DenseColumn.cellMapAny(values, naValues, nmValues, f)
 }
 
 case class GenColumn[A](values: Array[A], naValues: BitSet, nmValues: BitSet) extends DenseColumn[A] {
   def valueAt(row: Int): A = values(row)
-  def map[B](f: A => B): Column[B] = DenseColumn.mapGeneric(values, naValues, nmValues, f)
+  def map[@sp(Int,Long,Double) B](f: A => B): Column[B] = DenseColumn.mapGeneric(values, naValues, nmValues, f)
+  //def cellMap[B](f: Cell[A] => Cell[B]): Column[B] = DenseColumn.cellMapGeneric(values, naValues, nmValues, f)
 }
 
 class ColumnMacros(val c: blackbox.Context) {

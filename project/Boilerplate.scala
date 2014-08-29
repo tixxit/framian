@@ -20,9 +20,12 @@ object Boilerplate {
     }
   }
 
-  trait GenSpecFunction {
+  abstract class GenSpecFunction(specFunction: Boolean) {
     case class Config(name: String, inputArrayType: String, inputType: String, isSpec: Boolean, cast: String = "") {
-      def typeParams: String = if (isSpec) "B" else s"$inputType, B"
+      def typeParams: String = {
+        val sp = if (specFunction) "@specialized(Int,Long,Double)" else ""
+        if (isSpec) s"$sp B" else s"$inputType, $sp B"
+      }
     }
 
     def specs = List("Int", "Long", "Double")
@@ -58,6 +61,7 @@ object Boilerplate {
       |package framian.column
       |
       |import scala.collection.immutable.BitSet
+      |import framian.{Cell,NA,NM,Value}
       |
       |trait DenseColumnFunctions {
       |  private def copyToAnyArray[A](xs: Array[A], len: Int): Array[Any] = {
@@ -71,11 +75,13 @@ object Boilerplate {
       |  }
       |
       |${GenMap.body}
+      |
+      |${GenCellMap.body}
       |}
     """.stripMargin
   }
 
-  object GenMap extends GenSpecFunction {
+  object GenMap extends GenSpecFunction(true) {
     def gen(config: Config): String = {
       import config._
       block"""
@@ -126,6 +132,77 @@ object Boilerplate {
         |      } else {
         |        AnyColumn(xs, naValues, nmValues)
         |      }
+        |  
+        |    loop(0)
+        |  }
+      """
+    }
+  }
+
+  object GenCellMap extends GenSpecFunction(false) {
+    def gen(config: Config): String = {
+      import config._
+      block"""
+        |  def cellMap$name[$typeParams](values: Array[$inputArrayType], naValues: BitSet, nmValues: BitSet, f: Cell[$inputType] => Cell[B]): Column[B] = {
+        |    val na = BitSet.newBuilder
+        |    val nm = BitSet.newBuilder
+        |  
+        |    def get(i: Int): Cell[$inputType] =
+        |      if (naValues(i)) NA
+        |      else if (nmValues(i)) NM
+        |      else Value(values(i)$cast)
+        |  
+        |    def loop(i: Int): Column[B] =
+        |      if (i < values.length) {
+        |        f(get(i)) match {
+        |          case NA => na += i; loop(i + 1)
+        |          case NM => na += i; loop(i + 1)
+        |          case Value(value) =>
+        |            value match {
+        -              case (x: {specType}) =>
+        -                val xs = new Array[{specType}](values.size)
+        -                xs(i) = x
+        -                loop{specType}(xs, i + 1)
+        |              case x =>
+        |                val xs = new Array[Any](values.size)
+        |                xs(i) = x
+        |                loopAny(xs, i + 1)
+        |          }
+        |        }
+        |      } else {
+        |        NAColumn[B](nm.result())
+        |      }
+        |  
+        -    def loop{specType}(xs: Array[{specType}], i0: Int): Column[B] = {
+        -      var i = i0
+        -      while (i < xs.length) {
+        -        f(get(i)) match {
+        -          case NA => na += i
+        -          case NM => nm += i
+        -          case Value(value) =>
+        -            try {
+        -              xs(i) = value.asInstanceOf[{specType}]
+        -            } catch { case (_: ClassCastException) =>
+        -              return loopAny(copyToAnyArray(xs, i), i)
+        -            }
+        -        }
+        -        i += 1
+        -      }
+        -      {specType}Column(xs, na.result(), nm.result()).asInstanceOf[Column[B]]
+        -    }
+        -  
+        |    def loopAny(xs: Array[Any], i0: Int): Column[B] = {
+        |      var i = i0
+        |      while (i < xs.length) {
+        |        f(get(i)) match {
+        |          case NA => na += i
+        |          case NM => nm += i
+        |          case Value(value) => xs(i) = value
+        |        }
+        |        i += 1
+        |      }
+        |      AnyColumn(xs, na.result(), nm.result())
+        |    }
         |  
         |    loop(0)
         |  }
