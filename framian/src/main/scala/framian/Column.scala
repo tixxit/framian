@@ -93,8 +93,8 @@ trait Column[@spec(Int,Long,Float,Double) +A] extends ColumnLike[Column[A]] { se
    */
   def filter(f: A => Boolean): Column[A] = new FilteredColumn(f, this)
 
-  def zipMap[B, C](rhs: Column[B])(f: (A, B) => C): Column[C] =
-    new ZipMapColumn[A, B, C](f, this, rhs)
+  //def zipMap[B, C](rhs: Column[B])(f: (A, B) => C): Column[C] =
+  //  new ZipMapColumn[A, B, C](f, this, rhs)
 
   /**
    * Masks this column with a given `BitSet`. That is, a value only exists at
@@ -128,20 +128,6 @@ trait Column[@spec(Int,Long,Float,Double) +A] extends ColumnLike[Column[A]] { se
    * Force a specific row to be not available (`NA`).
    */
   def setNA(row: Int): Column[A] = new SetNAColumn(row, this)
-
-  // TODO: This should really just take an Index[_] and compact it for
-  //       fast access.
-  def compact[AA >: A](len: Int)(implicit ct: ClassTag[AA]): Column[AA] = {
-    val bldr = new ColumnBuilder[AA]
-    cfor(0)(_ < len, _ + 1) { row =>
-      if (isValueAt(row)) {
-        bldr.addValue(valueAt(row))
-      } else {
-        bldr.addNonValue(nonValueAt(row))
-      }
-    }
-    bldr.result()
-  }
 
   final def cells(rng: Range): Vector[Cell[A]] = rng.map(this(_))(collection.breakOut)
 

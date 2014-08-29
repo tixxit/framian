@@ -21,16 +21,11 @@ object Boilerplate {
   }
 
   abstract class GenSpecFunction(specFunction: Boolean) {
-    case class Config(name: String, inputArrayType: String, inputType: String, isSpec: Boolean, cast: String = "") {
-      def typeParams: String = {
-        val sp = if (specFunction) "@specialized(Int,Long,Double)" else ""
-        if (isSpec) s"$sp B" else s"$inputType, $sp B"
-      }
-    }
+    case class Config(name: String, inputArrayType: String, inputType: String, isSpec: Boolean, cast: String = "")
 
     def specs = List("Int", "Long", "Double")
 
-    def configs = 
+    def configs =
       Config("Generic", "A", "A", false) ::
       Config("Any", "Any", "A", false, ".asInstanceOf[A]") ::
       specs.map(s => Config(s, s, s, true))
@@ -74,16 +69,61 @@ object Boilerplate {
       |    ys
       |  }
       |
+      |  private def copyArray[A](xs: Array[A], len: Int): Array[A] = xs match {
+      |    case (xs: Array[Boolean]) => java.util.Arrays.copyOf(xs, len)
+      |    case (xs: Array[Double]) => java.util.Arrays.copyOf(xs, len)
+      |    case (xs: Array[Float]) => java.util.Arrays.copyOf(xs, len)
+      |    case (xs: Array[Char]) => java.util.Arrays.copyOf(xs, len)
+      |    case (xs: Array[Long]) => java.util.Arrays.copyOf(xs, len)
+      |    case (xs: Array[Int]) => java.util.Arrays.copyOf(xs, len)
+      |    case (xs: Array[Short]) => java.util.Arrays.copyOf(xs, len)
+      |    case (xs: Array[Byte]) => java.util.Arrays.copyOf(xs, len)
+      |    case _ => java.util.Arrays.copyOf(xs.asInstanceOf[Array[A with AnyRef]], len).asInstanceOf[Array[A]]
+      |  }
+      |
       |${GenMap.body}
       |
-      |${GenCellMap.body}
+      |${GenReindex.body}
+      |
+      |${GenForce.body}
       |}
     """.stripMargin
+  }
+
+  object GenReindex extends GenSpecFunction(false) {
+    def gen(config: Config): String = {
+      import config._
+
+      def typeParams: String = if (isSpec) s"" else s"[$inputType]"
+
+      block"""
+        |  def reindex$name$typeParams(index: Array[Int], values: Array[$inputArrayType], naValues: BitSet, nmValues: BitSet): Column[$inputType] = {
+        |    val xs = copyArray(values, index.length)
+        |    val na = BitSet.newBuilder
+        |    val nm = BitSet.newBuilder
+        |    var i = 0
+        |    while (i < index.length) {
+        |      val row = index(i)
+        |      if (naValues(row)) na += i
+        |      else if (nmValues(row)) nm += i
+        |      else if (row >= 0 && row < values.length) xs(i) = values(row)$cast
+        |      i += 1
+        |    }
+        |    ${name}Column(xs, na.result(), nm.result())
+        |  }
+      """
+    }
   }
 
   object GenMap extends GenSpecFunction(true) {
     def gen(config: Config): String = {
       import config._
+
+      def typeParams: String = {
+        val sp = "@specialized(Int,Long,Double)"
+        if (isSpec) s"$sp B" else s"$inputType, $sp B"
+      }
+
       block"""
         |  def map$name[$typeParams](values: Array[$inputArrayType], naValues: BitSet, nmValues: BitSet, f: $inputType => B): Column[B] = {
         |    def loop(i: Int): Column[B] =
@@ -139,44 +179,47 @@ object Boilerplate {
     }
   }
 
-  object GenCellMap extends GenSpecFunction(false) {
+  object GenForce extends GenSpecFunction(true) {
+    override def configs = Config("Any", "Any", "A", false) :: Nil
+
     def gen(config: Config): String = {
       import config._
+
+      def typeParams: String = {
+        val sp = "@specialized(Int,Long,Double)"
+        if (isSpec) s"$sp B" else s"$inputType, $sp B"
+      }
+
       block"""
-        |  def cellMap$name[$typeParams](values: Array[$inputArrayType], naValues: BitSet, nmValues: BitSet, f: Cell[$inputType] => Cell[B]): Column[B] = {
+        |  def force[$inputType](col: Int => Cell[$inputType], len: Int): Column[A] = {
         |    val na = BitSet.newBuilder
         |    val nm = BitSet.newBuilder
-        |  
-        |    def get(i: Int): Cell[$inputType] =
-        |      if (naValues(i)) NA
-        |      else if (nmValues(i)) NM
-        |      else Value(values(i)$cast)
-        |  
-        |    def loop(i: Int): Column[B] =
-        |      if (i < values.length) {
-        |        f(get(i)) match {
+        |
+        |    def loop(i: Int): Column[A] =
+        |      if (i < len) {
+        |        col(i) match {
         |          case NA => na += i; loop(i + 1)
         |          case NM => na += i; loop(i + 1)
         |          case Value(value) =>
         |            value match {
         -              case (x: {specType}) =>
-        -                val xs = new Array[{specType}](values.size)
+        -                val xs = new Array[{specType}](len)
         -                xs(i) = x
         -                loop{specType}(xs, i + 1)
         |              case x =>
-        |                val xs = new Array[Any](values.size)
+        |                val xs = new Array[Any](len)
         |                xs(i) = x
         |                loopAny(xs, i + 1)
-        |          }
+        |            }
         |        }
         |      } else {
-        |        NAColumn[B](nm.result())
+        |        NAColumn[A](nm.result())
         |      }
         |  
-        -    def loop{specType}(xs: Array[{specType}], i0: Int): Column[B] = {
+        -    def loop{specType}(xs: Array[{specType}], i0: Int): Column[A] = {
         -      var i = i0
         -      while (i < xs.length) {
-        -        f(get(i)) match {
+        -        col(i) match {
         -          case NA => na += i
         -          case NM => nm += i
         -          case Value(value) =>
@@ -188,13 +231,13 @@ object Boilerplate {
         -        }
         -        i += 1
         -      }
-        -      {specType}Column(xs, na.result(), nm.result()).asInstanceOf[Column[B]]
+        -      {specType}Column(xs, na.result(), nm.result()).asInstanceOf[Column[A]]
         -    }
         -  
-        |    def loopAny(xs: Array[Any], i0: Int): Column[B] = {
+        |    def loopAny(xs: Array[Any], i0: Int): Column[A] = {
         |      var i = i0
         |      while (i < xs.length) {
-        |        f(get(i)) match {
+        |        col(i) match {
         |          case NA => na += i
         |          case NM => nm += i
         |          case Value(value) => xs(i) = value
