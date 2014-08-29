@@ -4,6 +4,7 @@ import org.scalacheck._
 import org.specs2.ScalaCheck
 import org.specs2.mutable._
 
+import scala.collection.mutable
 import scala.reflect.ClassTag
 
 import spire.algebra._
@@ -286,6 +287,72 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
             classifyMeaningful(series) {
               series.filterByKeys(v => true).values must_== series.values
               series.filterByKeys(v => false) must_== Series.empty[String, Int]
+            }
+          }
+        }
+      }
+    }
+  }
+
+  "foreachDense" should {
+    "iterate over all dense key-value pairs" in {
+      forAll(arbitrary[Series[String, Int]]) { series =>
+        classifyEmpty(series) {
+          classifySparse(series) {
+            classifyMeaningful(series) {
+              // Build a sequence of (K, V) from the dense foreach, and ensure the equivalent of the
+              // filterByValues dense series can be recreated from its output
+              val eachDenseEntry = Seq.newBuilder[(String, Int)]
+              series.foreachDense((k, v) => eachDenseEntry += ((k, v)))
+              series.filterByValues(v => true) must_== Series(eachDenseEntry.result(): _*)
+            }
+          }
+        }
+      }
+    }
+  }
+
+  "foreachKeys" should {
+    "iterate over all keys of a series" in {
+      forAll(arbitrary[Series[String, Int]]) { series =>
+        classifyEmpty(series) {
+          classifySparse(series) {
+            classifyMeaningful(series) {
+              val keyVectorBuilder = Vector.newBuilder[String]
+              series.foreachKeys(keyVectorBuilder += _)
+              series.keys must_== keyVectorBuilder.result()
+            }
+          }
+        }
+      }
+    }
+  }
+
+  "foreachCells" should {
+    "iterate over all values of a series as cells, including NMs and NAs" in {
+      forAll(arbitrary[Series[String, Int]]) { series =>
+        classifyEmpty(series) {
+          classifySparse(series) {
+            classifyMeaningful(series) {
+              val cellVectorBuilder = Vector.newBuilder[Cell[Int]]
+              series.foreachCells(cellVectorBuilder += _)
+              series.cells must_== cellVectorBuilder.result()
+            }
+          }
+        }
+      }
+    }
+  }
+
+  "foreachValues" should {
+    "iterate over all the values of a series" in {
+      forAll(arbitrary[Series[String, Int]]) { series =>
+        classifyEmpty(series) {
+          classifySparse(series) {
+            classifyMeaningful(series) {
+              val valueVectorBuilder = Vector.newBuilder[Int]
+              series.foreachValues(valueVectorBuilder += _)
+              series.values must_== valueVectorBuilder.result()
             }
           }
         }
