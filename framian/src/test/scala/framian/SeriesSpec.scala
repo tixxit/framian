@@ -212,6 +212,26 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
     }
   }
 
+  "cellMapWithKeys" should {
+    "map values with their keys" in {
+      forAll(arbitrary[Series[String, Int]]) { series =>
+        classifyEmpty(series) {
+          classifySparse(series) {
+            classifyMeaningful(series) {
+              def plus5(c: Cell[Int]): Cell[Int] = c match {
+                case Value(v) => Value(v + 5)
+                case NA => NA
+                case NM => NM
+              }
+
+              series.cellMapWithKeys((k, v) => plus5(v)) must_== series.cellMap(plus5)
+            }
+          }
+        }
+      }
+    }
+  }
+
   "zipMap" should {
 
     "zipMap empty Series" in {
@@ -285,8 +305,23 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
         classifyEmpty(series) {
           classifySparse(series) {
             classifyMeaningful(series) {
-              series.filterByKeys(v => true).values must_== series.values
-              series.filterByKeys(v => false) must_== Series.empty[String, Int]
+              series.filterByKeys(k => true).values must_== series.values
+              series.filterByKeys(k => false) must_== Series.empty[String, Int]
+            }
+          }
+        }
+      }
+    }
+  }
+
+  "filterEntries" should {
+    "filter a series by its key-value pair entries" in {
+      forAll(arbitrary[Series[String, Int]]) { series =>
+        classifyEmpty(series) {
+          classifySparse(series) {
+            classifyMeaningful(series) {
+              series.filterEntries((k, v) => true) must_== series
+              series.filterEntries((k, v) => false) must_== Series.empty[String, Int]
             }
           }
         }
