@@ -15,3 +15,5 @@ trait SeriesClassifiers {
     classify(s.cells.exists(_.isValue), "non-empty, empty")(prop)
 
 }
+object SeriesClassifiers extends SeriesClassifiers
+

@@ -3,7 +3,6 @@ package framian
 import org.scalacheck._
 import org.specs2.ScalaCheck
 import org.specs2.mutable._
-import spire.math.Rational
 
 import scala.reflect.ClassTag
 
@@ -265,13 +264,28 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
   }
 
   "filterByValues" should {
-
     "filter a series by its values" in {
       forAll(arbitrary[Series[String, Int]]) { series =>
         classifyEmpty(series) {
           classifySparse(series) {
             classifyMeaningful(series) {
+              series.filterByValues(v => true).values must_== series.values
+              series.filterByValues(v => false) must_== Series.empty[String, Int]
+            }
+          }
+        }
+      }
+    }
+  }
 
+  "filterByKeys" should {
+    "filter a series by its keys" in {
+      forAll(arbitrary[Series[String, Int]]) { series =>
+        classifyEmpty(series) {
+          classifySparse(series) {
+            classifyMeaningful(series) {
+              series.filterByKeys(v => true).values must_== series.values
+              series.filterByKeys(v => false) must_== Series.empty[String, Int]
             }
           }
         }
