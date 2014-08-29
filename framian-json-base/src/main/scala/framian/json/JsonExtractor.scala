@@ -36,12 +36,13 @@ trait JsonExtractor extends JsonModule {
 
   implicit object JsonValueRowExtractor extends RowExtractor[JsonValue, JsonPath, Variable] {
     type P = List[(JsonPath, Column[JsonValue])]
-    def prepare[Row](frame: Frame[Row, JsonPath], cols: List[JsonPath]): Option[P] =
-      Some(cols map { key =>
-        key -> frame.column[JsonValue](key).column
+
+    def prepare(cols: Series[JsonPath, UntypedColumn], keys: List[JsonPath]): Option[P] =
+      Some(keys flatMap { key =>
+        cols(key).value.map(_.cast[JsonValue]).map(key -> _)
       })
 
-    def extract[Row](frame: Frame[Row, JsonPath], key: Row, row: Int, cols: P): Cell[JsonValue] =
+    def extract(row: Int, cols: P): Cell[JsonValue] =
       Cell.fromOption(inflate(for {
         (path, col) <- cols
         value <- col.foldRow(row)(Some(_), {
@@ -52,5 +53,5 @@ trait JsonExtractor extends JsonModule {
   }
 
   def frameToJson(frame: Frame[_, JsonPath]): JsonValue =
-    JsonValue.jsonArray(frame.columns.as[JsonValue].iterator.toVector flatMap (_._2.value))
+    JsonValue.jsonArray(frame.get(Cols.all.as[JsonValue]).to[Vector] flatMap (_._2.value))
 }

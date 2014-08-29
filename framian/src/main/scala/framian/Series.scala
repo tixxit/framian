@@ -21,8 +21,6 @@
 
 package framian
 
-import language.higherKinds
-
 import scala.annotation.tailrec
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable.{ ArrayBuilder, Builder }
@@ -31,6 +29,7 @@ import scala.reflect.ClassTag
 
 import spire.algebra._
 import spire.math._
+import spire.std.double._
 import spire.std.int._
 import spire.syntax.additiveMonoid._
 import spire.syntax.monoid._
@@ -39,6 +38,7 @@ import spire.syntax.cfor._
 
 import spire.compat._
 
+import framian.columns.MappedColumn
 import framian.reduce.Reducer
 import framian.util.TrivialMetricSpace
 
@@ -47,6 +47,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   private implicit def classTag = index.classTag
   private implicit def order = index.order
 
+  @inline
   def size: Int = index.size
 
   /** Returns this series as a collection of key/value pairs. */
@@ -87,12 +88,185 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
       k -> column.valueAt(ix)
     }
 
-  def keys: Vector[K] = index.map(_._1)(collection.breakOut)
-  def values: Vector[Cell[V]] = index.map({ case (_, i) => column(i) })(collection.breakOut)
 
+  /** Applies a function `f` to all key-cell pairs of the series.
+    *
+    * The series is traversed in index order.
+    *
+    * @param  f  the function that is applied for its side-effect
+    *            to every key-cell pair. The result of the
+    *            function `f` is discarded
+    * @see [[foreachCells]]
+    * @see [[foreachDense]]
+    * @see [[foreachKeys]]
+    * @see [[foreachValues]]
+    */
+  def foreach[U](f: (K, Cell[V]) => U): Unit = {
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      f(index.keyAt(i), column(index.indexAt(i)))
+    }
+  }
+
+
+  /** Applies a function `f` to all key-value pairs of the series.
+    *
+    * The series is traversed in index order.
+    *
+    * This method assumes that the series is dense, so it will skip
+    * over any non value cells if, in fact, the series is sparse.
+    *
+    * @param  f  the function that is applied for its side-effect
+    *            to every key-value pair. The result of the
+    *            function `f` is discarded
+    * @see [[foreach]]
+    * @see [[foreachCells]]
+    * @see [[foreachKeys]]
+    * @see [[foreachValues]]
+    */
+  def foreachDense[U](f: (K, V) => U): Unit = {
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      val ix = index.indexAt(i)
+      if (column.isValueAt(ix)) {
+        f(index.keyAt(i), column.valueAt(ix))
+      }
+    }
+  }
+
+
+  /** Applies a function `f` to all keys of the series.
+    *
+    * The series is traversed in index order.
+    *
+    * @param  f  the function that is applied for its side-effect
+    *            to every key. The result of the
+    *            function `f` is discarded
+    * @see [[foreach]]
+    * @see [[foreachCells]]
+    * @see [[foreachDense]]
+    * @see [[foreachValues]]
+    */
+  def foreachKeys[U](f: K => U): Unit = {
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      f(index.keyAt(i))
+    }
+  }
+
+
+  /** Applies a function `f` to all cells of the series.
+    *
+    * The series is traversed in index order.
+    *
+    * @param  f  the function that is applied for its side-effect
+    *            to every cell. The result of the
+    *            function `f` is discarded
+    * @see [[foreach]]
+    * @see [[foreachDense]]
+    * @see [[foreachKeys]]
+    * @see [[foreachValues]]
+    */
+  def foreachCells[U](f: Cell[V] => U): Unit = {
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      f(column(index.indexAt(i)))
+    }
+  }
+
+
+  /** Applies a function `f` to all values of the series.
+    *
+    * The series is traversed in index order.
+    *
+    * This method assumes that the series is dense, so it will skip
+    * over any non value cells if, in fact, the series is sparse.
+    *
+    * @param  f  the function that is applied for its side-effect
+    *            to every value. The result of the
+    *            function `f` is discarded
+    * @see [[foreach]]
+    * @see [[foreachCells]]
+    * @see [[foreachDense]]
+    * @see [[foreachKeys]]
+    */
+  def foreachValues[U](f: V => U): Unit = {
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      val ix = index.indexAt(i)
+      if (column.isValueAt(ix)) {
+        f(column.valueAt(ix))
+      }
+    }
+  }
+
+  /** Returns the keys of this series as a vector in index order.
+    *
+    * @return a vector of the keys of the series.
+    * @see [[cells]]
+    * @see [[values]]
+    */
+  def keys: Vector[K] = {
+    val builder = Vector.newBuilder[K]
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      builder += index.keyAt(i)
+    }
+    builder.result()
+  }
+
+
+  /** Return the cells of this series as a vector in index order.
+    *
+    * The series may be sparse, so the vector contains [[Cell]]s
+    * rather than just plain values.
+    *
+    * @return a sparse vector of the values of the series.
+    * @see [[keys]]
+    * @see [[values]]
+    */
+  def cells: Vector[Cell[V]] = {
+    val builder = Vector.newBuilder[Cell[V]]
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      builder += column(index.indexAt(i))
+    }
+    builder.result()
+  }
+
+
+  /** Returns the values of this series as a vector in index order.
+    *
+    * If the series is dense, this returns the values directly,
+    * rather than wrapped in [[Cell]]. If the series is infact sparse,
+    * the [[NonValue]]s are ignored.
+    *
+    * @return a dense vector of the values of the series.
+    * @see [[keys]]
+    * @see [[values]]
+    * @note The `Vector` returned by this method is related to
+    * the `Vector` returned by [[values]]
+    * {{{
+    * series.cells.collect { case Value(v) => v } == series.values
+    * }}}
+    * however, this method uses a more efficient access pattern
+    * to the underlying data.
+    */
+  def values: Vector[V] = {
+    val builder = Vector.newBuilder[V]
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      val ix = index.indexAt(i)
+      if (column.isValueAt(ix)) {
+        builder += column.valueAt(ix)
+      }
+    }
+    builder.result()
+  }
+
+
+  @inline
   def keyAt(i: Int): K = index.keyAt(i)
-  def valueAt(i: Int): Cell[V] = column(index.indexAt(i))
 
+  @inline
+  def cellAt(i: Int): Cell[V] = column(index.indexAt(i))
+
+  @inline
+  def valueAt(i: Int): V = column.valueAt(index.indexAt(i))
+
+  @inline
   def apply(key: K): Cell[V] = index.get(key) map (column(_)) getOrElse NA
 
   /**
@@ -112,7 +286,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     var seenValue = false
     while (i < index.size && !seenValue) {
       val row = index.indexAt(i)
-      seenValue = seenValue & column.isValueAt(row)
+      seenValue = seenValue | column.isValueAt(row)
       i += 1
     }
     seenValue
@@ -151,9 +325,19 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   }
 
   /**
-   * Merges 2 series together, taking the first non-NA or NM value.
+   * Concatenates `that` onto the end of `this` [[Series]].
    */
   def ++[VV >: V: ClassTag](that: Series[K, VV]): Series[K, VV] = {
+    val bldr = Series.newUnorderedBuilder[K, VV]
+    this.foreach(bldr.append)
+    that.foreach(bldr.append)
+    bldr.result()
+  }
+
+  /**
+   * Merges 2 series together, taking the first non-NA or NM value.
+   */
+  def orElse[VV >: V: ClassTag](that: Series[K, VV]): Series[K, VV] = {
     val merger = Merger[K](Merge.Outer)
     val (keys, lIndices, rIndices) = Index.cogroup(this.index, that.index)(merger).result()
     val lCol = this.column
@@ -227,23 +411,20 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
    * Convert this Series to a single column [[Frame]].
    */
   def toFrame[C: Order: ClassTag](col: C)(implicit tt: ClassTag[V]): Frame[K, C] =
-    Frame(index, col -> TypedColumn(column))
+    ColOrientedFrame(index, Series(col -> TypedColumn(column)))
 
   def toFrame(implicit tt: ClassTag[V]): Frame[K, Int] = {
     import spire.std.int._
-    Frame[K, Int](index, 0 -> TypedColumn(column))
+    toFrame(0)
   }
 
   def closestKeyTo(k: K, tolerance: Double)(implicit K0: MetricSpace[K, Double], K1: Order[K]): Option[K] =
     apply(k) match {
       case Value(v) => Some(k)
       case _ =>
-        val possibleDates =
-          keys.filter { key =>
-            val distance = K0.distance(key, k)
-            (distance <= tolerance)
-          }
-        possibleDates.headOption
+        keys.collectFirst {
+          case key if MetricSpace.closeTo[K, Double](k, key, tolerance) => key
+        }
     }
 
   /**
@@ -262,29 +443,157 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     Series(index, new MappedColumn(f, column)) // TODO: Use a macro here?
 
   /**
-   * Filter the this series by its keys.
+   * Map the values of this series, using both the *key* and *value* of each
+   * cell.
    */
-  def filterKeys(p: K => Boolean): Series[K, V] = {
-    val b = new SeriesBuilder[K, V]
-    b.sizeHint(this.size)
-    for ((k, ix) <- index.iterator) {
-      if (p(k)) {
-        b += (k -> column(ix))
+  def mapValuesWithKeys[W: ClassTag](f: (K, V) => W): Series[K, W] = {
+    val bldr = Column.builder[W]
+    index.foreach { (k, row) =>
+      bldr += column(row).map(v => f(k, v))
+    }
+    Series(index.resetIndices, bldr.result())
+  }
+
+  /**
+   * Transforms the cells in this series using `f`.
+   */
+  def cellMap[W: ClassTag](f: Cell[V] => Cell[W]): Series[K, W] = {
+    val bldr = Column.builder[W]
+    index.foreach { (k, row) =>
+      bldr += f(column(row))
+    }
+    Series(index.resetIndices, bldr.result())
+  }
+
+  /**
+   * Transforms the cells, indexed by their key, in this series using `f`.
+   */
+  def cellMapWithKeys[W: ClassTag](f: (K, Cell[V]) => Cell[W]): Series[K, W] = {
+    val bldr = Column.builder[W]
+    index.foreach { (k, row) =>
+      bldr += f(k, column(row))
+    }
+    Series(index.resetIndices, bldr.result())
+  }
+
+  /** Select all key-cell pairs of this series where the pairs
+    * satisfy a predicate.
+    *
+    * This method preserves the orderedness of the underlying index.
+    *
+    * @param  p  the predicate used to test key-cell pairs.
+    * @return a new series consisting of all key-cell pairs of this
+    *   series where the pairs satisfy the given predicate `p`.
+    * @see [[filterByKeys]]
+    * @see [[filterByCells]]
+    * @see [[filterByValues]]
+    */
+  def filterEntries(p: (K, Cell[V]) => Boolean)(implicit ev: ClassTag[V]): Series[K, V] = {
+    val b = Series.newBuilder[K, V](index.isOrdered)
+    b.sizeHint(index.size)
+    for ((k, ix) <- index) {
+      val cell = column(ix)
+      if (p(k, cell)) {
+        b.append(k, cell)
       }
     }
     b.result()
   }
 
-  /**
-   * Filter the values of this series only.
-   */
-  def filterValues(p: Cell[V] => Boolean): Series[K, V] = {
-    val b = new SeriesBuilder[K, V]
+
+  /** Select all key-cell pairs of this series where the keys
+    * satisfy a predicate.
+    *
+    * This method preserves the orderedness of the underlying index.
+    *
+    * @param  p  the predicate used to test keys.
+    * @return a new series consisting of all key-call pairs of this
+    *   series where the keys satisfy the given predicate `p`.
+    * @see [[filterEntries]]
+    * @see [[filterByCells]]
+    * @see [[filterByValues]]
+    * @note This method is a specialized and optimized version of
+    * [[filterEntries]], where
+    * {{{
+    *   s.filterEntries { (k, _) => p(k) } == s.filterByKeys(p)
+    * }}}
+    */
+  def filterByKeys(p: K => Boolean)(implicit ev: ClassTag[V]): Series[K, V] = {
+    val b = Series.newBuilder[K, V](index.isOrdered)
     b.sizeHint(this.size)
-    for ((k, ix) <- index.iterator) {
-      val cell = column(ix)
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      val k = index.keyAt(i)
+      if (p(k)) {
+        b.append(k, column(index.indexAt(i)))
+      }
+    }
+    b.result()
+  }
+
+
+  /** Select all key-cell pairs of this series where the cells
+    * satisfy a predicate.
+    *
+    * This method preserves the orderedness of the underlying index.
+    *
+    * @param  p  the predicate used to test cells.
+    * @return a new series consisting of all key-call pairs of this
+    *   series where the cells satisfy the given predicate `p`.
+    * @see [[filterEntries]]
+    * @see [[filterByKeys]]
+    * @see [[filterByValues]]
+    * @note This method is a specialized and optimized version of
+    * [[filterEntries]], where
+    * {{{
+    *   s.filterEntries { (_, c) => p(c) } == s.filterByCells(p)
+    * }}}
+    */
+  def filterByCells(p: Cell[V] => Boolean)(implicit ev: ClassTag[V]): Series[K, V] = {
+    val b = Series.newBuilder[K, V](index.isOrdered)
+    b.sizeHint(this.size)
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      val cell = column(index.indexAt(i))
       if (p(cell)) {
-        b += (k -> cell)
+        b.append(index.keyAt(i), cell)
+      }
+    }
+    b.result()
+  }
+
+
+  /** Selects all key-value pairs of this series where the values
+    * satisfy a predicate.
+    *
+    * This method preserves the orderedness of the underlying index.
+    * It also assumes this series is dense, so any non values will
+    * also be filtered out. The column that backs the new series
+    * will be dense.
+    *
+    * @param  p  the predicate used to test values.
+    * @return a new series consisting of all key-value pairs of this
+    *   series where the values satisfy the given predicate `p`.
+    * @see [[filterEntries]]
+    * @see [[filterByKeys]]
+    * @see [[filterByCells]]
+    * @note This method is a specialized and optimized version of
+    * [[filterEntries]], where
+    * {{{
+    *   s.filterEntries {
+    *     case (_, Value(v)) => p(v)
+    *     case _ => false
+    *   } == s.filterByValues(p)
+    * }}}
+    */
+  def filterByValues(p: V => Boolean)(implicit ev: ClassTag[V]): Series[K, V] = {
+    val b = Series.newBuilder[K, V](index.isOrdered)
+    b.sizeHint(this.size)
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      val ix = index.indexAt(i)
+      if (column.isValueAt(ix)) {
+        val v = column.valueAt(ix)
+        if (p(v)) {
+          b.appendValue(index.keyAt(i), v)
+        }
       }
     }
     b.result()
@@ -790,7 +1099,7 @@ object Series {
   }
 
   def fromCells[K: Order: ClassTag, V: ClassTag](col: TraversableOnce[(K, Cell[V])]): Series[K, V] = {
-    val bldr = new SeriesBuilder[K ,V]
+    val bldr = Series.newUnorderedBuilder[K ,V]
     bldr ++= col
     bldr.result()
   }
@@ -801,32 +1110,68 @@ object Series {
   def fromMap[K: Order: ClassTag, V: ClassTag](kvMap: Map[K, V]): Series[K, V] =
     Series(Index(kvMap.keys.toArray), Column.fromArray(kvMap.values.toArray))
 
-  implicit def cbf[K: Order: ClassTag, V]: CanBuildFrom[Series[_, _], (K, Cell[V]), Series[K, V]] =
+  implicit def cbf[K: Order: ClassTag, V : ClassTag]: CanBuildFrom[Series[_, _], (K, Cell[V]), Series[K, V]] =
     new CanBuildFrom[Series[_, _], (K, Cell[V]), Series[K, V]] {
-      def apply(): Builder[(K, Cell[V]), Series[K, V]] = new SeriesBuilder[K, V]
+      def apply(): Builder[(K, Cell[V]), Series[K, V]] = Series.newUnorderedBuilder[K ,V]
       def apply(from: Series[_, _]): Builder[(K, Cell[V]), Series[K, V]] = apply()
+    }
+
+  private def newBuilder[K : ClassTag : Order, V : ClassTag](isOrdered: Boolean): AbstractSeriesBuilder[K, V] =
+    if (isOrdered) newOrderedBuilder else newUnorderedBuilder
+
+  private def newUnorderedBuilder[K : ClassTag : Order, V : ClassTag]: AbstractSeriesBuilder[K, V] =
+    new AbstractSeriesBuilder[K, V] {
+      def result(): Series[K, V] =
+        Series(
+          Index(this.keyBldr.result()),
+          this.colBldr.result())
+    }
+
+  private def newOrderedBuilder[K : ClassTag : Order, V : ClassTag]: AbstractSeriesBuilder[K, V] =
+    new AbstractSeriesBuilder[K, V] {
+      def result(): Series[K, V] =
+        Series(
+          Index.ordered(this.keyBldr.result()),
+          this.colBldr.result())
     }
 }
 
-private final class SeriesBuilder[K: Order: ClassTag, V] extends Builder[(K, Cell[V]), Series[K,V]] {
-  val keys = ArrayBuilder.make[K]()
-  val values = ArrayBuilder.make[Cell[V]]()
 
-  def +=(elem: (K, Cell[V])) = {
-    keys += elem._1
-    values += elem._2
+private abstract class AbstractSeriesBuilder[K : ClassTag : Order, V : ClassTag] extends Builder[(K, Cell[V]), Series[K, V]] {
+  protected val keyBldr = Array.newBuilder[K]
+  protected val colBldr = new ColumnBuilder[V]
+
+  def +=(elem: (K, Cell[V])): this.type = {
+    keyBldr += elem._1
+    colBldr += elem._2
+    this
+  }
+
+  def append(k: K, c: Cell[V]): this.type = {
+    keyBldr += k
+    colBldr += c
+    this
+  }
+
+  def appendValue(k: K, v: V): this.type = {
+    keyBldr += k
+    colBldr.addValue(v)
+    this
+  }
+
+  def appendNonValue(k: K, nonValue: NonValue): this.type = {
+    keyBldr += k
+    colBldr.addNonValue(nonValue)
     this
   }
 
   def clear(): Unit = {
-    keys.clear()
-    values.clear()
+    keyBldr.clear()
+    colBldr.clear()
   }
 
-  def result(): Series[K, V] = Series(Index.unordered(keys.result()), Column.fromCells(values.result()))
-
   override def sizeHint(size: Int): Unit = {
-    keys.sizeHint(size)
-    values.sizeHint(size)
+    keyBldr.sizeHint(size)
+    colBldr.sizeHint(size)
   }
 }

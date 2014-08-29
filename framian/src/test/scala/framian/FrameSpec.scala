@@ -24,25 +24,25 @@ class FrameSpec extends Specification {
     "b" :: 2 :: HNil,
     "b" :: 3 :: HNil)
 
-  val f3 = Frame.fromSeries(
-    (0,
-     Series(1 -> 3,
-            2 -> 2,
-            2 -> 1)))
-  val f4 = Frame.fromSeries(
-    (1,
-     Series(1 -> 3,
-            2 -> 2,
-            2 -> 1)))
-  val f5 = Frame.fromSeries(
-    (1,
-     Series(2 -> 3,
-            2 -> 2,
-            3 -> 1)))
-  val f6 = Frame.fromSeries(
-    (1,
-     Series(2 -> 2,
-            2 -> 1)))
+  val f3 = Series(
+      1 -> 3,
+      2 -> 2,
+      2 -> 1
+    ).toFrame(0)
+  val f4 = Series(
+      1 -> 3,
+      2 -> 2,
+      2 -> 1
+    ).toFrame(1)
+  val f5 = Series(
+      2 -> 3,
+      2 -> 2,
+      3 -> 1
+    ).toFrame(1)
+  val f6 = Series(
+      2 -> 2,
+      2 -> 1
+    ).toFrame(1)
 
   val s0 = Series(
     0 -> "s3",
@@ -72,7 +72,7 @@ class FrameSpec extends Specification {
         if (k % 2 == 0) NA else Value(k)
       }
 
-      f must_== Frame.fromSeries(
+      f must_== Frame.mergeColumns(
         4 -> Series.fromCells(1 -> Value(5), 2 ->       NA, 3 -> Value(7)),
         5 -> Series.fromCells(1 ->       NA, 2 -> Value(7), 3 ->       NA)
       )
@@ -82,20 +82,20 @@ class FrameSpec extends Specification {
       f0 must_== f0
       f0 must_!= f1
       f1 must_!= f0
-      f0.columns(0).as[String].toFrame("abc") must_== f1.columns(0).as[String].toFrame("abc")
-      f0.columns(1).as[Int].toFrame("123") must_!= f1.columns(1).as[Int].toFrame("123")
+      f0.column[String](0).toFrame("abc") must_== f1.column[String](0).toFrame("abc")
+      f0.column[Int](1).toFrame("123") must_!= f1.column[Int](1).toFrame("123")
     }
 
     "have sane hashCode" in {
       f0.hashCode must_== f0.hashCode
       f0.hashCode must_!= f1.hashCode
       f1.hashCode must_!= f0.hashCode
-      f0.columns(0).as[String].toFrame("abc").hashCode must_== f1.columns(0).as[String].toFrame("abc").hashCode
-      f0.columns(1).as[Int].toFrame("123").hashCode must_!= f1.columns(1).as[Int].toFrame("123").hashCode
+      f0.column[String](0).toFrame("abc").hashCode must_== f1.column[String](0).toFrame("abc").hashCode
+      f0.column[Int](1).toFrame("123").hashCode must_!= f1.column[Int](1).toFrame("123").hashCode
     }
 
-    "order columns" in {
-      people.orderColumns must_== Frame.fromRows(
+    "sort columns" in {
+      people.sortColumns must_== Frame.fromRows(
           32 :: "Manager"  :: "Bob" :: HNil,
           24 :: "Employee" :: "Alice" :: HNil,
           44 :: "Employee"  :: "Charlie" :: HNil)
@@ -103,8 +103,8 @@ class FrameSpec extends Specification {
         .withRowIndex(Index.fromKeys("Bob", "Alice", "Charlie"))
     }
 
-    "order rows" in {
-      people.orderRows must_== Frame.fromRows(
+    "sort rows" in {
+      people.sortRows must_== Frame.fromRows(
           "Alice"   :: 24 :: "Employee" :: HNil,
           "Bob"     :: 32 :: "Manager"  :: HNil,
           "Charlie" :: 44 :: "Employee"  :: HNil)
@@ -226,7 +226,7 @@ class FrameSpec extends Specification {
     }
 
     "merge with a series" in {
-      f3.merge(s1, 1)(Merge.Inner) must_==
+      f3.merge(1, s1)(Merge.Inner) must_==
         Frame.fromRows(
           3 :: "s3" :: HNil,
           2 :: "s2" :: HNil,
@@ -244,7 +244,7 @@ class FrameSpec extends Specification {
     }
 
     "inner join with series" in {
-      f0.join(s0, 2)(Join.Inner) must_== Frame.fromRows(
+      f0.join(2, s0)(Join.Inner) must_== Frame.fromRows(
         "a" :: 1 :: "s3" :: HNil,
         "b" :: 2 :: "s2" :: HNil,
         "c" :: 3 :: "s1" :: HNil)
@@ -291,9 +291,9 @@ class FrameSpec extends Specification {
         .withRowIndex(Index.fromKeys("a", "b"))
       val b = Frame.fromRows(2.0 :: HNil, 3.0 :: HNil)
         .withRowIndex(Index.fromKeys("b", "c"))
-      val c = Frame[String, Int](Index.fromKeys("a", "b"),
-        0 -> TypedColumn(Column.fromCells(Vector(Value(1), Value(2)))),
-        0 -> TypedColumn(Column.fromCells(Vector(NA, Value(2.0)))))
+      val c = Frame.mergeColumns(
+        0 -> Series.fromCells("a" -> Value(1), "b" -> Value(2)),
+        0 -> Series.fromCells("a" ->       NA, "b" -> Value(2.0)))
       a.join(b)(Join.Left) must_== c
     }
 
@@ -310,9 +310,9 @@ class FrameSpec extends Specification {
         .withRowIndex(Index.fromKeys("a", "b"))
       val b = Frame.fromRows(2.0 :: HNil, 3.0 :: HNil)
         .withRowIndex(Index.fromKeys("b", "c"))
-      val c = Frame[String, Int](Index.fromKeys("b", "c"),
-        0 -> TypedColumn(Column.fromCells(Vector(Value(2), NA))),
-        0 -> TypedColumn(Column.fromCells(Vector(Value(2.0), Value(3.0)))))
+      val c = Frame.mergeColumns(
+        0 -> Series.fromCells("b" -> Value(2), "c" -> NA),
+        0 -> Series.fromCells("b" -> Value(2.0), "c" -> Value(3.0)))
       a.join(b)(Join.Right) must_== c
     }
 
@@ -329,9 +329,9 @@ class FrameSpec extends Specification {
         .withRowIndex(Index.fromKeys("a", "b"))
       val b = Frame.fromRows(2.0 :: HNil, 3.0 :: HNil)
         .withRowIndex(Index.fromKeys("b", "c"))
-      val c = Frame[String, Int](Index.fromKeys("a", "b", "c"),
-        0 -> TypedColumn(Column.fromCells(Vector(Value(1), Value(2), NA))),
-        0 -> TypedColumn(Column.fromCells(Vector(NA, Value(2.0), Value(3.0)))))
+      val c = Frame.mergeColumns(
+        0 -> Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA),
+        0 -> Series.fromCells("a" -> NA, "b" -> Value(2.0), "c" -> Value(3.0)))
       a.join(b)(Join.Outer) must_== c
     }
 
@@ -361,10 +361,10 @@ class FrameSpec extends Specification {
 
     "reduce groups" in {
       dups.mapRowGroups { (row, f) =>
-        val reduced = f.reduceFrame(reduce.Sum[Double]).iterator.toList
-        Frame(Index.fromKeys(row), reduced map { case (key, value) =>
+        val reduced = f.reduceFrame(reduce.Sum[Double]).to[List]
+        ColOrientedFrame(Index.fromKeys(row), Series(reduced map { case (key, value) =>
           key -> TypedColumn(Column.fromCells(Vector(value)))
-        }: _*)
+        }: _*))
       } must_== dups.reduceFrameByKey(reduce.Sum[Double])
     }
 
@@ -378,46 +378,63 @@ class FrameSpec extends Specification {
     }
   }
 
-  "ColumnSelection" should {
+  "Frame" should {
     "get row as HList" in {
-      f0.columns(0, 1).get[String :: Int :: HNil](0) must_== Value("a" :: 1 :: HNil)
-      f0.columns(0, 1).get[String :: Int :: HNil](1) must_== Value("b" :: 2 :: HNil)
-      f0.columns(0, 1).get[String :: Int :: HNil](2) must_== Value("c" :: 3 :: HNil)
-      f0.columns(0, 1).get[String :: Int :: HNil](3) must_== NA
-      f0.columns(0).get[String :: HNil](0) must_== Value("a" :: HNil)
-      f0.columns(1).get[Int :: HNil](2) must_== Value(3 :: HNil)
+      f0.get(Cols(0, 1).as[String :: Int :: HNil])(0) must_== Value("a" :: 1 :: HNil)
+      f0.get(Cols(0, 1).as[String :: Int :: HNil])(1) must_== Value("b" :: 2 :: HNil)
+      f0.get(Cols(0, 1).as[String :: Int :: HNil])(2) must_== Value("c" :: 3 :: HNil)
+      f0.get(Cols(0, 1).as[String :: Int :: HNil])(3) must_== NA
+      f0.get(Cols(0).as[String :: HNil])(0) must_== Value("a" :: HNil)
+      f0.get(Cols(1).as[Int :: HNil])(2) must_== Value(3 :: HNil)
     }
 
     "convert to series" in {
-      f0.columns(0).as[String] must_== Series(0 -> "a", 1 -> "b", 2 -> "c")
-      f0.columns(0).as[Int] must_== Series(Index.fromKeys(0, 1, 2), Column.fromCells(Vector(NM, NM, NM)))
-      f0.columns(1).as[Int] must_== Series(0 -> 1, 1 -> 2, 2 -> 3)
-      f0.columns(0, 1).as[String :: Int :: HNil] must_== Series(
+      f0.get(Cols(0).as[String]) must_== Series(0 -> "a", 1 -> "b", 2 -> "c")
+      f0.get(Cols(0).as[Int]) must_== Series(Index.fromKeys(0, 1, 2), Column.fromCells(Vector(NM, NM, NM)))
+      f0.get(Cols(1).as[Int]) must_== Series(0 -> 1, 1 -> 2, 2 -> 3)
+      f0.get(Cols(0, 1).as[String :: Int :: HNil]) must_== Series(
         0 -> ("a" :: 1 :: HNil),
         1 -> ("b" :: 2 :: HNil),
         2 -> ("c" :: 3 :: HNil))
     }
 
     "map to series" in {
-      f0.columns(1) map { (x: Int) => x + 1 } must_== Series(0 -> 2, 1 -> 3, 2 -> 4)
-      f0.columns(0) map { (x: String) => 42 } must_== Series(0 -> 42, 1 -> 42, 2 -> 42)
-      f0.columns(1, 0) map { (x: Int, y: String) => y + x } must_== Series(0 -> "a1", 1 -> "b2", 2 -> "c3")
+      f0.map(Cols(1).as[Int], 2)(_ + 1) must_== Frame.fromRows(
+        "a" :: 1 :: 2 :: HNil,
+        "b" :: 2 :: 3 :: HNil,
+        "c" :: 3 :: 4 :: HNil)
+      f0.map(Cols(0).as[String], 2)(_ => 42) must_== Frame.fromRows(
+        "a" :: 1 :: 42 :: HNil,
+        "b" :: 2 :: 42 :: HNil,
+        "c" :: 3 :: 42 :: HNil)
+      f0.map(Cols(1, 0).as[(Int, String)], 2) { case (x, y) =>
+        y + x
+      } must_== Frame.fromRows(
+        "a" :: 1 :: "a1" :: HNil,
+        "b" :: 2 :: "b2" :: HNil,
+        "c" :: 3 :: "c3" :: HNil)
     }
 
     "map with index to series" in {
-      f0.columns(0) mapWithIndex { (i: Int, x: String) => i + x } must_== Series(0 -> "0a", 1 -> "1b", 2 -> "2c")
-      f0.columns(1) mapWithIndex { (i: Int, j: Int) => i + j } must_== Series(0 -> 1, 1 -> 3, 2 -> 5)
+      f0.mapWithIndex(Cols(0).as[String], 2)(_ + _) must_== Frame.fromRows(
+        "a" :: 1 :: "0a" :: HNil,
+        "b" :: 2 :: "1b" :: HNil,
+        "c" :: 3 :: "2c" :: HNil)
+      f0.mapWithIndex(Cols(1).as[Int], 2)(_ + _) must_== Frame.fromRows(
+        "a" :: 1 :: 1 :: HNil,
+        "b" :: 2 :: 3 :: HNil,
+        "c" :: 3 :: 5 :: HNil)
     }
 
     "filter whole frame" in {
-      f0.columns(1) filter { (x: Int) => x % 2 == 0 } must_==
+      f0.filter(Cols(1).as[Int])(_ % 2 == 0) must_==
         Frame.fromRows("b" :: 2 :: HNil).withRowIndex(Index.fromKeys(1))
     }
 
     "group by column values" in {
-      f0.columns(0).groupAs[String] must_== f0.withRowIndex(Index.fromKeys("a", "b", "c"))
-      f0.columns(1).groupBy { (x: Int) => -x } must_== f0.withRowIndex(Index(-3 -> 2, -2 -> 1, -1 -> 0))
-      f2.columns(0).groupBy { (x: String) => x } must_== f2.withRowIndex(Index(("a",0), ("b",2), ("b",1)))
+      f0.group(Cols(0).as[String]) must_== f0.withRowIndex(Index.fromKeys("a", "b", "c"))
+      f0.group(Cols(1).as[Int].map(-_)) must_== f0.withRowIndex(Index(-3 -> 2, -2 -> 1, -1 -> 0))
+      f2.group(Cols(0).as[String]) must_== f2.withRowIndex(Index(("a",0), ("b",2), ("b",1)))
     }
   }
 
@@ -427,5 +444,80 @@ class FrameSpec extends Specification {
         Series(1 -> ("c", 3))
     }
   }
-}
 
+  "map" should {
+    "append column when to is new" in {
+      f0.map(Cols(1).as[Int], to = 2)(_ + 2) must_== Frame.fromRows(
+        "a" :: 1 :: 3 :: HNil,
+        "b" :: 2 :: 4 :: HNil,
+        "c" :: 3 :: 5 :: HNil)
+    }
+
+    "replace column when `to` exists" in {
+      f0.map(Cols(1).as[Int], to = 1)(_ + 2) must_== Frame.fromRows(
+        "a" :: 3 :: HNil,
+        "b" :: 4 :: HNil,
+        "c" :: 5 :: HNil)
+    }
+  }
+
+  "reduce" should {
+    "reduce rows" in {
+      f0.reduce(Cols(1).as[Double], 2)(reduce.Mean) must_==
+        f0.merge(2, Series(0 -> 2D, 1 -> 2D, 2 -> 2D))(Merge.Outer)
+    }
+
+    "reduce cols" in {
+      f0.transpose.reduce(Rows(1).as[Double], 2)(reduce.Mean) must_==
+        f0.merge(2, Series(0 -> 2D, 1 -> 2D, 2 -> 2D))(Merge.Outer).transpose
+    }
+
+    "replace column when `to` exists" in {
+      f0.reduce(Cols(1).as[Int], to = 1)(reduce.Sum) must_== Frame.fromRows(
+        "a" :: 6 :: HNil,
+        "b" :: 6 :: HNil,
+        "c" :: 6 :: HNil)
+
+      f0.transpose.reduce(Rows(1).as[Int], to = 1)(reduce.Sum) must_== Frame.fromColumns(
+        "a" :: 6 :: HNil,
+        "b" :: 6 :: HNil,
+        "c" :: 6 :: HNil)
+    }
+
+    "respect NMs in reducer" in {
+      val f = Series.fromCells(1 -> Value(1), 2 -> NM, 3 -> Value(3)).toFrame("x")
+      f.reduce(Cols("x").as[Int], "y")(reduce.Sum) must_==
+        f.merge("y", Series(1 -> NM, 2 -> NM, 3 -> NM))(Merge.Outer)
+    }
+
+    "respect NAs in reducer" in {
+      val f = Series.fromCells[Int, Int](1 -> NA, 2 -> NA).toFrame("x")
+      f.reduce(Cols("x").as[Int], "y")(reduce.Max) must_==
+        f.merge("y", Series(1 -> NA, 2 -> NA))(Merge.Outer)
+    }
+  }
+
+  "reduceByKey" should {
+    val f = Frame.mergeColumns(
+      "x" -> Series.fromCells(0 -> Value(1), 2 -> Value(5), 2 -> Value(6)),
+      "y" -> Series.fromCells(0 -> Value(2), 0 -> Value(3), 1 -> NM, 1 -> Value(2)))
+
+    "reduce rows/cols" in {
+      f.reduceByKey(Cols("x").as[Int], "z")(reduce.Sum) must_==
+        f.join("z", Series.fromCells(0 -> Value(1), 1 -> Value(0), 2 -> Value(11)))(Join.Outer)
+
+      f.transpose.reduceByKey(Rows("x").as[Int], "z")(reduce.Sum) must_==
+        f.join("z", Series.fromCells(0 -> Value(1), 1 -> Value(0), 2 -> Value(11)))(Join.Outer).transpose
+    }
+
+    "respect NMs from reducer" in {
+      f.reduceByKey(Cols("y").as[Int], "z")(reduce.Sum) must_==
+        f.join("z", Series.fromCells(0 -> Value(5), 1 -> NM, 2 -> Value(0)))(Join.Outer)
+    }
+
+    "respect NAs from reducer" in {
+      f.reduceByKey(Cols("x").as[Int], "z")(reduce.Max) must_==
+        f.join("z", Series.fromCells(0 -> Value(1), 1 -> NA, 2 -> Value(6)))(Join.Outer)
+    }
+  }
+}

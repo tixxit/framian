@@ -48,7 +48,7 @@ trait RowPopulator[A, Row, Col] {
   def frame(state: State): Frame[Row, Col]
 }
 
-trait RowPopulatorLow0 {
+trait RowPopulatorLowPriorityImplicits {
   implicit def generic[A, B, Row, Col](implicit generic: Generic.Aux[A, B],
       pop: RowPopulator[B, Row, Col]) =
     new RowPopulator[A, Row, Col] {
@@ -61,7 +61,7 @@ trait RowPopulatorLow0 {
     }
 }
 
-object RowPopulator extends RowPopulatorLow0 {
+object RowPopulator extends RowPopulatorLowPriorityImplicits {
   implicit def HListRowPopulator[Row: Order: ClassTag, L <: HList](
       implicit pop: HListColPopulator[L]) = new HListRowPopulator[Row, L](pop)
 
@@ -79,44 +79,44 @@ object RowPopulator extends RowPopulatorLow0 {
       val cols = pop.columns(state.tail).toArray
       val rowIndex = Index(state.head.reverse.toArray)
       val colIndex = Index(Array.range(0, cols.size))
-      Frame.fromColumns(rowIndex, colIndex, Column.fromArray(cols))
+      ColOrientedFrame(rowIndex, colIndex, Column.fromArray(cols))
     }
   }
-}
 
-trait HListColPopulator[L <: HList] {
-  type State <: HList
-  def init: State
-  def populate(state: State, data: L): State
-  def columns(state: State): List[UntypedColumn]
-}
-
-trait HListColPopulator0 {
-  implicit object HNilColPopulator extends HListColPopulator[HNil] {
-    type State = HNil
-    def init: HNil = HNil
-    def populate(u: HNil, data: HNil): HNil = HNil
-    def columns(state: State): List[UntypedColumn] = Nil
+  trait HListColPopulator[L <: HList] {
+    type State <: HList
+    def init: State
+    def populate(state: State, data: L): State
+    def columns(state: State): List[UntypedColumn]
   }
-}
 
-object HListColPopulator extends HListColPopulator0 {
-  implicit def HConsColPopulator[H: ClassTag, T <: HList](implicit tail: HListColPopulator[T]) =
-    new HConsColPopulator(tail)
+  trait HListColPopulator0 {
+    implicit object HNilColPopulator extends HListColPopulator[HNil] {
+      type State = HNil
+      def init: HNil = HNil
+      def populate(u: HNil, data: HNil): HNil = HNil
+      def columns(state: State): List[UntypedColumn] = Nil
+    }
+  }
 
-  final class HConsColPopulator[H: ClassTag, T <: HList](val tail: HListColPopulator[T])
-      extends HListColPopulator[H :: T] {
+  object HListColPopulator extends HListColPopulator0 {
+    implicit def HConsColPopulator[H: ClassTag, T <: HList](implicit tail: HListColPopulator[T]) =
+      new HConsColPopulator(tail)
 
-    type State = List[H] :: tail.State
+    final class HConsColPopulator[H: ClassTag, T <: HList](val tail: HListColPopulator[T])
+        extends HListColPopulator[H :: T] {
 
-    def init = Nil :: tail.init
+      type State = List[H] :: tail.State
 
-    def populate(state: State, data: H :: T): State =
-      (data.head :: state.head) :: tail.populate(state.tail, data.tail)
+      def init = Nil :: tail.init
 
-    def columns(state: State): List[UntypedColumn] = {
-      val col = TypedColumn(Column.fromArray(state.head.reverse.toArray))
-      col :: tail.columns(state.tail)
+      def populate(state: State, data: H :: T): State =
+        (data.head :: state.head) :: tail.populate(state.tail, data.tail)
+
+      def columns(state: State): List[UntypedColumn] = {
+        val col = TypedColumn(Column.fromArray(state.head.reverse.toArray))
+        col :: tail.columns(state.tail)
+      }
     }
   }
 }
