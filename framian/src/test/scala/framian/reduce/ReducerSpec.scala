@@ -14,7 +14,7 @@ import org.specs2.mutable._
 
 import org.scalacheck.{ Arbitrary, Gen, Prop }
 
-class ReducerSpec extends Specification with ScalaCheck {
+class ReducerSpec extends Specification with ScalaCheck with SeriesClassifiers {
   import Arbitrary.arbitrary
   import Prop.{classify, collect, forAll}
   import SeriesGenerators._
@@ -42,15 +42,6 @@ class ReducerSpec extends Specification with ScalaCheck {
       "c" -> Value(5D), "c" -> NA, "c" -> Value(1D),
       "d" -> Value(0D))
   }
-
-  def classifySparse[K, V](s: Series[K, V])(prop: Prop): Prop =
-    classify(s.cells.exists(_.isNonValue), "sparse", "dense")(prop)
-
-  def classifyMeaningful[K, V](s: Series[K, V])(prop: Prop): Prop =
-    classify(s.cells.contains(NM), "meaningless", "meaningful")(prop)
-
-  def classifyEmpty[K, V](s: Series[K, V])(prop: Prop): Prop =
-    classify(s.cells.exists(_.isValue), "non-empty, empty")(prop)
 
   def reducingMeaninglessSeriesMustEqNM[I: Arbitrary : ClassTag, O: ClassTag](reducer: Reducer[I, O]): Prop =
     forAll(arbitrary[Series[Int, I]]) { series =>

@@ -14,7 +14,7 @@ import spire.std.int._
 import spire.std.iterable._
 import spire.std.string._
 
-class SeriesSpec extends Specification with ScalaCheck {
+class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
   import Arbitrary.arbitrary
   import Prop._
   import SeriesGenerators._
@@ -261,6 +261,21 @@ class SeriesSpec extends Specification with ScalaCheck {
         "d" -> NA, "d" -> NA, "d" -> NA, "d" -> NM,
         "d" -> Value(35), "d" -> NA, "d" -> Value(42), "d" -> NM
       )
+    }
+  }
+
+  "filterByValues" should {
+
+    "filter a series by its values" in {
+      forAll(arbitrary[Series[String, Int]]) { series =>
+        classifyEmpty(series) {
+          classifySparse(series) {
+            classifyMeaningful(series) {
+
+            }
+          }
+        }
+      }
     }
   }
 
