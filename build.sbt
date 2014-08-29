@@ -46,3 +46,7 @@ lazy val framianJsonPlay22 = project.
   settings(
     sourceDirectory <<= sourceDirectory in framianJsonPlay
   )
+
+lazy val framianColumn = project.
+  in(file("framian-column")).
+  dependsOn(framian)
