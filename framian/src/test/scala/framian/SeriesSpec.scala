@@ -535,4 +535,79 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
       }
     }
   }
+
+  "count" should {
+    "render the number of items in the series" in {
+      forAll(arbitrary[Series[String, Int]]) { series =>
+        classifyEmpty(series) {
+          classifySparse(series) {
+            classifyMeaningful(series) {
+              if (series.filterByCells(_ == NM).cells.nonEmpty) {
+                series.count must_== NM
+              } else {
+                series.count must_== Value(series.values.size)
+              }
+
+              ok
+            }
+          }
+        }
+      }
+    }
+  }
+
+  "first" should {
+    "render the first valid value in a series" in {
+      Series[String, Int]().first must_== NA
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).first must_== Value(1)
+      Series.fromCells("a" -> NA, "b" -> Value(2), "c" -> Value(3)).first must_== Value(2)
+      Series.fromCells("a" -> NA, "b" -> NA, "c" -> Value(3)).first must_== Value(3)
+      Series.fromCells("a" -> NA, "b" -> NA, "c" -> NA).first must_== NA
+      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> NM).first must_== Value(1)
+      Series.fromCells("a" -> NA, "b" -> NM, "c" -> Value(3)).first must_== NM
+      Series.fromCells("a" -> NA, "b" -> NA, "c" -> NM).first must_== NM
+    }
+  }
+
+  "firstN" should {
+    "render the first N valid values in a series" in {
+      Series[String, Int]().first must_== NA
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).firstN(2) must_== Value(List(1, 2))
+      Series.fromCells("a" -> NA, "b" -> Value(2), "c" -> Value(3)).firstN(2) must_== Value(List(2, 3))
+      Series.fromCells("a" -> NA, "b" -> NA, "c" -> Value(3)).firstN(2) must_== NA
+      Series.fromCells("a" -> NA, "b" -> NA, "c" -> NA).firstN(2) must_== NA
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NM).firstN(2) must_== Value(List(1, 2))
+      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).firstN(2) must_== NM
+      Series.fromCells("a" -> NA, "b" -> NA, "c" -> NM).firstN(2) must_== NM
+      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> Value(3)).firstN(2) must_== Value(List(1, 3))
+    }
+  }
+
+  "last" should {
+    "render the last valid value in a series" in {
+      Series[String, Int]().first must_== NA
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).last must_== Value(3)
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).last must_== Value(2)
+      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).last must_== Value(1)
+      Series.fromCells("a" -> NA, "b" -> NA, "c" -> NA).last must_== NA
+      Series.fromCells("a" -> NM, "b" -> NM, "c" -> Value(3)).last must_== Value(3)
+      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> NA).last must_== NM
+      Series.fromCells("a" -> NM, "b" -> NA, "c" -> NA).last must_== NM
+    }
+  }
+
+  "lastN" should {
+    "render the last N valid values in a series" in {
+      Series[String, Int]().last must_== NA
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).lastN(2) must_== Value(List(2, 3))
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).lastN(2) must_== Value(List(1, 2))
+      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).lastN(2) must_== NA
+      Series.fromCells("a" -> NA, "b" -> NA, "c" -> NA).lastN(2) must_== NA
+      Series.fromCells("a" -> NM, "b" -> Value(2), "c" -> Value(3)).lastN(2) must_== Value(List(2, 3))
+      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).lastN(2) must_== NM
+      Series.fromCells("a" -> NM, "b" -> NA, "c" -> NA).lastN(2) must_== NM
+      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> Value(3)).lastN(2) must_== Value(List(1, 3))
+    }
+  }
+
 }

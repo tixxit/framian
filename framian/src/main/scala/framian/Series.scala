@@ -1055,8 +1055,8 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   }
 
   override def toString: String =
-    (keys zip values).map { case (key, value) =>
-      s"$key -> $value"
+    (keys zip cells).map { case (key, cell) =>
+      s"$key -> $cell"
     }.mkString("Series(", ", ", ")")
 
   override def equals(that0: Any): Boolean = that0 match {
