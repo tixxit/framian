@@ -610,4 +610,31 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
     }
   }
 
+  "max" should {
+    "render the maximum value in a series" in {
+      Series[String, Int]().last must_== NA
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).max must_== Value(3)
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).max must_== Value(2)
+      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).max must_== Value(1)
+      Series.fromCells[String, Int]("a" -> NA, "b" -> NA, "c" -> NA).max must_== NA
+      Series.fromCells[String, Int]("a" -> NM, "b" -> Value(2), "c" -> Value(3)).max must_== NM
+      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).max must_== NM
+      Series.fromCells[String, Int]("a" -> NM, "b" -> NA, "c" -> NA).max must_== NM
+      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> Value(3)).max must_== Value(3)
+    }
+  }
+
+  "min" should {
+    "render the minimum value in a series" in {
+      Series[String, Int]().last must_== NA
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).min must_== Value(1)
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).min must_== Value(1)
+      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).min must_== Value(1)
+      Series.fromCells[String, Int]("a" -> NA, "b" -> NA, "c" -> NA).min must_== NA
+      Series.fromCells[String, Int]("a" -> NM, "b" -> Value(2), "c" -> Value(3)).min must_== NM
+      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).min must_== NM
+      Series.fromCells[String, Int]("a" -> NM, "b" -> NA, "c" -> NA).min must_== NM
+      Series.fromCells("a" -> NA, "b" -> Value(2), "c" -> Value(3)).min must_== Value(2)
+    }
+  }
 }
