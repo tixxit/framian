@@ -158,3 +158,9 @@ private[framian] final class ZipMapColumn[A, B, C](f: (A, B) => C, lhs: Column[A
     else rhs.nonValueAt(row)
   def valueAt(row: Int): C = f(lhs.valueAt(row), rhs.valueAt(row))
 }
+
+private[framian] final class ConcatColumn[A](col0: Column[A], col1: Column[A], offset: Int) extends Column[A] {
+  def isValueAt(row: Int): Boolean = if (row < offset) col0.isValueAt(row) else col1.isValueAt(row - offset)
+  def nonValueAt(row: Int): NonValue = if (row < offset) col0.nonValueAt(row) else col1.nonValueAt(row - offset)
+  def valueAt(row: Int): A = if (row < offset) col0.valueAt(row) else col1.valueAt(row - offset)
+}

@@ -270,6 +270,20 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   def apply(key: K): Cell[V] = index.get(key) map (column(_)) getOrElse NA
 
   /**
+   * Returns all cells with with key of `key`.
+   */
+  def getCells(key: K): Vector[Cell[V]] =
+    index.getAll(key).map { case (_, row) => column(row) } (collection.breakOut)
+
+  /**
+   * Returns all values with with key of `key`.
+   */
+  def getValues(key: K): Vector[V] =
+    index.getAll(key).collect {
+      case (_, row) if column.isValueAt(row) => column.valueAt(row)
+    } (collection.breakOut)
+
+  /**
    * Returns `true` if at least 1 value exists in this series. A series with
    * only `NA`s and/or `NM`s will return `false`.
    */
@@ -285,29 +299,32 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   }
 
   /**
-   * Merges 2 series together using a semigroup to append values.
+   * Combines 2 series together using the functions provided to handle each
+   * case. If a value exists in both `this` and `that`, then `both` is used
+   * to combine the value to a new one, otherwise either `left` or `right`
+   * are used, unless both are missing, then the missing value is returned
+   * ([[NA]] is both are [[NA]] and [[NM]] otherwise).
    */
-  def merge[VV >: V: Semigroup: ClassTag](that: Series[K, VV]): Series[K, VV] = {
+  def combine[W, X: ClassTag](that: Series[K, W])(left: V => X, right: W => X, both: (V, W) => X): Series[K, X] = {
     val merger = Merger[K](Merge.Outer)
     val (keys, lIndices, rIndices) = Index.cogroup(this.index, that.index)(merger).result()
     val lCol = this.column
     val rCol = that.column
 
-    // TODO: Remove duplication between this and zipMap.
-    val bldr = Column.builder[VV]
+    val bldr = Column.builder[X]
     cfor(0)(_ < lIndices.length, _ + 1) { i =>
       val l = lIndices(i)
       val r = rIndices(i)
       val lExists = lCol.isValueAt(l)
       val rExists = rCol.isValueAt(r)
       if (lExists && rExists) {
-        bldr.addValue((lCol.valueAt(l): VV) |+| rCol.valueAt(r))
+        bldr.addValue(both(lCol.valueAt(l), rCol.valueAt(r)))
       } else if (lExists) {
         if (rCol.nonValueAt(r) == NM) bldr.addNM()
-        else bldr.addValue(lCol.valueAt(l))
+        else bldr.addValue(left(lCol.valueAt(l)))
       } else if (rExists) {
         if (lCol.nonValueAt(l) == NM) bldr.addNM()
-        else bldr.addValue(rCol.valueAt(r))
+        else bldr.addValue(right(rCol.valueAt(r)))
       } else {
         bldr.addNonValue(if (lCol.nonValueAt(l) == NM) NM else rCol.nonValueAt(r))
       }
@@ -315,6 +332,12 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
 
     Series(Index.ordered(keys), bldr.result())
   }
+
+  /**
+   * Merges 2 series together using a semigroup to append values.
+   */
+  def merge[VV >: V: Semigroup: ClassTag](that: Series[K, VV]): Series[K, VV] =
+    combine(that)(v => v, v => v, (v, w) => (v: VV) |+| (w: VV))
 
   /**
    * Concatenates `that` onto the end of `this` [[Series]].

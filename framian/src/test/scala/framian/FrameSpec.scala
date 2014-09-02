@@ -1,6 +1,9 @@
 package framian
 
 import org.specs2.mutable._
+import org.specs2.ScalaCheck
+import org.scalacheck._
+import org.scalacheck.Arbitrary.arbitrary
 
 import spire.algebra._
 import spire.std.string._
@@ -10,7 +13,11 @@ import spire.std.iterable._
 
 import shapeless._
 
-class FrameSpec extends Specification {
+class FrameSpec extends Specification with ScalaCheck {
+  import Arbitrary.arbitrary
+  import Prop._
+  import FrameGenerators._
+
   val f0 = Frame.fromRows(
     "a" :: 1 :: HNil,
     "b" :: 2 :: HNil,
@@ -518,6 +525,57 @@ class FrameSpec extends Specification {
     "respect NAs from reducer" in {
       f.reduceByKey(Cols("x").as[Int], "z")(reduce.Max) must_==
         f.join("z", Series.fromCells(0 -> Value(1), 1 -> NA, 2 -> Value(6)))(Join.Outer)
+    }
+  }
+
+  "appendRows" should {
+    "append rows to empty frame" in {
+      Frame.empty[Int, Int].appendRows(f0) must_== f0
+      f0.appendRows(Frame.empty[Int, Int]) must_== f0
+    }
+
+    "append 2 simple frames with same columns" in {
+      f0.appendRows(f1) must_== Frame.fromRows(
+        "a" :: 1 :: HNil,
+        "b" :: 2 :: HNil,
+        "c" :: 3 :: HNil,
+        "a" :: 3 :: HNil,
+        "b" :: 2 :: HNil,
+        "c" :: 1 :: HNil
+      ).withRowIndex(Index(Array(0, 1, 2, 0, 1, 2)))
+    }
+
+    "append 2 simple frames with different columns" in {
+      val a = Frame.fromRows(
+        "a" :: 1 :: HNil,
+        "b" :: 2 :: HNil,
+        "c" :: 3 :: HNil)
+      val b = Frame.fromRows(
+        9 :: 4D ::HNil,
+        8 :: 5D ::HNil,
+        7 :: 6D ::HNil).withColIndex(Index(Array(1, 2)))
+
+      val col0 = Column.fromCells(Vector(Value("a"), Value("b"), Value("c"), NA, NA, NA))
+      val col1 = Column.fromCells(Vector(Value(1), Value(2), Value(3), Value(9), Value(8), Value(7)))
+      val col2 = Column.fromCells(Vector(NA, NA, NA, Value(4D), Value(5D), Value(6D)))
+      a.appendRows(b) must_== ColOrientedFrame(Index(Array(0, 1, 2, 0, 1, 2)),
+        Series(0 -> TypedColumn(col0), 1 -> TypedColumn(col1), 2 -> TypedColumn(col2)))
+    }
+
+    "append frame rows with same column oriented schema" in {
+      val genFrame = genColOrientedFrame[Int, String](arbitrary[Int])(
+        "a" -> arbitrary[String],
+        "b" -> arbitrary[Int],
+        "c" -> arbitrary[Double])
+
+      forAll(Gen.zip(genFrame, genFrame)) { case (f0, f1) =>
+        val rows0 = f0.get(Cols("a", "b", "c").as[(String, Int, Double)])
+        val rows1 = f1.get(Cols("a", "b", "c").as[(String, Int, Double)])
+        val index = Index(rows0.index.keys ++ rows1.index.keys)
+        val values = rows0.values ++ rows1.values
+        val expected = Frame.fromRows(values: _*).withRowIndex(index).withColIndex(Index(Array("a", "b", "c")))
+        f0.appendRows(f1) must_== expected
+      }
     }
   }
 }
