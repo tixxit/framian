@@ -1,5 +1,5 @@
 
-resolvers += "bintray/tixxit" at "http://dl.bintray.com/tixxit/sbt-plugins"
+resolvers += Resolver.url("tixxit/sbt-plugins", url("http://dl.bintray.com/tixxit/sbt-plugins"))(Resolver.ivyStylePatterns)
 
 // https://issues.scala-lang.org/browse/SI-8772
 // trick from https://github.com/sbt/sbt/issues/1439#issuecomment-51860493
