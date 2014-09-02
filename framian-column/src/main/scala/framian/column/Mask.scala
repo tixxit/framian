@@ -10,63 +10,31 @@ import scala.collection.mutable.ArrayBuilder
 
 import spire.implicits._
 
-class MaskBuilder {
-  var len = 0
-  var size = 0
-  var bits = new Array[Long](8)
-
-  private def resize(newLen: Int): Unit = {
-    bits = Arrays.copyOf(bits, highestOneBit(newLen) * 2)
-    len = newLen
-  }
-
-  def +=(n: Int): this.type = {
-    val i = n >>> 6
-    if (i >= bits.length)
-      resize(i + 1)
-    if (i >= len)
-      len = i + 1
-    val word = bits(i)
-    val bit = 1L << (n & 0x3F)
-    if ((word & bit) == 0) {
-      bits(i) = word | bit
-      size += 1
-    }
-    this
-  }
-
-  def result(): Mask = {
-    val bits0 = Arrays.copyOf(bits, len)
-    new Mask(bits0, size)
-  }
-}
-
-object Mask {
-  def newBuilder: MaskBuilder = new MaskBuilder
-
-  final val empty = new Mask(new Array[Long](0), 0)
-
-  def apply(elems: Int*): Mask = {
-    val bldr = new MaskBuilder
-    elems.foreach(bldr += _)
-    bldr.result()
-  }
-
-  def range(from: Int, until: Int): Mask =
-    Mask(from.until(until): _*)
-
-  final def fromBits(bits: Array[Long]): Mask = {
-    var i = 0
-    var size = 0
-    while (i < bits.length) {
-      size += bitCount(bits(i))
-      i += 1
-    }
-    new Mask(bits, size)
-  }
-}
-
 final class Mask(private val bits: Array[Long], val size: Int) {
+  def max: Option[Int] =
+    if (bits.length == 0) {
+      None
+    } else {
+      val word = bits(bits.length - 1)
+      var i = 64
+      while (i > 0) {
+        i -= 1
+        if ((word & (1L << i)) != 0)
+          return Some(i)
+      }
+      None
+    }
+
+  def min: Option[Int] =
+    if (bits.length == 0) {
+      None
+    } else {
+      foreach(i => return Some(i))
+      None
+    }
+
+  def isEmpty: Boolean = size == 0
+
   def foreach[U](f: Int => U): Unit = {
     var i = 0
     while (i < bits.length) {
@@ -126,6 +94,19 @@ final class Mask(private val bits: Array[Long], val size: Int) {
     }
   }
 
+  def -(n: Int): Mask = {
+    val hi = n >>> 6
+    val bit = 1L << (n & 0x3F)
+
+    if (hi < bits.length && (bits(hi) & bit) != 0) {
+      val bits0 = Arrays.copyOf(bits, bits.length)
+      bits0(hi) ^= bit
+      new Mask(bits0, size - 1)
+    } else {
+      this
+    }
+  }
+
   def filter(f: Int => Boolean): Mask = {
     val bldr = new MaskBuilder
     foreach { i => if (f(i)) bldr += i }
@@ -148,4 +129,60 @@ final class Mask(private val bits: Array[Long], val size: Int) {
 
   override def toString: String =
     toSet.mkString("Mask(", ", ", ")")
+}
+
+object Mask {
+  def newBuilder: MaskBuilder = new MaskBuilder
+
+  final val empty = new Mask(new Array[Long](0), 0)
+
+  def apply(elems: Int*): Mask = {
+    val bldr = new MaskBuilder
+    elems.foreach(bldr += _)
+    bldr.result()
+  }
+
+  def range(from: Int, until: Int): Mask =
+    Mask(from.until(until): _*)
+
+  final def fromBits(bits: Array[Long]): Mask = {
+    var i = 0
+    var size = 0
+    while (i < bits.length) {
+      size += bitCount(bits(i))
+      i += 1
+    }
+    new Mask(bits, size)
+  }
+}
+
+final class MaskBuilder {
+  var len = 0
+  var size = 0
+  var bits = new Array[Long](8)
+
+  private def resize(newLen: Int): Unit = {
+    bits = Arrays.copyOf(bits, highestOneBit(newLen) * 2)
+    len = newLen
+  }
+
+  def +=(n: Int): this.type = {
+    val i = n >>> 6
+    if (i >= bits.length)
+      resize(i + 1)
+    if (i >= len)
+      len = i + 1
+    val word = bits(i)
+    val bit = 1L << (n & 0x3F)
+    if ((word & bit) == 0) {
+      bits(i) = word | bit
+      size += 1
+    }
+    this
+  }
+
+  def result(): Mask = {
+    val bits0 = Arrays.copyOf(bits, len)
+    new Mask(bits0, size)
+  }
 }

@@ -142,7 +142,7 @@ object Boilerplate {
         |          }
         |        }
         |      } else {
-        |        NAColumn[B](nmValues)
+        |        Column.empty[B](nmValues)
         |      }
         |  
         -    def loop{specType}(xs: Array[{specType}], i0: Int): Column[B] = {
@@ -212,7 +212,7 @@ object Boilerplate {
         |            }
         |        }
         |      } else {
-        |        NAColumn[A](nm.result())
+        |        Column.empty(nm.result())
         |      }
         |  
         -    def loop{specType}(xs: Array[{specType}], i0: Int): Column[A] = {
