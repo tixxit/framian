@@ -4,12 +4,13 @@ package column
 import scala.language.experimental.macros
 
 import scala.{specialized => sp }
+import scala.annotation.unspecialized
 
 import scala.reflect.macros.blackbox
 
-import scala.collection.immutable.BitSet
+sealed trait Column[@sp(Int,Long,Double) +A] {
 
-sealed trait Column[+A] {
+  @unspecialized
   def foldRow[B](row: Int)(na: B, nm: B, f: A => B): B = macro ColumnMacros.foldRowImpl[A, B]
 
   def apply(row: Int): Cell[A]
@@ -23,6 +24,10 @@ sealed trait Column[+A] {
   def reindex(index: Array[Int]): Column[A]
 
   def force(len: Int): Column[A]
+
+  def mask(na: Mask): Column[A]
+
+  def setNA(row: Int): Column[A] = mask(Mask(row)) // TODO: Implement with Mask#+?
 
   override def toString: String =
     (0 to 5).map(apply(_).toString).mkString("Column(", ", ", ")")
@@ -41,7 +46,7 @@ sealed trait BoxedColumn[A] extends Column[A] {
   }
 }
 
-sealed trait UnboxedColumn[A] extends Column[A] {
+sealed trait UnboxedColumn[@sp(Int,Long,Double) A] extends Column[A] {
   def isValueAt(row: Int): Boolean
   def nonValueAt(row: Int): NonValue
   def valueAt(row: Int): A
@@ -53,7 +58,7 @@ sealed trait UnboxedColumn[A] extends Column[A] {
 
 object Column {
   def eval[A](get: Int => Cell[A]): Column[A] = EvalColumn(get)
-  def dense[A](values: Array[A], na: BitSet = BitSet.empty, nm: BitSet = BitSet.empty): Column[A] = values match {
+  def dense[A](values: Array[A], na: Mask = Mask.empty, nm: Mask = Mask.empty): Column[A] = values match {
     case (values: Array[Double]) => DoubleColumn(values, na, nm)
     case (values: Array[Int]) => IntColumn(values, na, nm)
     case (values: Array[Long]) => LongColumn(values, na, nm)
@@ -72,6 +77,10 @@ case class EvalColumn[A](f: Int => Cell[A]) extends BoxedColumn[A] {
 
   def force(len: Int): Column[A] =
     DenseColumn.force(f, len)
+
+  def mask(mask: Mask): Column[A] = EvalColumn { row =>
+    if (mask(row)) NA else f(row)
+  }
 }
 
 // Wraps a column and memoizes the results.
@@ -93,7 +102,7 @@ case class EvalColumn[A](f: Int => Cell[A]) extends BoxedColumn[A] {
 sealed trait EmptyColumn[A] extends BoxedColumn[A] {
   def cellMap[B](f: Cell[A] => Cell[B]): Column[B] = EvalColumn((apply _) andThen f)
   def reindex(index: Array[Int]): Column[A] = {
-    val nm = BitSet.newBuilder
+    val nm = Mask.newBuilder
     var i = 0
     while (i < index.length) {
       if (apply(index(i)) == NM)
@@ -107,7 +116,7 @@ sealed trait EmptyColumn[A] extends BoxedColumn[A] {
     case NAColumn(nm) =>
       NAColumn(nm.filter(row => row >= 0 && row < len))
     case NMColumn(na) =>
-      val nm = BitSet.newBuilder
+      val nm = Mask.newBuilder
       (0 until len) foreach { i =>
         if (!na(i)) nm += i
       }
@@ -115,25 +124,27 @@ sealed trait EmptyColumn[A] extends BoxedColumn[A] {
   }
 }
 
-case class NAColumn[A](nmValues: BitSet) extends EmptyColumn[A] {
+case class NAColumn[A](nmValues: Mask) extends EmptyColumn[A] {
   def apply(row: Int): Cell[A] = if (nmValues(row)) NM else NA
+  def mask(mask: Mask): Column[A] = NAColumn(nmValues -- mask)
 }
 
-case class NMColumn[A](naValues: BitSet) extends EmptyColumn[A] {
+case class NMColumn[A](naValues: Mask) extends EmptyColumn[A] {
   def apply(row: Int): Cell[A] = if (naValues(row)) NA else NM
+  def mask(mask: Mask): Column[A] = NAColumn(naValues | mask)
 }
 
-sealed trait DenseColumn[A] extends UnboxedColumn[A] {
+sealed trait DenseColumn[@sp(Int,Long,Double) A] extends UnboxedColumn[A] {
   def values: Array[_]
-  def naValues: BitSet
-  def nmValues: BitSet
+  def naValues: Mask
+  def nmValues: Mask
 
   private final def valid(row: Int) = row >= 0 && row < values.length
   def isValueAt(row: Int): Boolean = valid(row) && !naValues(row) && !nmValues(row)
   def nonValueAt(row: Int): NonValue = if (nmValues(row)) NM else NA
 
   def filter(p: A => Boolean): Column[A] = {
-    val na = BitSet.newBuilder
+    val na = Mask.newBuilder
     var i = 0
     while (i < values.length) {
       if (naValues(i) || (isValueAt(i) && !p(valueAt(i)))) {
@@ -144,63 +155,66 @@ sealed trait DenseColumn[A] extends UnboxedColumn[A] {
     Column.dense(values, na.result(), nmValues).asInstanceOf[Column[A]]
   }
 
+  def mask(na: Mask): Column[A] =
+    Column.dense(values, naValues | na, nmValues -- na).asInstanceOf[Column[A]]
+
   // Required, because cellmap can make an infinite column.
   def cellMap[B](f: Cell[A] => Cell[B]): Column[B] = Column.eval(apply _).cellMap(f)
 }
 
 object DenseColumn extends DenseColumnFunctions
 
-case class IntColumn(values: Array[Int], naValues: BitSet, nmValues: BitSet) extends DenseColumn[Int] {
+case class IntColumn(values: Array[Int], naValues: Mask, nmValues: Mask) extends DenseColumn[Int] {
   def valueAt(row: Int): Int = values(row)
   def map[@sp(Int,Long,Double) B](f: Int => B): Column[B] = DenseColumn.mapInt(values, naValues, nmValues, f)
   def reindex(index: Array[Int]): Column[Int] = DenseColumn.reindexInt(index, values, naValues, nmValues)
   def force(len: Int): Column[Int] = IntColumn(
     java.util.Arrays.copyOf(values, len),
-    if (values.length < len) naValues ++ (values.length until len) else naValues,
+    if (values.length < len) naValues ++ Mask.range(values.length, len) else naValues,
     nmValues.filter(_ < len)
   )
 }
 
-case class LongColumn(values: Array[Long], naValues: BitSet, nmValues: BitSet) extends DenseColumn[Long] {
+case class LongColumn(values: Array[Long], naValues: Mask, nmValues: Mask) extends DenseColumn[Long] {
   def valueAt(row: Int): Long = values(row)
   def map[@sp(Int,Long,Double) B](f: Long => B): Column[B] = DenseColumn.mapLong(values, naValues, nmValues, f)
   def reindex(index: Array[Int]): Column[Long] = DenseColumn.reindexLong(index, values, naValues, nmValues)
   def force(len: Int): Column[Long] = LongColumn(
     java.util.Arrays.copyOf(values, len),
-    if (values.length < len) naValues ++ (values.length until len) else naValues,
+    if (values.length < len) naValues ++ Mask.range(values.length, len) else naValues,
     nmValues.filter(_ < len)
   )
 }
 
-case class DoubleColumn(values: Array[Double], naValues: BitSet, nmValues: BitSet) extends DenseColumn[Double] {
+case class DoubleColumn(values: Array[Double], naValues: Mask, nmValues: Mask) extends DenseColumn[Double] {
   def valueAt(row: Int): Double = values(row)
   def map[@sp(Int,Long,Double) B](f: Double => B): Column[B] = DenseColumn.mapDouble(values, naValues, nmValues, f)
   def reindex(index: Array[Int]): Column[Double] = DenseColumn.reindexDouble(index, values, naValues, nmValues)
   def force(len: Int): Column[Double] = DoubleColumn(
     java.util.Arrays.copyOf(values, len),
-    if (values.length < len) naValues ++ (values.length until len) else naValues,
+    if (values.length < len) naValues ++ Mask.range(values.length, len) else naValues,
     nmValues.filter(_ < len)
   )
 }
 
-case class AnyColumn[A](values: Array[Any], naValues: BitSet, nmValues: BitSet) extends DenseColumn[A] {
+case class AnyColumn[A](values: Array[Any], naValues: Mask, nmValues: Mask) extends DenseColumn[A] {
   def valueAt(row: Int): A = values(row).asInstanceOf[A]
   def map[@sp(Int,Long,Double) B](f: A => B): Column[B] = DenseColumn.mapAny(values, naValues, nmValues, f)
   def reindex(index: Array[Int]): Column[A] = DenseColumn.reindexAny(index, values, naValues, nmValues)
   def force(len: Int): Column[A] = AnyColumn(
     DenseColumn.copyArray(values, len),
-    if (values.length < len) naValues ++ (values.length until len) else naValues,
+    if (values.length < len) naValues ++ Mask.range(values.length, len) else naValues,
     nmValues.filter(_ < len)
   )
 }
 
-case class GenericColumn[A](values: Array[A], naValues: BitSet, nmValues: BitSet) extends DenseColumn[A] {
+case class GenericColumn[A](values: Array[A], naValues: Mask, nmValues: Mask) extends DenseColumn[A] {
   def valueAt(row: Int): A = values(row)
   def map[@sp(Int,Long,Double) B](f: A => B): Column[B] = DenseColumn.mapGeneric(values, naValues, nmValues, f)
   def reindex(index: Array[Int]): Column[A] = DenseColumn.reindexGeneric(index, values, naValues, nmValues)
   def force(len: Int): Column[A] = GenericColumn(
     DenseColumn.copyArray(values, len),
-    if (values.length < len) naValues ++ (values.length until len) else naValues,
+    if (values.length < len) naValues ++ Mask.range(values.length, len) else naValues,
     nmValues.filter(_ < len)
   )
 }
@@ -222,8 +236,8 @@ class ColumnMacros(val c: blackbox.Context) {
           $f($col.valueAt($r))
         } else {
           $col.nonValueAt($r) match {
-            case NA => $na
-            case NM => $nm
+            case _root_.framian.NA => $na
+            case _root_.framian.NM => $nm
           }
         }
 

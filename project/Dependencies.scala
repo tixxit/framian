@@ -13,6 +13,8 @@ object Dependencies {
     // Test libraries
     val Specs2             = "2.3.12"
     val ScalaCheck         = "1.11.4"
+
+    val Jmh                = "1.0"
   }
 
   // Compile
@@ -23,6 +25,11 @@ object Dependencies {
     val spire             = "org.spire-math"           %% "spire"                   % V.Spire
     val shapeless_10      = "com.chuusai"               % "shapeless_2.10.4"        % V.Shapeless
     val shapeless_11      = "com.chuusai"               % "shapeless_2.11"          % V.Shapeless
+  }
+
+  // Benchmark
+  object Benchmark {
+    val jmh               = "org.openjdk.jmh" % "jmh-core" % V.Jmh //% "benchmark"
   }
 
   // Test

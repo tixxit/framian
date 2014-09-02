@@ -49,4 +49,6 @@ lazy val framianJsonPlay22 = project.
 
 lazy val framianColumn = project.
   in(file("framian-column")).
+  configs(net.tixxit.sbt.benchmark.BenchmarkPlugin.Benchmark). // Anyway to not add this?
+  configs(net.tixxit.sbt.benchmark.BenchmarkPlugin.BenchmarkPrecompile). // Anyway to not add this?
   dependsOn(framian)

@@ -55,7 +55,6 @@ object Boilerplate {
     val body = s"""
       |package framian.column
       |
-      |import scala.collection.immutable.BitSet
       |import framian.{Cell,NA,NM,Value}
       |
       |trait DenseColumnFunctions {
@@ -97,10 +96,10 @@ object Boilerplate {
       def typeParams: String = if (isSpec) s"" else s"[$inputType]"
 
       block"""
-        |  def reindex$name$typeParams(index: Array[Int], values: Array[$inputArrayType], naValues: BitSet, nmValues: BitSet): Column[$inputType] = {
+        |  def reindex$name$typeParams(index: Array[Int], values: Array[$inputArrayType], naValues: Mask, nmValues: Mask): Column[$inputType] = {
         |    val xs = copyArray(values, index.length)
-        |    val na = BitSet.newBuilder
-        |    val nm = BitSet.newBuilder
+        |    val na = Mask.newBuilder
+        |    val nm = Mask.newBuilder
         |    var i = 0
         |    while (i < index.length) {
         |      val row = index(i)
@@ -125,7 +124,7 @@ object Boilerplate {
       }
 
       block"""
-        |  def map$name[$typeParams](values: Array[$inputArrayType], naValues: BitSet, nmValues: BitSet, f: $inputType => B): Column[B] = {
+        |  def map$name[$typeParams](values: Array[$inputArrayType], naValues: Mask, nmValues: Mask, f: $inputType => B): Column[B] = {
         |    def loop(i: Int): Column[B] =
         |      if (i < values.length) {
         |        if (naValues(i) || nmValues(i)) {
@@ -192,8 +191,8 @@ object Boilerplate {
 
       block"""
         |  def force[$inputType](col: Int => Cell[$inputType], len: Int): Column[A] = {
-        |    val na = BitSet.newBuilder
-        |    val nm = BitSet.newBuilder
+        |    val na = Mask.newBuilder
+        |    val nm = Mask.newBuilder
         |
         |    def loop(i: Int): Column[A] =
         |      if (i < len) {
