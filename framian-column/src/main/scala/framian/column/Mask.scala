@@ -129,6 +129,24 @@ final class Mask(private val bits: Array[Long], val size: Int) {
 
   override def toString: String =
     toSet.mkString("Mask(", ", ", ")")
+
+  override def equals(that: Any): Boolean = that match {
+    case (that: Mask) if this.size == that.size =>
+      var i = 0
+      while (i < bits.length) {
+        val w0 = bits(i)
+        val w1 = that.bits(i)
+        if ((w0 ^ w1) != 0)
+          return false
+        i += 1
+      }
+      true
+
+    case _ => false
+  }
+
+  override def hashCode: Int =
+    bits.foldLeft(1914323553)(_ ^ _.hashCode)
 }
 
 object Mask {
