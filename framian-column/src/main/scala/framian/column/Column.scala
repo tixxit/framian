@@ -5,7 +5,6 @@ import scala.language.experimental.macros
 
 import scala.{specialized => sp }
 import scala.annotation.unspecialized
-
 import scala.reflect.macros.blackbox
 
 sealed trait Column[@sp(Int,Long,Double) +A] {
@@ -20,6 +19,8 @@ sealed trait Column[@sp(Int,Long,Double) +A] {
   def map[@sp(Int,Long,Double) B](f: A => B): Column[B]
 
   def filter(p: A => Boolean): Column[A]
+
+  // def orElse(that: Column[A]): Column[A]
 
   def reindex(index: Array[Int]): Column[A]
 
@@ -57,6 +58,8 @@ sealed trait UnboxedColumn[@sp(Int,Long,Double) A] extends Column[A] {
 }
 
 object Column {
+  final def newBuilder[A: GenColumnBuilder](): ColumnBuilder[A] = ColumnBuilder[A]()
+
   def empty[A](nm: Mask = Mask.empty): Column[A] = if (nm.isEmpty) {
     new EmptyColumn[A]
   } else {

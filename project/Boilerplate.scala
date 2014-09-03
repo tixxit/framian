@@ -5,7 +5,10 @@ object Boilerplate {
     val denseColumnFunctions = dir / "framian" / "column" / "DenseColumnFunctions.scala"
     IO.write(denseColumnFunctions, GenDenseColumnFunctions.body)
 
-    Seq(denseColumnFunctions)
+    val columnBuilders = dir / "framian" / "column" / "columnBuilders.scala"
+    IO.write(columnBuilders, GenColumnBuilders.body)
+
+    Seq(denseColumnFunctions, columnBuilders)
   }
 
   import scala.StringContext._
@@ -25,10 +28,11 @@ object Boilerplate {
 
     def specs = List("Int", "Long", "Double")
 
-    def configs =
-      Config("Generic", "A", "A", false) ::
-      Config("Any", "Any", "A", false, ".asInstanceOf[A]") ::
-      specs.map(s => Config(s, s, s, true))
+    val GenericConfig = Config("Generic", "A", "A", false)
+    val AnyConfig = Config("Any", "Any", "A", false, ".asInstanceOf[A]")
+    val SpecConfigs = specs.map(s => Config(s, s, s, true))
+
+    def configs = GenericConfig :: AnyConfig :: SpecConfigs
 
     def body: String = {
       def loop(lines: List[String], chunks: Vector[String]): String = lines match {
@@ -248,6 +252,135 @@ object Boilerplate {
         |  
         |    loop(0)
         |  }
+      """
+    }
+  }
+
+  object GenColumnBuilders {
+    val body = s"""
+      |package framian.column
+      |
+      |import scala.collection.mutable.ArrayBuilder
+      |import scala.reflect.ClassTag
+      |
+      |import framian.{Cell,NA,NM,Value}
+      |
+      |${GenSpecColumnBuilders.body}
+      |${GenAnyColumnBuilder.body}
+    """.stripMargin
+  }
+
+  object GenSpecColumnBuilders extends GenSpecFunction(true) {
+    override def configs = GenericConfig :: SpecConfigs
+
+    def gen(config: Config): String = {
+      import config._
+
+      def typeParams: String = if (isSpec) s"" else s"[$inputType: ClassTag]"
+
+      block"""
+        |class ${name}ColumnBuilder$typeParams extends ColumnBuilder[$inputType] {
+        |  var i = 0
+        |  var values: ArrayBuilder[$inputType] = ArrayBuilder.make()
+        |  var na = Mask.newBuilder
+        |  var nm = Mask.newBuilder
+        |
+        |  def addValue(a: $inputType): this.type = { values += a; i += 1; this }
+        |  def addNA(): this.type = { na += i; i += 1; this }
+        |  def addNM(): this.type = { nm += i; i += 1; this }
+        |
+        |  def add(cell: Cell[$inputType]): this.type = cell match {
+        |    case Value(a) => addValue(a)
+        |    case NA => addNA()
+        |    case NM => addNM()
+        |  }
+        |
+        |  def result() = ${name}Column(values.result(), na.result(), nm.result())
+        |}
+        |
+      """
+    }
+  }
+
+  object GenAnyColumnBuilder extends GenSpecFunction(false) {
+    override def configs = AnyConfig :: Nil
+
+    def gen(config: Config): String = {
+      import config._
+
+      block"""
+        |class AnyColumnBuilder[A] extends ColumnBuilder[A] {
+        |  var i = 0
+        |  var values: ArrayBuilder[Any] = ArrayBuilder.make()
+        |  var na = Mask.newBuilder
+        |  var nm = Mask.newBuilder
+        |
+        |  def addValue(a: A): this.type = {
+        |    values += a
+        |    i += 1
+        |    this
+        |  }
+        |
+        |  def addNA(): this.type = {
+        |    na += i
+        |    i += 1
+        |    this
+        |  }
+        |
+        |  def addNM(): this.type = {
+        |    nm += i
+        |    i += 1
+        |    this
+        |  }
+        |
+        |  def add(cell: Cell[A]): this.type = cell match {
+        |    case Value(a) => addValue(a)
+        |    case NA => addNA()
+        |    case NM => addNM()
+        |  }
+        |
+        |  def result(): Column[A] = {
+        |    val data = values.result()
+        |    val naValues = na.result()
+        |    val nmValues = nm.result()
+        |    val fallback = AnyColumn[A](data, naValues, nmValues)
+        |
+        |    def loop(i: Int): Column[A] =
+        |      if (i < data.length) {
+        |        if (naValues(i) || nmValues(i)) {
+        |          loop(i + 1)
+        |        } else {
+        |          data(i) match {
+        -            case (x: {specType}) =>
+        -              val xs = new Array[{specType}](data.size)
+        -              xs(i) = x
+        -              loop{specType}(xs, i + 1)
+        |            case x =>
+        |              fallback
+        |          }
+        |        }
+        |      } else {
+        |        fallback
+        |      }
+        |
+        -    def loop{specType}(xs: Array[{specType}], i: Int): Column[A] =
+        -      if (i < data.length) {
+        -        if (naValues(i) || nmValues(i)) {
+        -          loop{specType}(xs, i + 1)
+        -        } else data(i) match {
+        -          case (x: {specType}) =>
+        -            xs(i) = x
+        -            loop{specType}(xs, i + 1)
+        -          case _ =>
+        -            fallback
+        -        }
+        -      } else {
+        -        {specType}Column(xs, naValues, nmValues).asInstanceOf[Column[A]]
+        -      }
+        |
+        |    loop(0)
+        |  }
+        |}
       """
     }
   }
