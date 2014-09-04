@@ -55,10 +55,42 @@ trait Frame[Row, Col] {
   def rowsAsSeries: Series[Row, UntypedColumn]
 
   /**
+   * Returns `true` if this frame can be treated as column oriented. This is
+   * largely for optimization purposes.
+   */
+  def isColOriented: Boolean
+
+  /**
+   * Returns `true` if this frame can be treated as row oriented. This is
+   * largely for optimization purposes.
+   */
+  def isRowOriented: Boolean
+
+  /**
    * Transposes the rows and columns of this frame. All rows in this frame
    * becomes the columns of the new frame.
    */
   def transpose: Frame[Col, Row]
+
+  /**
+   * Returns the set of all unique column keys.
+   */
+  def colKeys: Set[Col] = colIndex.map(_._1)(collection.breakOut)
+
+  /**
+   * Returns the set of all unique row keys.
+   */
+  def rowKeys: Set[Row] = rowIndex.map(_._1)(collection.breakOut)
+
+  /**
+   * Returns the number of rows in this frame.
+   */
+  def rows: Int = rowIndex.size
+
+  /**
+   * Returns the number of cols in this frame.
+   */
+  def cols: Int = colIndex.size
 
   /**
    * Returns `true` if this frame is logically empty. A frame is logically
@@ -427,6 +459,36 @@ trait Frame[Row, Col] {
   def reduceByKey[A, B: ClassTag](rows: Rows[Row, A], to: Row)(reducer: Reducer[A, B]): Frame[Row, Col] =
     transpose.reduceByKey(rows.toCols, to)(reducer).transpose
 
+  /**
+   * Appends the rows in `that` to the end of the rows in `this`. This will
+   * force the columns into sorted order.
+   */
+  def appendRows(that: Frame[Row, Col]): Frame[Row, Col] =
+    if (this.isColOriented) {
+      val (keys0, indices0) = this.rowIndex.unzip
+      val (keys1, indices1) = that.rowIndex.unzip
+      val cols0 = this.columnsAsSeries.mapValues(_.reindex(indices0))
+      val cols1 = that.columnsAsSeries.mapValues(_.reindex(indices1))
+      val offset = keys0.size
+      val cols = cols0.combine(cols1)(col => col, _.shift(offset), { (col0, col1) =>
+        ConcatColumn(col0, col1, offset)
+      })
+      ColOrientedFrame(Index(keys0 ++ keys1), cols)
+    } else {
+      val merger = Merger[Col](Merge.Outer)
+      val (keys, lIndices, rIndices) = Index.cogroup(this.colIndex, that.colIndex)(merger).result()
+      val rows0 = this.rowsAsSeries.mapValues(_.reindex(lIndices))
+      val rows1 = that.rowsAsSeries.mapValues(_.reindex(rIndices))
+      RowOrientedFrame(Index(keys), rows0 ++ rows1)
+    }
+
+  /**
+   * Appends the columns in `that` to the end of the columns in `this`. This
+   * will force the rows into sorted order.
+   */
+  def appendCols(that: Frame[Row, Col]): Frame[Row, Col] =
+    transpose.appendRows(that.transpose).transpose
+
   override def hashCode: Int = {
     val values = columnsAsSeries.iterator flatMap { case (colKey, cell) =>
       val col = cell.getOrElse(UntypedColumn.empty).cast[Any]
@@ -510,7 +572,7 @@ trait Frame[Row, Col] {
   def merge(that: Frame[Row, Col])(mergeStrategy: Merge): Frame[Row, Col] =
     genericJoin(that)(Merger(mergeStrategy))
 
-  def merge[T: ClassTag: ColumnTyper](col: Col, that: Series[Row, T])(mergeStrategy: Merge): Frame[Row, Col] =
+  def merge[T: ClassTag](col: Col, that: Series[Row, T])(mergeStrategy: Merge): Frame[Row, Col] =
     merge(that.toFrame(col))(mergeStrategy)
 
   def merge[L <: HList](them: L)(merge: Merge)(implicit folder: Frame.SeriesMergeFolder[L, Row, Col]): Frame[Row, Col] =
@@ -519,7 +581,7 @@ trait Frame[Row, Col] {
   def join(that: Frame[Row, Col])(joinStrategy: Join): Frame[Row, Col] =
     genericJoin(that)(Joiner(joinStrategy))
 
-  def join[T: ClassTag: ColumnTyper](col: Col, that: Series[Row, T])(joinStrategy: Join): Frame[Row, Col] =
+  def join[T: ClassTag](col: Col, that: Series[Row, T])(joinStrategy: Join): Frame[Row, Col] =
     join(that.toFrame(col))(joinStrategy)
 
   def join[L <: HList](them: L)(join: Join)(implicit folder: Frame.SeriesJoinFolder[L, Row, Col]): Frame[Row, Col] =
@@ -725,21 +787,24 @@ object Frame {
 case class ColOrientedFrame[Row, Col](
       rowIndex: Index[Row],
       colIndex: Index[Col],
-      cols: Column[UntypedColumn])
+      valueCols: Column[UntypedColumn])
     extends Frame[Row, Col] {
 
-  def columnsAsSeries: Series[Col, UntypedColumn] = Series(colIndex, cols)
+  def columnsAsSeries: Series[Col, UntypedColumn] = Series(colIndex, valueCols)
   def rowsAsSeries: Series[Row, UntypedColumn] = Series(rowIndex, Column[UntypedColumn]({ row =>
-    RowView(colIndex, cols, row)
+    RowView(colIndex, valueCols, row)
   }))
 
   def withColIndex[C1](ci: Index[C1]): Frame[Row, C1] =
-    ColOrientedFrame(rowIndex, ci, cols)
+    ColOrientedFrame(rowIndex, ci, valueCols)
 
   def withRowIndex[R1](ri: Index[R1]): Frame[R1, Col] =
-    ColOrientedFrame(ri, colIndex, cols)
+    ColOrientedFrame(ri, colIndex, valueCols)
 
-  def transpose: Frame[Col, Row] = RowOrientedFrame(colIndex, rowIndex, cols)
+  def transpose: Frame[Col, Row] = RowOrientedFrame(colIndex, rowIndex, valueCols)
+
+  def isColOriented: Boolean = true
+  def isRowOriented: Boolean = false
 }
 
 object ColOrientedFrame {
@@ -750,22 +815,25 @@ object ColOrientedFrame {
 case class RowOrientedFrame[Row, Col](
       rowIndex: Index[Row],
       colIndex: Index[Col],
-      rows: Column[UntypedColumn])
+      valueRows: Column[UntypedColumn])
     extends Frame[Row, Col] {
 
-  def rowsAsSeries: Series[Row, UntypedColumn] = Series(rowIndex, rows)
+  def rowsAsSeries: Series[Row, UntypedColumn] = Series(rowIndex, valueRows)
   def columnsAsSeries: Series[Col, UntypedColumn] = Series(colIndex, Column[UntypedColumn]({ row =>
-    RowView(colIndex, rows, row)
+    RowView(colIndex, valueRows, row)
   }))
   
 
   def withColIndex[C1](ci: Index[C1]): Frame[Row, C1] =
-    RowOrientedFrame(rowIndex, ci, rows)
+    RowOrientedFrame(rowIndex, ci, valueRows)
 
   def withRowIndex[R1](ri: Index[R1]): Frame[R1, Col] =
-    RowOrientedFrame(ri, colIndex, rows)
+    RowOrientedFrame(ri, colIndex, valueRows)
 
-  def transpose: Frame[Col, Row] = ColOrientedFrame(colIndex, rowIndex, rows)
+  def transpose: Frame[Col, Row] = ColOrientedFrame(colIndex, rowIndex, valueRows)
+
+  def isColOriented: Boolean = false
+  def isRowOriented: Boolean = true
 }
 
 object RowOrientedFrame {

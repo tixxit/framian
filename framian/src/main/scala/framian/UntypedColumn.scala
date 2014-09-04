@@ -74,3 +74,24 @@ case class MergedUntypedColumn(left: UntypedColumn, right: UntypedColumn) extend
   def reindex(index: Array[Int]): UntypedColumn = MergedUntypedColumn(left.reindex(index), right.reindex(index))
   def setNA(row: Int): UntypedColumn = MergedUntypedColumn(left.setNA(row), right.setNA(row))
 }
+
+case class ConcatColumn(col0: UntypedColumn, col1: UntypedColumn, offset: Int) extends UntypedColumn {
+  def cast[A: ColumnTyper]: Column[A] =
+    new columns.ConcatColumn(col0.cast[A], col1.cast[A], offset)
+  def mask(bits: Int => Boolean): UntypedColumn =
+    ConcatColumn(col0.mask(bits), col1.mask(row => bits(row + offset)), offset)
+  def shift(rows: Int): UntypedColumn =
+    ConcatColumn(col0.shift(rows), col1.shift(rows), offset + rows)
+  def reindex(index: Array[Int]): UntypedColumn = {
+    val index0 = index.map { row =>
+      if (row < offset) row else offset
+    }
+    val index1 = index.map { row =>
+      if (row < offset) offset - 1 else row
+    }
+    MergedUntypedColumn(col0.setNA(offset).reindex(index0), col1.setNA(offset - 1).reindex(index1))
+  }
+  def setNA(row: Int): UntypedColumn =
+    if (row < offset) ConcatColumn(col0.setNA(row), col1, offset)
+    else ConcatColumn(col0, col1.setNA(row - offset), offset)
+}
