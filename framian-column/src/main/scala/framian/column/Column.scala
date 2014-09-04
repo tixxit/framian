@@ -1,6 +1,8 @@
 package framian
 package column
 
+import java.util.concurrent.ConcurrentHashMap
+
 import scala.language.experimental.macros
 
 import scala.{specialized => sp }
@@ -29,6 +31,8 @@ sealed trait Column[@sp(Int,Long,Double) +A] {
   def mask(na: Mask): Column[A]
 
   def setNA(row: Int): Column[A]
+
+  def memoize(optimistic: Boolean = false): Column[A]
 
   override def toString: String =
     (0 to 5).map(apply(_).toString).mkString("Column(", ", ", ")")
@@ -76,7 +80,6 @@ object Column {
   }
 }
 
-// Wraps Int => Cell[A].
 private[column] case class EvalColumn[A](f: Int => Cell[A]) extends BoxedColumn[A] {
   override def apply(row: Int): Cell[A] = f(row)
 
@@ -95,23 +98,57 @@ private[column] case class EvalColumn[A](f: Int => Cell[A]) extends BoxedColumn[
   def setNA(naRow: Int): Column[A] = EvalColumn { row =>
     if (row == naRow) NA else f(row)
   }
+
+  def memoize(optimistic: Boolean): Column[A] =
+    if (optimistic) new OptimisticMemoizingColumn(f)
+    else new PessimisticMemoizingColumn(f)
 }
 
-// Wraps a column and memoizes the results.
-// case class MemoizingColumn[A](col: Column[A]) extends Column[A] {
-//   private val cache: Map[Int, Cell[A]] = _
-// 
-//   override def apply(row: Int): Cell[A] = {
-//     val cached = cache.get(row)
-//     if (cached == null) {
-//       val result = col(row)
-//       val sneaky = cache.putIfAbsent(result)
-//       if (sneaky != null) sneaky else result
-//     } else {
-//       cached
-//     }
-//   }
-// }
+private[column] sealed trait MemoizingColumn[A] extends BoxedColumn[A] with (Int => Cell[A]) {
+  private def eval: EvalColumn[A] = EvalColumn(this)
+  def cellMap[B](f: Cell[A] => Cell[B]): Column[B] = eval.cellMap(f)
+  def reindex(index: Array[Int]): Column[A] = eval.reindex(index)
+  def force(len: Int): Column[A] = eval.force(len)
+  def mask(mask: Mask): Column[A] = eval.mask(mask)
+  def setNA(naRow: Int): Column[A] = eval.setNA(naRow)
+  def memoize(optimistic: Boolean): Column[A] = this
+}
+
+private[column] class OptimisticMemoizingColumn[A](get: Int => Cell[A]) extends MemoizingColumn[A] {
+  private val cached: ConcurrentHashMap[Int, Cell[A]] = new ConcurrentHashMap()
+
+  def apply(row: Int): Cell[A] = {
+    if (!cached.containsKey(row))
+      cached.putIfAbsent(row, get(row))
+    cached.get(row)
+  }
+}
+
+private[column] class PessimisticMemoizingColumn[A](get: Int => Cell[A]) extends MemoizingColumn[A] {
+  private val cached: ConcurrentHashMap[Int, Box] = new ConcurrentHashMap()
+
+  def apply(row: Int): Cell[A] = {
+    if (!cached.containsKey(row))
+      cached.putIfAbsent(row, new Box(row))
+    cached.get(row).cell
+  }
+
+  private class Box(row: Int) {
+    @volatile var _cell: Cell[A] = null
+    def cell: Cell[A] = {
+      var result = _cell
+      if (result == null) {
+        synchronized {
+          result = _cell
+          if (result == null) {
+            _cell = get(row); result = _cell
+          }
+        }
+      }
+      result
+    }
+  }
+}
 
 private[column] final class EmptyColumn[A] extends BoxedColumn[A] {
   def cellMap[B](f: Cell[A] => Cell[B]): Column[B] = EvalColumn(row => f(NA))
@@ -120,6 +157,7 @@ private[column] final class EmptyColumn[A] extends BoxedColumn[A] {
   def setNA(row: Int): Column[A] = this
   def reindex(index: Array[Int]): Column[A] = this
   def force(len: Int): Column[A] = this
+  def memoize(optimistic: Boolean): Column[A] = this
 }
 
 private[column] sealed trait DenseColumn[@sp(Int,Long,Double) A] extends UnboxedColumn[A] {
@@ -151,6 +189,8 @@ private[column] sealed trait DenseColumn[@sp(Int,Long,Double) A] extends Unboxed
     else Column.dense(values, naValues + row, nmValues - row).asInstanceOf[Column[A]]
 
   def cellMap[B](f: Cell[A] => Cell[B]): Column[B] = Column.eval(apply _).cellMap(f)
+
+  def memoize(optimistic: Boolean): Column[A] = this
 }
 
 private[column] object DenseColumn extends DenseColumnFunctions
