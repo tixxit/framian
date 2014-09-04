@@ -23,7 +23,7 @@ resolvers in ThisBuild ++= Seq(
 
 lazy val root = project.
   in(file(".")).
-  aggregate(framian, framianJsonBase, framianJsonPlay).
+  aggregate(framianColumn, framian, framianJsonBase, framianJsonPlay).
   settings(
     publish := (),
     publishLocal := ()
