@@ -29,8 +29,14 @@ lazy val root = project.
     publishLocal := ()
   )
 
+lazy val framianColumn = project.
+  in(file("framian-column")).
+  configs(net.tixxit.sbt.benchmark.BenchmarkPlugin.Benchmark). // Anyway to not add this?
+  configs(net.tixxit.sbt.benchmark.BenchmarkPlugin.BenchmarkPrecompile) // Anyway to not add this?
+
 lazy val framian = project.
-  in(file("framian"))
+  in(file("framian")).
+  dependsOn(framianColumn)
 
 lazy val framianJsonBase = project.
   in(file("framian-json-base")).
@@ -46,9 +52,3 @@ lazy val framianJsonPlay22 = project.
   settings(
     sourceDirectory <<= sourceDirectory in framianJsonPlay
   )
-
-lazy val framianColumn = project.
-  in(file("framian-column")).
-  configs(net.tixxit.sbt.benchmark.BenchmarkPlugin.Benchmark). // Anyway to not add this?
-  configs(net.tixxit.sbt.benchmark.BenchmarkPlugin.BenchmarkPrecompile). // Anyway to not add this?
-  dependsOn(framian)
