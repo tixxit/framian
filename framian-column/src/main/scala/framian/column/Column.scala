@@ -24,14 +24,55 @@ sealed trait Column[@sp(Int,Long,Double) +A] {
 
   // def orElse(that: Column[A]): Column[A]
 
+  /**
+   * Returns a column whose `i`-th row maps to row `index(i)` in this column.
+   * If `i &lt; 0` or `i &gt;= index.length` then the returned column returns
+   * [[NA]]. This always forces all rows in `index` and the returned column is
+   * *dense* and unboxed.
+   */
   def reindex(index: Array[Int]): Column[A]
 
+  /**
+   * Returns a column which has had all rows between `0` and `len` (exclusive)
+   * forced (evaluated) and stored in memory, while all rows outside of `0` and
+   * `len` are set to [[NA]]. The returned column is *dense* and unboxed.
+   *
+   * @param len the upper bound of the range of values to force
+   */
   def force(len: Int): Column[A]
 
+  /**
+   * Returns a column with rows contained in `na` masked to [[NA]]s.
+   *
+   * @param na the rows to mask in the column
+   */
   def mask(na: Mask): Column[A]
 
+  /**
+   * Returns a column with a single row forced to [[NA]] and all others
+   * remaining the same. This is equivalent to, but possibly more efficient
+   * than `col.mask(Mask(row))`.
+   *
+   * @param row the row that will be forced to [[NA]]
+   */
   def setNA(row: Int): Column[A]
 
+  /**
+   * Returns a copy of this column whose values will be memoized if they are
+   * evaluated. That is, if `this` column is an *eval* column, then memoizing
+   * it will ensure that, for each row, the value is only computed once,
+   * regardless of the number of times it is accessed.
+   *
+   * By default, the memoization is always pessimistic (guaranteed at-most-once
+   * evaluation). If `optimistic` is `true`, then the memoizing may use an
+   * optimistic update strategy, which means a value *may* be evaluated more
+   * than once if it accessed concurrently.
+   *
+   * For dense, empty, and previously-memoized columns, this just returns the
+   * column itself.
+   *
+   * @param optimistic if true, memoized column may use optimistic updates
+   */
   def memoize(optimistic: Boolean = false): Column[A]
 
   override def toString: String =
@@ -64,14 +105,49 @@ sealed trait UnboxedColumn[@sp(Int,Long,Double) A] extends Column[A] {
 object Column {
   final def newBuilder[A: GenColumnBuilder](): ColumnBuilder[A] = ColumnBuilder[A]()
 
+  /**
+   * Returns a column which defaults to [[NA]] for all rows, except those in
+   * `nm`, which are [[NM]].
+   */
   def empty[A](nm: Mask = Mask.empty): Column[A] = if (nm.isEmpty) {
     new EmptyColumn[A]
   } else {
     new AnyColumn[A](new Array[Any](0), Mask.empty, nm)
   }
 
+  /**
+   * Returns a column which returns `Value(a)` for all rows.
+   *
+   * @note The `value` argument is strict.
+   */
+  def value[A](value: A): Column[A] = {
+    val cell = Value(value)
+    EvalColumn(_ => cell)
+  }
+
+  /**
+   * Returns a column whose values are obtained using `get`. Each time a row is
+   * accessed, `get` will be re-evaluated. To ensure values are evaluated
+   * only once, you can [[memoize]] the column or use on of the *forcing*
+   * methods, such as [[reindex]] or [[force]].
+   */
   def eval[A](get: Int => Cell[A]): Column[A] = EvalColumn(get)
 
+  /**
+   * Create a dense column from an array of values. A dense column can still
+   * have empty values, [[NA]] and [[NM]], as specified with the `na` and `nm`
+   * masks respectively. Dense columns are unboxed and only values that aren't
+   * masked by `na` and `nm` will ever be returned (so they can be `null`,
+   * `NaN`, etc.)
+   *
+   * The [[NM]] mask (`nm`) always takes precedence over the [[NA]] mask
+   * (`na`).  If a row is outside of the range 0 until `values.length`, then if
+   * `nm(row)` is true, [[NM]] will be returned, otherwise [[NA]] is returned.
+   *
+   * @param values the values of the column, rows correspond to indices
+   * @param na     masked rows that will return [[NA]]
+   * @param nm     masked rows that will return [[NM]]
+   */
   def dense[A](values: Array[A], na: Mask = Mask.empty, nm: Mask = Mask.empty): Column[A] = values match {
     case (values: Array[Double]) => DoubleColumn(values, na, nm)
     case (values: Array[Int]) => IntColumn(values, na, nm)
@@ -104,8 +180,8 @@ private[column] case class EvalColumn[A](f: Int => Cell[A]) extends BoxedColumn[
     else new PessimisticMemoizingColumn(f)
 }
 
-private[column] sealed trait MemoizingColumn[A] extends BoxedColumn[A] with (Int => Cell[A]) {
-  private def eval: EvalColumn[A] = EvalColumn(this)
+private[column] sealed trait MemoizingColumn[A] extends BoxedColumn[A] {
+  private def eval: EvalColumn[A] = EvalColumn(apply _)
   def cellMap[B](f: Cell[A] => Cell[B]): Column[B] = eval.cellMap(f)
   def reindex(index: Array[Int]): Column[A] = eval.reindex(index)
   def force(len: Int): Column[A] = eval.force(len)
@@ -133,6 +209,8 @@ private[column] class PessimisticMemoizingColumn[A](get: Int => Cell[A]) extends
     cached.get(row).cell
   }
 
+  // A Box let's us do the double-checked locking per-value, rather than having
+  // to lock the entire cache for the update.
   private class Box(row: Int) {
     @volatile var _cell: Cell[A] = null
     def cell: Cell[A] = {
@@ -191,6 +269,11 @@ private[column] sealed trait DenseColumn[@sp(Int,Long,Double) A] extends Unboxed
   def cellMap[B](f: Cell[A] => Cell[B]): Column[B] = Column.eval(apply _).cellMap(f)
 
   def memoize(optimistic: Boolean): Column[A] = this
+
+  override def toString: String = {
+    val len = nmValues.max.map(_ + 1).getOrElse(values.length)
+    (0 until len).map(apply(_).toString).mkString("Column(", ", ", ")")
+  }
 }
 
 private[column] object DenseColumn extends DenseColumnFunctions
