@@ -9,6 +9,7 @@ trait ColumnBuilder[@specialized(Int,Long,Double) A] {
   def addNA(): this.type
   def addNM(): this.type
   def add(cell: Cell[A]): this.type
+  def +=(cell: Cell[A]): this.type = add(cell)
   def result(): Column[A]
 }
 

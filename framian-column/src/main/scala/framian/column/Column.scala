@@ -76,7 +76,7 @@ sealed trait Column[@sp(Int,Long,Double) +A] {
   def memoize(optimistic: Boolean = false): Column[A]
 
   override def toString: String =
-    (0 to 5).map(apply(_).toString).mkString("Column(", ", ", ")")
+    (0 to 5).map(apply(_).toString).mkString("Column(", ", ", ", ...)")
 }
 
 sealed trait BoxedColumn[A] extends Column[A] {
@@ -104,6 +104,16 @@ sealed trait UnboxedColumn[@sp(Int,Long,Double) A] extends Column[A] {
 
 object Column {
   final def newBuilder[A: GenColumnBuilder](): ColumnBuilder[A] = ColumnBuilder[A]()
+
+  /**
+   * Construct a column whose `i`-th row is the `i`-th element in `cells`. All
+   * other rows are [[NA]].
+   */
+  def apply[A: GenColumnBuilder](cells: Cell[A]*): Column[A] = {
+    val bldr = newBuilder[A]()
+    cells.foreach(bldr += _)
+    bldr.result()
+  }
 
   /**
    * Returns a column which defaults to [[NA]] for all rows, except those in
