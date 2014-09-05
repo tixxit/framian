@@ -8,6 +8,6 @@ def customAddSbtPlugin(m: ModuleID) = Defaults.sbtPluginExtra(m, "0.13", "2.10")
 libraryDependencies ++= Seq(
   customAddSbtPlugin("de.johoop" % "jacoco4sbt" % "2.1.6"),
   customAddSbtPlugin("me.lessis" % "bintray-sbt" % "0.1.2"),
-  customAddSbtPlugin("net.tixxit" % "sbt-benchmark" % "0.0.4")
+  customAddSbtPlugin("net.tixxit" % "sbt-benchmark" % "0.1.0")
 )
 

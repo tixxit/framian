@@ -31,8 +31,7 @@ lazy val root = project.
 
 lazy val framianColumn = project.
   in(file("framian-column")).
-  configs(net.tixxit.sbt.benchmark.BenchmarkPlugin.Benchmark). // Anyway to not add this?
-  configs(net.tixxit.sbt.benchmark.BenchmarkPlugin.BenchmarkPrecompile) // Anyway to not add this?
+  enablePlugins(BenchmarkPlugin)
 
 lazy val framian = project.
   in(file("framian")).

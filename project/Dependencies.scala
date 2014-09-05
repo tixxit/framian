@@ -27,11 +27,6 @@ object Dependencies {
     val shapeless_11      = "com.chuusai"               % "shapeless_2.11"          % V.Shapeless
   }
 
-  // Benchmark
-  object Benchmark {
-    val jmh               = "org.openjdk.jmh" % "jmh-core" % V.Jmh //% "benchmark"
-  }
-
   // Test
   object Test {
     val specs2          =   "org.specs2"            %% "specs2"                      % V.Specs2        % "test"
