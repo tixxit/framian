@@ -107,9 +107,9 @@ object Boilerplate {
         |    var i = 0
         |    while (i < index.length) {
         |      val row = index(i)
-        |      if (naValues(row)) na += i
-        |      else if (nmValues(row)) nm += i
-        |      else if (row >= 0 && row < values.length) xs(i) = values(row)$cast
+        |      if (nmValues(row)) nm += i
+        |      else if (row >= 0 && row < values.length && !naValues(row)) xs(i) = values(row)$cast
+        |      else na += i
         |      i += 1
         |    }
         |    ${name}Column(xs, na.result(), nm.result())
