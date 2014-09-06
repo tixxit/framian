@@ -458,8 +458,13 @@ final class UnorderedIndex[K: Order: ClassTag] private[framian] (
     }
   }
 
-  def resetIndices: Index[K] =
-    new UnorderedIndex(keys, Array.range(0, keys.size), ord)
+  def resetIndices: Index[K] = {
+    val indices = new Array[Int](keys.length)
+    cfor(0)(_ < ord.length, _ + 1) { i =>
+      indices(ord(i)) = i
+    }
+    new UnorderedIndex(keys, indices, ord)
+  }
 
   def unzip: (Array[K], Array[Int]) = {
     val ks = new Array[K](ord.length)

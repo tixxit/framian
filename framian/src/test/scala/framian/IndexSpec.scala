@@ -146,6 +146,20 @@ class IndexSpec extends Specification with ScalaCheck {
     }
   }
 
+  "reset indices" should {
+    "do nothing when indices aren't specified" in {
+      val idx0 = Index.fromKeys("a", "c", "b")
+      idx0.resetIndices must_== idx0
+
+      val idx1 = Index.fromKeys("a", "b", "c")
+      idx1.resetIndices must_== idx1
+    }
+
+    "reset indices in traversal order" ! check { (pairs: Vector[(String, Int)]) =>
+      Index(pairs: _*).resetIndices must_== Index(pairs.map(_._1).toArray)
+    }
+  }
+
   "Index.Cogrouper" should {
     type Cogroup[K] = (List[(K, Int)], List[(K, Int)])
 
