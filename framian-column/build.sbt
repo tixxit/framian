@@ -23,3 +23,5 @@ testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html", "junitxml",
 TestCoverage.settings
 
 Publish.settings
+
+Dependencies.macroParadise

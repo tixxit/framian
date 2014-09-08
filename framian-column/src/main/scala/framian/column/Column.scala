@@ -7,12 +7,12 @@ import scala.language.experimental.macros
 
 import scala.{specialized => sp }
 import scala.annotation.unspecialized
-import scala.reflect.macros.blackbox
+import scala.reflect.macros.Context
 
-sealed trait Column[@sp(Int,Long,Double) +A] {
+sealed trait Column[+A] { // TODO: Can't specialize in 2.10, but can in 2.11.
 
-  @unspecialized
-  def foldRow[B](row: Int)(na: B, nm: B, f: A => B): B = macro ColumnMacros.foldRowImpl[A, B]
+  // @unspecialized -- See TODO above.
+  def foldRow[B](row: Int)(na: B, nm: B, f: A => B): B = macro Column.foldRowImpl[A, B]
 
   def apply(row: Int): Cell[A]
 
@@ -182,12 +182,15 @@ object Column {
     def memoize(optimistic: Boolean): Column[Nothing] = this
     def orElse[A0 >: Nothing](that: Column[A0]): Column[A0] = that
   }
+
+  def foldRowImpl[A, B](c: Context)(row: c.Expr[Int])(na: c.Expr[B], nm: c.Expr[B], f: c.Expr[A => B]): c.Expr[B] =
+    c.Expr(new ColumnMacros[c.type](c).foldRow(row)(na, nm, f))
 }
 
-class ColumnMacros(val c: blackbox.Context) {
+class ColumnMacros[C <: /*blackbox.*/Context](val c: C) {
   import c.universe._
 
-  def foldRowImpl[A, B](row: c.Expr[Int])(na: c.Expr[B], nm: c.Expr[B], f: c.Expr[A => B]): c.Tree = {
+  def foldRow[A, B](row: c.Expr[Int])(na: c.Expr[B], nm: c.Expr[B], f: c.Expr[A => B]): c.Tree = {
     val cell = newTermName(c.fresh("foldRow$cell$"))
     val col = newTermName(c.fresh("foldRow$col$"))
     val value = newTermName(c.fresh("foldRow$value$"))
@@ -195,7 +198,7 @@ class ColumnMacros(val c: blackbox.Context) {
 
     val tree = q"""
     ${c.prefix} match {
-      case ($col: UnboxedColumn[_]) =>
+      case ($col: _root_.framian.column.UnboxedColumn[_]) =>
         val $r = $row
         if ($col.isValueAt($r)) {
           $f($col.valueAt($r))
