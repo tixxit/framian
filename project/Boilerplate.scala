@@ -89,6 +89,8 @@ object Boilerplate {
       |${GenReindex.body}
       |
       |${GenForce.body}
+      |
+      |${GenOrElse.body}
       |}
     """.stripMargin
   }
@@ -251,6 +253,64 @@ object Boilerplate {
         |    }
         |  
         |    loop(0)
+        |  }
+      """
+    }
+  }
+
+  object GenOrElse extends GenSpecFunction(false) {
+    def gen(config: Config): String = {
+      import config._
+
+      def typeParams: String = {
+        if (isSpec) s"A0 >: $inputType"
+        else s"$inputType, A0 >: $inputType"
+      }
+
+      val classTagCase = if (config.name != "Generic") {
+        block"""
+        |      case ${name}Column(values0, naValues0, nmValues0) =>
+        |        val xs = copyArray(values, spire.math.max(values.length, values0.length))
+        |        var i = 0
+        |        while (i < values0.length) {
+        |          if (i >= values.length || naValues(i))
+        |            xs(i) = values0(i)
+        |          i += 1
+        |        }
+        |        ${name}Column(xs, naValues & naValues0, nmValues | nmValues0).asInstanceOf[Column[A0]]
+        |
+        """
+      } else ""
+
+      block"""
+        |  def orElse$name[$typeParams](values: Array[$inputArrayType], naValues: Mask, nmValues: Mask, rhs: Column[A0]): Column[A0] = {
+        |    rhs match {
+        $classTagCase
+        |      case (rhs: DenseColumn[_]) =>
+        |        val bldr = Column.newBuilder[A0]()
+        |        val len = spire.math.max(values.length, rhs.values.length)
+        |        var i = 0
+        |        while (i < len) {
+        |          if (i < values.length && !naValues(i)) {
+        |            if (nmValues(i)) bldr.addNM()
+        |            else bldr.addValue(values(i)$cast)
+        |          } else {
+        |            if (rhs.isValueAt(i)) bldr.addValue(rhs.valueAt(i))
+        |            else bldr += rhs.nonValueAt(i)
+        |          }
+        |          i += 1
+        |        }
+        |        bldr.result()
+        |
+        |      case _ => // TODO: Add case for unboxed columns.
+        |        Column.eval { row =>
+        |          if (row >= 0 && row < values.length && !naValues(row)) {
+        |            if (nmValues(row)) NM else Value(values(row)$cast)
+        |          } else {
+        |            rhs(row)
+        |          }
+        |        }
+        |    }
         |  }
       """
     }
