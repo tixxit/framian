@@ -22,16 +22,13 @@
 package framian
 
 import scala.reflect.ClassTag
-import scala.reflect.runtime.universe.{ TypeTag, typeTag }
 import scala.annotation.tailrec
 import scala.collection.{ IterableLike, Iterable }
 import scala.collection.generic.CanBuildFrom
-import scala.collection.mutable.{ ArrayBuilder, Builder }
+import scala.collection.mutable
 
 import spire.algebra.{ Order, Eq }
 import spire.math.Searching
-
-import shapeless._
 
 import spire.syntax.order._
 import spire.syntax.cfor._
@@ -193,7 +190,7 @@ sealed abstract class Index[K](implicit val order: Order[K], val classTag: Class
 
   override def seq: Index[K] = this
 
-  override protected def newBuilder: Builder[(K, Int), Index[K]] =
+  override protected def newBuilder: mutable.Builder[(K, Int), Index[K]] =
     new Index.IndexBuilder
 
   override def equals(that: Any): Boolean = that match {
@@ -221,8 +218,8 @@ sealed abstract class Index[K](implicit val order: Order[K], val classTag: Class
 object Index {
   implicit def cbf[K: Order: ClassTag]: CanBuildFrom[Index[_], (K, Int), Index[K]] =
     new CanBuildFrom[Index[_], (K, Int), Index[K]] {
-      def apply(): Builder[(K, Int), Index[K]] = new IndexBuilder[K]
-      def apply(from: Index[_]): Builder[(K, Int), Index[K]] = apply()
+      def apply(): mutable.Builder[(K, Int), Index[K]] = new IndexBuilder[K]
+      def apply(from: Index[_]): mutable.Builder[(K, Int), Index[K]] = apply()
     }
 
   def newBuilder[K: Order: ClassTag]: IndexBuilder[K] = new IndexBuilder
@@ -295,9 +292,9 @@ object Index {
     new UnorderedIndex(keys0, indices0, flip(order0))
   }
 
-  final class IndexBuilder[K: Order: ClassTag] extends Builder[(K, Int), Index[K]] {
-    val keys = ArrayBuilder.make[K]()
-    val indices = ArrayBuilder.make[Int]()
+  final class IndexBuilder[K: Order: ClassTag] extends mutable.Builder[(K, Int), Index[K]] {
+    val keys = mutable.ArrayBuilder.make[K]()
+    val indices = mutable.ArrayBuilder.make[Int]()
 
     var isOrdered = true
     var isNonEmpty = false
@@ -387,9 +384,9 @@ object Index {
     // We cheat here and use a mutable state because an immutable one would just
     // be too slow.
     final class State {
-      val keys: ArrayBuilder[K] = ArrayBuilder.make[K]
-      val lIndices: ArrayBuilder[Int] = ArrayBuilder.make[Int]
-      val rIndices: ArrayBuilder[Int] = ArrayBuilder.make[Int]
+      val keys: mutable.ArrayBuilder[K] = mutable.ArrayBuilder.make[K]
+      val lIndices: mutable.ArrayBuilder[Int] = mutable.ArrayBuilder.make[Int]
+      val rIndices: mutable.ArrayBuilder[Int] = mutable.ArrayBuilder.make[Int]
 
       def add(k: K, l: Int, r: Int) { keys += k; lIndices += l; rIndices += r }
 
