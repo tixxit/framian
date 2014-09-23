@@ -3,7 +3,7 @@ package column
 
 import java.util.concurrent.ConcurrentHashMap
 
-private[column] sealed trait MemoizingColumn[A] extends BoxedColumn[A] {
+private[framian] sealed trait MemoizingColumn[A] extends BoxedColumn[A] {
   private def eval: EvalColumn[A] = EvalColumn(apply _)
   def cellMap[B](f: Cell[A] => Cell[B]): Column[B] = eval.cellMap(f)
   def reindex(index: Array[Int]): Column[A] = eval.reindex(index)
@@ -12,9 +12,10 @@ private[column] sealed trait MemoizingColumn[A] extends BoxedColumn[A] {
   def setNA(naRow: Int): Column[A] = eval.setNA(naRow)
   def memoize(optimistic: Boolean): Column[A] = this
   def orElse[A0 >: A](that: Column[A0]): Column[A0] = eval.orElse(that)
+  def shift(n: Int): Column[A] = eval.shift(n)
 }
 
-private[column] class OptimisticMemoizingColumn[A](get: Int => Cell[A]) extends MemoizingColumn[A] {
+private[framian] class OptimisticMemoizingColumn[A](get: Int => Cell[A]) extends MemoizingColumn[A] {
   private val cached: ConcurrentHashMap[Int, Cell[A]] = new ConcurrentHashMap()
 
   def apply(row: Int): Cell[A] = {
@@ -24,7 +25,7 @@ private[column] class OptimisticMemoizingColumn[A](get: Int => Cell[A]) extends 
   }
 }
 
-private[column] class PessimisticMemoizingColumn[A](get: Int => Cell[A]) extends MemoizingColumn[A] {
+private[framian] class PessimisticMemoizingColumn[A](get: Int => Cell[A]) extends MemoizingColumn[A] {
   private val cached: ConcurrentHashMap[Int, Box] = new ConcurrentHashMap()
 
   def apply(row: Int): Cell[A] = {

@@ -48,7 +48,7 @@ trait ColumnGenerators {
     */
   def genColumn[A: ClassTag](gen: Gen[A], weight: (Int, Int, Int) = CellGenerators.dDefault): Gen[Column[A]] = for {
     cellValues <- Gen.listOf(CellGenerators.genCell(gen, weight))
-  } yield Column.fromCells(cellValues.toVector)
+  } yield Column(cellValues: _*)
 }
 object ColumnGenerators extends ColumnGenerators
 

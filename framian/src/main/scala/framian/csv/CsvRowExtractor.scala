@@ -24,6 +24,8 @@ package csv
 
 import spire.syntax.monoid._
 
+import framian.column._
+
 sealed abstract class CsvRowDelim(val value: String)
 object CsvRowDelim {
   case object Unix extends CsvRowDelim("\n")
@@ -84,7 +86,7 @@ object CsvCell {
       val num = col.cast[BigDecimal] map (Number(_): CsvCell)
       val text = col.cast[String] map (Text(_): CsvCell)
       val any = col.cast[Any] map { a => Text(a.toString): CsvCell }
-      num |+| text |+| any
+      num orElse text orElse any
     }
   }
 }
@@ -106,7 +108,7 @@ object CsvRow {
       Some(keys flatMap { key => cols(key).value.map(_.cast[CsvCell](CsvCell.CsvCellColumnTyper)) })
 
     def extract(row: Int, cols: List[Column[CsvCell]]): Cell[CsvRow] =
-      Value(CsvRow(cols map { _.foldRow(row)(a => a, CsvCell.fromNonValue) }))
+      Value(CsvRow(cols map { _.foldRow(row)(CsvCell.Empty, CsvCell.Invalid, a => a) }))
   }
 }
 

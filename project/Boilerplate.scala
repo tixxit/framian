@@ -57,7 +57,8 @@ object Boilerplate {
 
   object GenDenseColumnFunctions {
     val body = s"""
-      |package framian.column
+      |package framian
+      |package column
       |
       |import framian.{Cell,NA,NM,Value}
       |
@@ -271,13 +272,14 @@ object Boilerplate {
         block"""
         |      case ${name}Column(values0, naValues0, nmValues0) =>
         |        val xs = copyArray(values, spire.math.max(values.length, values0.length))
+        |        val nm = (nmValues & (nmValues0 | naValues0)) | (naValues & nmValues0)
         |        var i = 0
         |        while (i < values0.length) {
-        |          if (i >= values.length || naValues(i))
+        |          if (i >= values.length || naValues(i) || nmValues(i))
         |            xs(i) = values0(i)
         |          i += 1
         |        }
-        |        ${name}Column(xs, naValues & naValues0, nmValues | nmValues0).asInstanceOf[Column[A0]]
+        |        ${name}Column(xs, naValues & naValues0, nm).asInstanceOf[Column[A0]]
         |
         """
       } else ""
@@ -291,12 +293,14 @@ object Boilerplate {
         |        val len = spire.math.max(values.length, rhs.values.length)
         |        var i = 0
         |        while (i < len) {
-        |          if (i < values.length && !naValues(i)) {
-        |            if (nmValues(i)) bldr.addNM()
-        |            else bldr.addValue(values(i)$cast)
+        |          if (i < values.length && !naValues(i) && !nmValues(i)) {
+        |            bldr.addValue(values(i)$cast)
+        |          } else if (rhs.isValueAt(i)) {
+        |            bldr.addValue(rhs.valueAt(i))
+        |          } else if (nmValues(i)) {
+        |            bldr.addNM()
         |          } else {
-        |            if (rhs.isValueAt(i)) bldr.addValue(rhs.valueAt(i))
-        |            else bldr += rhs.nonValueAt(i)
+        |            bldr.add(rhs.nonValueAt(i))
         |          }
         |          i += 1
         |        }
@@ -304,10 +308,13 @@ object Boilerplate {
         |
         |      case _ => // TODO: Add case for unboxed columns.
         |        Column.eval { row =>
-        |          if (row >= 0 && row < values.length && !naValues(row)) {
-        |            if (nmValues(row)) NM else Value(values(row)$cast)
+        |          if (row >= 0 && row < values.length && !naValues(row) && !nmValues(row)) {
+        |            Value(values(row)$cast)
         |          } else {
-        |            rhs(row)
+        |            rhs(row) match {
+        |              case NA if nmValues(row) => NM
+        |              case cell => cell
+        |            }
         |          }
         |        }
         |    }
@@ -318,7 +325,8 @@ object Boilerplate {
 
   object GenColumnBuilders {
     val body = s"""
-      |package framian.column
+      |package framian
+      |package column
       |
       |import scala.collection.mutable.ArrayBuilder
       |import scala.reflect.ClassTag
@@ -346,8 +354,8 @@ object Boilerplate {
         |  var nm = Mask.newBuilder
         |
         |  def addValue(a: $inputType): this.type = { values += a; i += 1; this }
-        |  def addNA(): this.type = { na += i; i += 1; this }
-        |  def addNM(): this.type = { nm += i; i += 1; this }
+        |  def addNA(): this.type = { na += i; values += null.asInstanceOf[$inputType]; i += 1; this }
+        |  def addNM(): this.type = { nm += i; values += null.asInstanceOf[$inputType]; i += 1; this }
         |
         |  def add(cell: Cell[$inputType]): this.type = cell match {
         |    case Value(a) => addValue(a)
@@ -356,6 +364,8 @@ object Boilerplate {
         |  }
         |
         |  def result() = ${name}Column(values.result(), na.result(), nm.result())
+        |
+        |  def clear(): Unit = { i = 0; values.clear(); na.clear(); nm.clear() }
         |}
         |
       """
@@ -383,12 +393,14 @@ object Boilerplate {
         |
         |  def addNA(): this.type = {
         |    na += i
+        |    values += null
         |    i += 1
         |    this
         |  }
         |
         |  def addNM(): this.type = {
         |    nm += i
+        |    values += null
         |    i += 1
         |    this
         |  }
@@ -440,6 +452,8 @@ object Boilerplate {
         |
         |    loop(0)
         |  }
+        |
+        |  def clear(): Unit = { i = 0; values.clear(); na.clear(); nm.clear() }
         |}
       """
     }

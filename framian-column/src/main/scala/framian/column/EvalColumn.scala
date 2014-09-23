@@ -1,7 +1,7 @@
 package framian
 package column
 
-private[column] case class EvalColumn[A](f: Int => Cell[A]) extends BoxedColumn[A] {
+private[framian] case class EvalColumn[A](f: Int => Cell[A]) extends BoxedColumn[A] {
   override def apply(row: Int): Cell[A] = f(row)
 
   def cellMap[B](g: Cell[A] => Cell[B]): Column[B] = EvalColumn(f andThen g)
@@ -31,5 +31,7 @@ private[column] case class EvalColumn[A](f: Int => Cell[A]) extends BoxedColumn[
         case cell => cell
       }
     }
+
+  def shift(n: Int): Column[A] = EvalColumn(row => f(row - n))
 }
 

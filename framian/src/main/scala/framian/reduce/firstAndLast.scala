@@ -29,12 +29,9 @@ final class First[A] extends Reducer[A, A] {
   def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Cell[A] = {
     @tailrec def loop(i: Int): Cell[A] = if (i < end) {
       val row = indices(i)
-      if (column.isValueAt(row)) {
-        Value(column.valueAt(row))
-      } else if (column.nonValueAt(row) == NA) {
-        loop(i + 1)
-      } else {
-        NM
+      column(row) match {
+        case NA => loop(i + 1)
+        case first => first
       }
     } else NA
 
@@ -47,12 +44,9 @@ final class Last[A] extends Reducer[A, A] {
   def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Cell[A] = {
     @tailrec def loop(i: Int): Cell[A] = if (i >= start) {
       val row = indices(i)
-      if (column.isValueAt(row)) {
-        Value(column.valueAt(row))
-      } else if (column.nonValueAt(row) == NA) {
-        loop(i - 1)
-      } else {
-        NM
+      column(row) match {
+        case NA => loop(i - 1)
+        case last => last
       }
     } else NA
 
@@ -66,21 +60,16 @@ final class FirstN[A](n: Int) extends Reducer[A, List[A]] {
 
   def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Cell[List[A]] = {
     val rows = List.newBuilder[A]
+    var k = 1
 
-    @tailrec def loop(i: Int, k: Int): Cell[List[A]] = if (i < end) {
-      val row = indices(i)
-      if (column.isValueAt(row)) {
-        rows += column.valueAt(row)
-        if (k == n) Value(rows.result())
-        else loop(i + 1, k + 1)
-      } else if (column.nonValueAt(row) == NA) {
-        loop(i + 1, k)
-      } else {
-        NM
-      }
-    } else NA
+    val success = column.foreach(start, end, indices(_)) { (_, value) =>
+      rows += value
+      if (k == n)
+        return Value(rows.result())
+      k += 1
+    }
 
-    loop(start, 1)
+    if (success) NA else NM
   }
 }
 
@@ -90,20 +79,16 @@ final class LastN[A](n: Int) extends Reducer[A, List[A]] {
 
   def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Cell[List[A]] = {
     var rows = List.empty[A]
+    var k = 1
 
-    @tailrec def loop(i: Int, k: Int): Cell[List[A]] = if (i >= start) {
-      val row = indices(i)
-      if (column.isValueAt(row)) {
-        rows = column.valueAt(row) :: rows
-        if (k == n) Value(rows)
-        else loop(i - 1, k + 1)
-      } else if (column.nonValueAt(row) == NA) {
-        loop(i - 1, k)
-      } else {
-        NM
-      }
-    } else NA
+    // TOODO: The end - i + start - 1 is rather unsatisifying.
+    val success = column.foreach(start, end, { i => indices(end - i + start - 1) }) { (_, value) =>
+      rows = value :: rows
+      if (k == n)
+        return Value(rows)
+      k += 1
+    }
 
-    loop(end - 1, 1)
+    if (success) NA else NM
   }
 }

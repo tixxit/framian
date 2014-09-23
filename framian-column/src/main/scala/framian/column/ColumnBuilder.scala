@@ -1,4 +1,5 @@
-package framian.column
+package framian
+package column
 
 import framian.Cell
 
@@ -11,6 +12,7 @@ trait ColumnBuilder[@specialized(Int,Long,Double) A] {
   def add(cell: Cell[A]): this.type
   def +=(cell: Cell[A]): this.type = add(cell)
   def result(): Column[A]
+  def clear(): Unit
 }
 
 object ColumnBuilder {

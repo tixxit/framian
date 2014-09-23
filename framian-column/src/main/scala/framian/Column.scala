@@ -1,7 +1,4 @@
 package framian
-package column
-
-import java.util.concurrent.ConcurrentHashMap
 
 import scala.language.experimental.macros
 
@@ -9,16 +6,49 @@ import scala.{specialized => sp }
 import scala.annotation.unspecialized
 import scala.reflect.macros.Context
 
+import spire.algebra.{ Semigroup, Monoid }
+
+import framian.column._
+
 sealed trait Column[+A] { // TODO: Can't specialize in 2.10, but can in 2.11.
 
   // @unspecialized -- See TODO above.
   def foldRow[B](row: Int)(na: B, nm: B, f: A => B): B = macro Column.foldRowImpl[A, B]
+
+  /**
+   * Equivalent to calling `foreach(from, until, rows, true)(f)`.
+   */
+  def foreach[U](from: Int, until: Int, rows: Int => Int)(f: (Int, A) => U): Boolean = macro Column.foreachImpl[A, U]
+
+  /**
+   * Iterates from `from` until `until`, and for each value `i` in this range,
+   * it retreives a row via `rows(i)`. If this row is `NM` and `abortOnNM` is
+   * `true`, then iteration stops immediately and `false` is returned.
+   * Otherwise, if the row is a value, it calls `f` with `i` and the value of
+   * the row. If iteration terminates normally (ie. no [[NM]]s), then `true` is
+   * returned.
+   *
+   * This is implemented as a macro and desugars into a while loop that access
+   * the column using `apply` if it is a [[BoxedColumn]] and
+   * `isValueAt`/`valueAt`/`nonValueAt` if it is an [[UnboxedColumn]]. It will
+   * also inline `rows` and `f` if they are function literals.
+   *
+   * @param from  the value to start iterating at (inclusive)
+   * @param until the value to stop iterating at (exclusive)
+   * @param rows  the function used to retrieve the row for an iteration
+   * @param f     the function to call at each value
+   * @param abortOnNM terminate early if an `NM` is found
+   * @return true if no NMs were found (or `abortOnNM` is false) and terminate completed successfully, false otherwise
+   */
+  def foreach[U](from: Int, until: Int, rows: Int => Int, abortOnNM: Boolean)(f: (Int, A) => U): Boolean = macro Column.foreachExtraImpl[A, U]
 
   def apply(row: Int): Cell[A]
 
   def cellMap[B](f: Cell[A] => Cell[B]): Column[B]
 
   def map[@sp(Int,Long,Double) B](f: A => B): Column[B]
+
+  def flatMap[B](f: A => Cell[B]): Column[B]
 
   def filter(p: A => Boolean): Column[A]
 
@@ -82,6 +112,12 @@ sealed trait Column[+A] { // TODO: Can't specialize in 2.10, but can in 2.11.
    */
   def memoize(optimistic: Boolean = false): Column[A]
 
+  /**
+   * Shifts all values in the column up by `rows` rows. So,
+   * `col.shift(n).apply(row) == col(row - n)`.
+   */
+  def shift(rows: Int): Column[A]
+
   override def toString: String =
     (0 to 5).map(apply(_).toString).mkString("Column(", ", ", ", ...)")
 }
@@ -89,6 +125,11 @@ sealed trait Column[+A] { // TODO: Can't specialize in 2.10, but can in 2.11.
 trait BoxedColumn[A] extends Column[A] {
   def map[@sp(Int,Long,Double) B](f: A => B): Column[B] = cellMap {
     case Value(a) => Value(f(a))
+    case (nonValue: NonValue) => nonValue
+  }
+
+  def flatMap[B](f: A => Cell[B]): Column[B] = cellMap {
+    case Value(a) => f(a)
     case (nonValue: NonValue) => nonValue
   }
 
@@ -162,11 +203,15 @@ object Column {
     case _ => GenericColumn[A](values, na, nm)
   }
 
+  def values[A](values: Seq[A]): Column[A] =
+    AnyColumn[A]((values: Seq[Any]).toArray, Mask.empty, Mask.empty)
+
   /**
    * Returns a column that returns [[NM]] for any row in `nmValues` and [[NA]]
-   * for all others.
+   * for all others. If all you need is a column that always returns [[NA]],
+   * then use [[Empty]].
    */
-  def empty[A](nmValues: Mask): Column[A] =
+  def empty[A](nmValues: Mask = Mask.empty): Column[A] =
     AnyColumn[A](new Array[Any](0), Mask.empty, nmValues)
 
   /**
@@ -181,43 +226,24 @@ object Column {
     def force(len: Int): Column[Nothing] = this
     def memoize(optimistic: Boolean): Column[Nothing] = this
     def orElse[A0 >: Nothing](that: Column[A0]): Column[A0] = that
+    def shift(n: Int): Column[Nothing] = this
   }
+
+  implicit def columnMonoid[A]: Monoid[Column[A]] =
+    new Monoid[Column[A]] {
+      def id: Column[A] = Empty
+      def op(lhs: Column[A], rhs: Column[A]): Column[A] =
+        lhs orElse rhs
+    }
 
   def foldRowImpl[A, B](c: Context)(row: c.Expr[Int])(na: c.Expr[B], nm: c.Expr[B], f: c.Expr[A => B]): c.Expr[B] =
-    c.Expr(new ColumnMacros[c.type](c).foldRow(row)(na, nm, f))
-}
+    new ColumnMacros[c.type](c).foldRow(row)(na, nm, f)
 
-class ColumnMacros[C <: /*blackbox.*/Context](val c: C) {
-  import c.universe._
-
-  def foldRow[A, B](row: c.Expr[Int])(na: c.Expr[B], nm: c.Expr[B], f: c.Expr[A => B]): c.Tree = {
-    val cell = newTermName(c.fresh("foldRow$cell$"))
-    val col = newTermName(c.fresh("foldRow$col$"))
-    val value = newTermName(c.fresh("foldRow$value$"))
-    val r = newTermName(c.fresh("foldRow$row$"))
-
-    val tree = q"""
-    ${c.prefix} match {
-      case ($col: _root_.framian.column.UnboxedColumn[_]) =>
-        val $r = $row
-        if ($col.isValueAt($r)) {
-          $f($col.valueAt($r))
-        } else {
-          $col.nonValueAt($r) match {
-            case _root_.framian.NA => $na
-            case _root_.framian.NM => $nm
-          }
-        }
-
-      case $col =>
-        $col($row) match {
-          case _root_.framian.NA => $na
-          case _root_.framian.NM => $nm
-          case _root_.framian.Value($value) => $f($value)
-        }
-    }
-    """
-
-    c.resetLocalAttrs(tree)
+  def foreachImpl[A, U](c: Context)(from: c.Expr[Int], until: c.Expr[Int], rows: c.Expr[Int => Int])(f: c.Expr[(Int, A) => U]): c.Expr[Boolean] = {
+    import c.universe._
+    new ColumnMacros[c.type](c).foreach(from, until, rows, c.Expr[Boolean](q"true"))(f)
   }
+
+  def foreachExtraImpl[A, U](c: Context)(from: c.Expr[Int], until: c.Expr[Int], rows: c.Expr[Int => Int], abortOnNM: c.Expr[Boolean])(f: c.Expr[(Int, A) => U]): c.Expr[Boolean] =
+    new ColumnMacros[c.type](c).foreach(from, until, rows, abortOnNM)(f)
 }

@@ -25,13 +25,13 @@ class ReducerSpec extends Specification with ScalaCheck with SeriesClassifiers {
   object unique {
     val dense = Series("a" -> 1D, "b" -> 2D, "c" -> 4D, "d" -> 5D)
     val sparse = Series(Index.fromKeys("a", "b", "c", "d", "e", "f"),
-      Column.fromCells(Vector(NA, Value(2D), NM, NA, Value(4D), NM)))
+      Column(NA, Value(2D), NM, NA, Value(4D), NM))
   }
 
   object odd {
     val dense = Series("a" -> 1D, "b" -> 2D, "c" -> 3D)
     val sparse = Series(Index.fromKeys("a", "b", "c", "d"),
-      Column.fromCells(Vector(NA, Value(2D), Value(4D), Value(5D))))
+      Column(NA, Value(2D), Value(4D), Value(5D)))
   }
 
   object duplicate {

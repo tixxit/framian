@@ -1,4 +1,5 @@
-package framian.column
+package framian
+package column
 
 import java.lang.Integer.highestOneBit
 import java.lang.Long.bitCount
@@ -113,6 +114,12 @@ final class Mask(private val bits: Array[Long], val size: Int) {
     bldr.result()
   }
 
+  def map(f: Int => Int): Mask = {
+    val bldr = new MaskBuilder
+    foreach { i => bldr += f(i) }
+    bldr.result()
+  }
+
   def apply(n: Int): Boolean = {
     val hi = n >>> 6
     if (hi < bits.length)
@@ -202,5 +209,11 @@ final class MaskBuilder {
   def result(): Mask = {
     val bits0 = Arrays.copyOf(bits, len)
     new Mask(bits0, size)
+  }
+
+  def clear(): Unit = {
+    len = 0
+    size = 0
+    bits = new Array[Long](8)
   }
 }

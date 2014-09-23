@@ -30,6 +30,8 @@ import scala.io.Source
 import spire.math.Number
 import spire.implicits._
 
+import framian.column._
+
 package object utilities {
 
   /** Load a frame from CSV.
@@ -169,7 +171,7 @@ package object utilities {
       Index(rowIndexValues.toArray),
       Series(valueColumnIndex.zip(
         valueColumns map {
-          colArr => TypedColumn(Column.fromArray(colArr.toArray))
+          colArr => TypedColumn(Column.dense(colArr.toArray))
         }): _*))
   }
 }
