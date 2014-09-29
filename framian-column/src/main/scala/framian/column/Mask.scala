@@ -134,6 +134,12 @@ final class Mask(private val bits: Array[Long], val size: Int) {
     bldr.result()
   }
 
+  def toBitSet: BitSet = {
+    val bldr = BitSet.newBuilder
+    foreach(bldr += _)
+    bldr.result()
+  }
+
   override def toString: String =
     toSet.mkString("Mask(", ", ", ")")
 

@@ -10,6 +10,10 @@ class ColumnSpec extends Specification {
   def slice[A](col: Column[A])(indices: Int*): Vector[Cell[A]] =
     indices.toVector map (col(_))
 
+  implicit class ColumnOps[A](col: Column[A]) {
+    def slice(rows: Seq[Int]): Vector[Cell[A]] = rows.map(col(_))(collection.breakOut)
+  }
+
   "Column construction" should {
     "wrap arrays" in {
       val col = Column.dense(Array(1, 2, 3))
@@ -32,6 +36,20 @@ class ColumnSpec extends Specification {
     "empty is empty" in {
       val col = Column.empty[String]()
       slice(col)(Int.MinValue, 0, Int.MaxValue, -1, 1, 200) must contain(be_==(NA)).forall
+    }
+  }
+
+  "shift" should {
+    "move dense column rows up" in {
+      val col = Column.dense(Array(1,2,3,4,5), Mask(1, 2), Mask(3))
+      col.shift(2).slice(0 to 6) must_== Vector(NA, NA, Value(1), NA, NA, NM, Value(5))
+      col.shift(-2).slice(-2 to 2) must_== Vector(Value(1), NA, NA, NM, Value(5))
+    }
+
+    "move eval columns rows up" in {
+      val col = Column.eval { row => Value(row) }
+      col.shift(2).slice(-3 to 3) must_== Vector(-5, -4, -3, -2 -1, 0, 1).map(Value(_))
+      col.shift(-2).slice(-3 to 3) must_== Vector(-1, 0, 1, 2, 3, 4, 5).map(Value(_))
     }
   }
 
@@ -102,13 +120,13 @@ class ColumnSpec extends Specification {
       slice(col)(Int.MinValue, 0, 1, 2, Int.MaxValue) must contain(be_==(NA)).forall
     }
 
-    "be right biased" in {
+    "be left biased" in {
       val a = Column.eval(row => Value(row))
       val b = Column.eval(row => Value(-row))
-      (a |+| b)(1) must_== Value(-1)
-      (a |+| b)(2) must_== Value(-2)
-      (b |+| a)(1) must_== Value(1)
-      (b |+| a)(2) must_== Value(2)
+      (a |+| b)(1) must_== Value(1)
+      (a |+| b)(2) must_== Value(2)
+      (b |+| a)(1) must_== Value(-1)
+      (b |+| a)(2) must_== Value(-2)
     }
 
     "ignore non values" in {

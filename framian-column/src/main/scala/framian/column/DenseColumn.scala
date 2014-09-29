@@ -52,14 +52,18 @@ private[framian] sealed trait DenseColumn[@sp(Int,Long,Double) A] extends Unboxe
   }
 
   def shift(n: Int): Column[A] = {
-    val len = spire.math.min(values.length.toLong + n, Int.MaxValue.toLong).toInt
-    val indices = Array.fill(len)(-1)
-    var i = n
-    while (i < len) {
-      indices(i) = i - n
-      i += 1
+    if (n < 0) {
+      Column.eval(apply _).shift(n)
+    } else {
+      val len = spire.math.min(values.length.toLong + n, Int.MaxValue.toLong).toInt
+      val indices = Array.fill(len)(-1)
+      var i = n
+      while (i < len) {
+        indices(i) = i - n
+        i += 1
+      }
+      reindex(indices)
     }
-    reindex(indices)
   }
 
   override def toString: String = {

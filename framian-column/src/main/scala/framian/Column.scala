@@ -42,14 +42,37 @@ sealed trait Column[+A] { // TODO: Can't specialize in 2.10, but can in 2.11.
    */
   def foreach[U](from: Int, until: Int, rows: Int => Int, abortOnNM: Boolean)(f: (Int, A) => U): Boolean = macro Column.foreachExtraImpl[A, U]
 
+  /**
+   * Returns the [[Cell]] at row `row`.
+   */
   def apply(row: Int): Cell[A]
 
+  /**
+   * Maps the cells of this [[Column]] using `f`. This method will always force
+   * the column into an eval column and should be used with caution.
+   */
   def cellMap[B](f: Cell[A] => Cell[B]): Column[B]
 
+  /**
+   * Map all values of this `Column` using `f`. All [[NA]] and [[NM]] values
+   * remain as they were.
+   */
   def map[@sp(Int,Long,Double) B](f: A => B): Column[B]
 
+  /**
+   * Map the values of this `Column` to a new [[Cell]]. All [[NA]] and [[NM]]
+   * values remain the same.
+   *
+   * @param f function use to transform this column's values
+   */
   def flatMap[B](f: A => Cell[B]): Column[B]
 
+  /**
+   * Filters the values of this `Column` so that any value for which `p` is
+   * true remains a value and all other values are turned into [[NA]]s.
+   *
+   * @param p predicate to filter this column's values with
+   */
   def filter(p: A => Boolean): Column[A]
 
   /**
@@ -114,7 +137,8 @@ sealed trait Column[+A] { // TODO: Can't specialize in 2.10, but can in 2.11.
 
   /**
    * Shifts all values in the column up by `rows` rows. So,
-   * `col.shift(n).apply(row) == col(row - n)`.
+   * `col.shift(n).apply(row) == col(row - n)`. If this is a dense column,
+   * then it will only remain dense if `rows` is non-negative.
    */
   def shift(rows: Int): Column[A]
 
