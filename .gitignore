@@ -16,16 +16,11 @@ dist
 *.swo
 *.pyc
 *.iml
-xcuserdata/
-bin/tmp-desktop.styl
-lui-current.js
-lui-desktop-current.js
 tags
-/modules/qatool/src/css/form-fields-compiled.css
-/modules/qatool/src/css/main-compiled.css
-/modules/qatool/src/css/metric-audit-compiled.css
-/modules/qatool/node_modules
-/modules/qatool/bundle.js
+
+Gemfile
+Gemfile.lock
+
 
 # temp files
 .~*

@@ -1,7 +1,10 @@
 language: scala
 scala:
-  - 2.11.1
-  - 2.10.4
+- 2.11.2
+- 2.10.4
 jdk:
-  - oraclejdk7
-  - openjdk7
+- oraclejdk7
+- openjdk7
+notifications:
+  flowdock:
+    secure: J4wkM5yk5Llrliv2T+/zr6WJkny24nU/oWASHewKBTx9IfeF1EJOSsGAAFTbKCf+DVIVysUwu7fTNnH7+JgPm0OPXmAwSlCxJcMVsutZzdY6CnWpovrVg0FnNV6/Fovz7Npf9SgVh7k1LijHGM7nMcGpFg9pIf5nvtrwytk8K80=
