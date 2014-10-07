@@ -205,7 +205,7 @@ object Boilerplate {
         |      if (i < len) {
         |        col(i) match {
         |          case NA => na += i; loop(i + 1)
-        |          case NM => na += i; loop(i + 1)
+        |          case NM => nm += i; loop(i + 1)
         |          case Value(value) =>
         |            value match {
         -              case (x: {specType}) =>

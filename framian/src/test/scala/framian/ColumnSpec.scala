@@ -2,6 +2,9 @@ package framian
 package column
 
 import org.specs2.mutable._
+import org.specs2.ScalaCheck
+import org.scalacheck._
+import org.scalacheck.Arbitrary.arbitrary
 
 import spire.algebra._
 import spire.syntax.monoid._
@@ -9,10 +12,6 @@ import spire.syntax.monoid._
 class ColumnSpec extends Specification {
   def slice[A](col: Column[A])(indices: Int*): Vector[Cell[A]] =
     indices.toVector map (col(_))
-
-  implicit class ColumnOps[A](col: Column[A]) {
-    def slice(rows: Seq[Int]): Vector[Cell[A]] = rows.map(col(_))(collection.breakOut)
-  }
 
   "Column construction" should {
     "wrap arrays" in {
@@ -39,91 +38,12 @@ class ColumnSpec extends Specification {
     }
   }
 
-  "shift" should {
-    "move dense column rows up" in {
-      val col = Column.dense(Array(1,2,3,4,5), Mask(1, 2), Mask(3))
-      col.shift(2).slice(0 to 6) must_== Vector(NA, NA, Value(1), NA, NA, NM, Value(5))
-      col.shift(-2).slice(-2 to 2) must_== Vector(Value(1), NA, NA, NM, Value(5))
-    }
-
-    "move eval columns rows up" in {
-      val col = Column.eval { row => Value(row) }
-      col.shift(2).slice(-3 to 3) must_== Vector(-5, -4, -3, -2 -1, 0, 1).map(Value(_))
-      col.shift(-2).slice(-3 to 3) must_== Vector(-1, 0, 1, 2, 3, 4, 5).map(Value(_))
-    }
-  }
-
-  "dense columns" should {
-    "manually spec from dense constructor" in {
-      Column.dense(Array("1","2","3")) must beAnInstanceOf[GenericColumn[_]]
-      Column.dense(Array(1,2,3)) must beAnInstanceOf[IntColumn]
-      Column.dense(Array(1L,2L,3L)) must beAnInstanceOf[LongColumn]
-      Column.dense(Array(1D,2D,3D)) must beAnInstanceOf[DoubleColumn]
-    }
-
-    "manually spec from default constructor" in {
-      Column(NA, Value("x"), NM) must beAnInstanceOf[GenericColumn[_]]
-      Column(NA, Value(1), NM) must beAnInstanceOf[IntColumn]
-      Column(NA, Value(1L), NM) must beAnInstanceOf[LongColumn]
-      Column(NA, Value(1D), NM) must beAnInstanceOf[DoubleColumn]
-    }
-
-    "force manual spec through map" in {
-      val col = Column.dense(Array("1","2","3"), Mask(1))
-      col.map(_.toDouble) must beAnInstanceOf[DoubleColumn]
-      col.map(_.toInt) must beAnInstanceOf[IntColumn]
-      col.map(_.toLong) must beAnInstanceOf[LongColumn]
-    }
-
-    "force manual spec through flatMap" in {
-      val col = Column.dense(Array("1","2","3"), Mask(1))
-      col.flatMap(n => Value(n.toDouble)) must beAnInstanceOf[DoubleColumn]
-      col.flatMap(n => Value(n.toInt)) must beAnInstanceOf[IntColumn]
-      col.flatMap(n => Value(n.toLong)) must beAnInstanceOf[LongColumn]
-    }
-
-    "retain manual spec through filter" in {
-      Column.dense(Array(1,2,3)).filter(_ == 2) must beAnInstanceOf[IntColumn]
-      Column.dense(Array(1D,2D,3D)).filter(_ == 2) must beAnInstanceOf[DoubleColumn]
-      Column.dense(Array(1L,2L,3L)).filter(_ == 2) must beAnInstanceOf[LongColumn]
-    }
-
-    "retain manual spec through orElse" in {
-      Column(Value(1)).orElse(Column(Value(2))) must beAnInstanceOf[IntColumn]
-      Column(Value(1L)).orElse(Column(Value(2L))) must beAnInstanceOf[LongColumn]
-      Column(Value(1D)).orElse(Column(Value(2D))) must beAnInstanceOf[DoubleColumn]
-    }
-
-    "retain manual spec through reindex" in {
-      Column.dense(Array(1,2,3)).reindex(Array(2,1,0)) must beAnInstanceOf[IntColumn]
-      Column.dense(Array(1D,2D,3D)).reindex(Array(2,1,0)) must beAnInstanceOf[DoubleColumn]
-      Column.dense(Array(1L,2L,3L)).reindex(Array(2,1,0)) must beAnInstanceOf[LongColumn]
-    }
-
-    "retain manual spec through force" in {
-      Column.dense(Array(1,2,3)).force(2) must beAnInstanceOf[IntColumn]
-      Column.dense(Array(1D,2D,3D)).force(2) must beAnInstanceOf[DoubleColumn]
-      Column.dense(Array(1L,2L,3L)).force(2) must beAnInstanceOf[LongColumn]
-    }
-
-    "retain manual spec through mask" in {
-      val mask = Mask(1)
-      Column.dense(Array(1,2,3)).mask(mask) must beAnInstanceOf[IntColumn]
-      Column.dense(Array(1D,2D,3D)).mask(mask) must beAnInstanceOf[DoubleColumn]
-      Column.dense(Array(1L,2L,3L)).mask(mask) must beAnInstanceOf[LongColumn]
-    }
-
-    "retain manual spec through setNA" in {
-      Column.dense(Array(1,2,3)).setNA(Int.MinValue) must beAnInstanceOf[IntColumn]
-      Column.dense(Array(1D,2D,3D)).setNA(Int.MinValue) must beAnInstanceOf[DoubleColumn]
-      Column.dense(Array(1L,2L,3L)).setNA(Int.MinValue) must beAnInstanceOf[LongColumn]
-    }
-
-    "setNA should be no-op when row already NA" in {
-      val col = Column.dense(Array(1,2,3)).asInstanceOf[IntColumn]
-      Column.dense(Array(1,2,3)).setNA(Int.MinValue).setNA(3).setNA(Int.MaxValue).asInstanceOf[IntColumn].naValues.max must_== None
-      Column.dense(Array(1L,2L,3L)).setNA(Int.MinValue).setNA(3).setNA(Int.MaxValue).asInstanceOf[LongColumn].naValues.max must_== None
-      Column.dense(Array(1D,2D,3D)).setNA(Int.MinValue).setNA(3).setNA(Int.MaxValue).asInstanceOf[DoubleColumn].naValues.max must_== None
+  "memo columns" should {
+    "only evaluate values at most once" in {
+      var counter = 0
+      val col = Column.eval { row => counter += 1; Value(row) }.memoize()
+      col(0); col(0); col(1); col(0); col(0); col(1); col(2); col(1); col(0)
+      counter must_==(3)
     }
   }
 
@@ -220,5 +140,189 @@ class ColumnSpec extends Specification {
     }
     
     // TODO: ScalaCheck tests for monoid properties. Spire provides this.
+  }
+}
+
+abstract class BaseColumnSpec extends Specification with ScalaCheck {
+  import ColumnGenerators._
+
+  implicit class ColumnOps[A](col: Column[A]) {
+    def slice(rows: Seq[Int]): Vector[Cell[A]] = rows.map(col(_))(collection.breakOut)
+  }
+
+  def mkCol[A](cells: Cell[A]*): Column[A]
+
+  "foreach" should {
+    "bail early on NM values" in {
+      val col = mkCol(Value(1), Value(2), NM, Value(4))
+      col.foreach(0, 5, n => n) { (i, n) =>
+        if (n == 4)
+          throw new Exception()
+      }
+      ok
+    }
+
+    "skip NA values" in {
+      val col = mkCol(Value(1), NA, Value(2), NA, Value(3))
+      var bldr = List.newBuilder[Int]
+      col.foreach(0, 5, n => 4 - n) { (i, n) =>
+        bldr += n
+      }
+      bldr.result() must_== List(3, 2, 1)
+    }
+  }
+
+  "shift" should {
+    "move column rows up" in {
+      val col = mkCol(Value(1), NA, NA, NM, Value(5))
+      col.shift(2).slice(0 to 6) must_== Vector(NA, NA, Value(1), NA, NA, NM, Value(5))
+      col.shift(-2).slice(-2 to 2) must_== Vector(Value(1), NA, NA, NM, Value(5))
+    }
+  }
+
+  "reindex" should {
+    "return empty column for empty array" in {
+      val col = mkCol(Value(1), Value(2)).reindex(Array())
+      (-10 to 10).map(col(_)).forall(_ must_== NA)
+    }
+
+    "reindex rearranges values" in {
+      val col = mkCol(Value(1), Value(2), Value(3))
+      col.reindex(Array(1, 2, 0)).slice(0 to 2) must_== Vector(Value(2), Value(3), Value(1))
+    }
+
+    "reindex rearranges NMs" in {
+      val col = mkCol(Value(1), NM, Value(3), NM)
+      col.reindex(Array(1, 2, 3, 0)).slice(0 to 3) must_== Vector(NM, Value(3), NM, Value(1))
+    }
+
+    "reindex with negative indices" in {
+      val col = mkCol(Value(1), Value(2))
+      col.reindex(Array(-1, 0, -1)).slice(0 to 2) must_== Vector(NA, Value(1), NA)
+    }
+  }
+
+  "force" should {
+    "return empty column when size is 0" in check { (col: Column[Int], indices: List[Int]) =>
+      val empty = col.force(0)
+      indices.map(empty(_)).forall(_ == NA)
+    }
+
+    "not mess with values in range" in check { (col: Column[Int], blen: Byte) =>
+      val len = blen.toInt.abs
+      col.force(len).slice(0 until len) must_== col.slice(0 until len)
+    }
+
+    "NA all values out of range" in check { (col: Column[Int], len: Int, indices: List[Int]) =>
+      val len0 = len & 0x7FFFFFFF
+      col.force(len0).slice(indices.filter(_ >= len0)).forall(_ == NA)
+    }
+  }
+}
+
+class DenseColumnSpec extends BaseColumnSpec {
+  def mkCol[A](cells: Cell[A]*): Column[A] = Column(cells: _*)
+
+  "dense columns" should {
+    "manually spec from dense constructor" in {
+      Column.dense(Array("1","2","3")) must beAnInstanceOf[GenericColumn[_]]
+      Column.dense(Array(1,2,3)) must beAnInstanceOf[IntColumn]
+      Column.dense(Array(1L,2L,3L)) must beAnInstanceOf[LongColumn]
+      Column.dense(Array(1D,2D,3D)) must beAnInstanceOf[DoubleColumn]
+    }
+
+    "manually spec from default constructor" in {
+      Column(NA, Value("x"), NM) must beAnInstanceOf[GenericColumn[_]]
+      Column(NA, Value(1), NM) must beAnInstanceOf[IntColumn]
+      Column(NA, Value(1L), NM) must beAnInstanceOf[LongColumn]
+      Column(NA, Value(1D), NM) must beAnInstanceOf[DoubleColumn]
+    }
+
+    "use AnyColumn when type is not known and not-spec" in {
+      def mkCol[A](as: A*): Column[A] = Column(as.map(Value(_)): _*)
+      mkCol("x", "y") must beAnInstanceOf[AnyColumn[_]]
+    }
+
+    "use spec col when type is not known but spec" in {
+      def mkCol[A](as: A*): Column[A] = Column(as.map(Value(_)): _*)
+      mkCol(1, 2) must beAnInstanceOf[IntColumn]
+      mkCol(1L, 2L) must beAnInstanceOf[LongColumn]
+      mkCol(1D, 2D) must beAnInstanceOf[DoubleColumn]
+    }
+
+    "force manual spec through map" in {
+      val col = Column.dense(Array("1","2","3"), Mask(1))
+      col.map(_.toDouble) must beAnInstanceOf[DoubleColumn]
+      col.map(_.toInt) must beAnInstanceOf[IntColumn]
+      col.map(_.toLong) must beAnInstanceOf[LongColumn]
+    }
+
+    "force manual spec through flatMap" in {
+      val col = Column.dense(Array("1","2","3"), Mask(1))
+      col.flatMap(n => Value(n.toDouble)) must beAnInstanceOf[DoubleColumn]
+      col.flatMap(n => Value(n.toInt)) must beAnInstanceOf[IntColumn]
+      col.flatMap(n => Value(n.toLong)) must beAnInstanceOf[LongColumn]
+    }
+
+    "retain manual spec through filter" in {
+      Column.dense(Array(1,2,3)).filter(_ == 2) must beAnInstanceOf[IntColumn]
+      Column.dense(Array(1D,2D,3D)).filter(_ == 2) must beAnInstanceOf[DoubleColumn]
+      Column.dense(Array(1L,2L,3L)).filter(_ == 2) must beAnInstanceOf[LongColumn]
+    }
+
+    "retain manual spec through orElse" in {
+      Column(Value(1)).orElse(Column(Value(2))) must beAnInstanceOf[IntColumn]
+      Column(Value(1L)).orElse(Column(Value(2L))) must beAnInstanceOf[LongColumn]
+      Column(Value(1D)).orElse(Column(Value(2D))) must beAnInstanceOf[DoubleColumn]
+    }
+
+    "retain manual spec through reindex" in {
+      Column.dense(Array(1,2,3)).reindex(Array(2,1,0)) must beAnInstanceOf[IntColumn]
+      Column.dense(Array(1D,2D,3D)).reindex(Array(2,1,0)) must beAnInstanceOf[DoubleColumn]
+      Column.dense(Array(1L,2L,3L)).reindex(Array(2,1,0)) must beAnInstanceOf[LongColumn]
+    }
+
+    "retain manual spec through force" in {
+      Column.dense(Array(1,2,3)).force(2) must beAnInstanceOf[IntColumn]
+      Column.dense(Array(1D,2D,3D)).force(2) must beAnInstanceOf[DoubleColumn]
+      Column.dense(Array(1L,2L,3L)).force(2) must beAnInstanceOf[LongColumn]
+    }
+
+    "retain manual spec through mask" in {
+      val mask = Mask(1)
+      Column.dense(Array(1,2,3)).mask(mask) must beAnInstanceOf[IntColumn]
+      Column.dense(Array(1D,2D,3D)).mask(mask) must beAnInstanceOf[DoubleColumn]
+      Column.dense(Array(1L,2L,3L)).mask(mask) must beAnInstanceOf[LongColumn]
+    }
+
+    "retain manual spec through setNA" in {
+      Column.dense(Array(1,2,3)).setNA(Int.MinValue) must beAnInstanceOf[IntColumn]
+      Column.dense(Array(1D,2D,3D)).setNA(Int.MinValue) must beAnInstanceOf[DoubleColumn]
+      Column.dense(Array(1L,2L,3L)).setNA(Int.MinValue) must beAnInstanceOf[LongColumn]
+    }
+
+    "setNA should be no-op when row already NA" in {
+      val col = Column.dense(Array(1,2,3)).asInstanceOf[IntColumn]
+      Column.dense(Array(1,2,3)).setNA(Int.MinValue).setNA(3).setNA(Int.MaxValue).asInstanceOf[IntColumn].naValues.max must_== None
+      Column.dense(Array(1L,2L,3L)).setNA(Int.MinValue).setNA(3).setNA(Int.MaxValue).asInstanceOf[LongColumn].naValues.max must_== None
+      Column.dense(Array(1D,2D,3D)).setNA(Int.MinValue).setNA(3).setNA(Int.MaxValue).asInstanceOf[DoubleColumn].naValues.max must_== None
+    }
+  }
+}
+
+class EvalColumnSpec extends BaseColumnSpec {
+  def mkCol[A](cells: Cell[A]*): Column[A] = {
+    val cells0 = cells.toVector
+    Column.eval(row => if (row >= 0 && row < cells0.size) cells0(row) else NA)
+  }
+
+  "eval columns" should {
+    "return dense columns from reindex" in {
+      Column.eval(Value(_)).reindex(Array(1,3,2)) must beAnInstanceOf[DenseColumn[_]]
+    }
+
+    "return dense columns from force" in {
+      Column.eval(Value(_)).force(5) must beAnInstanceOf[DenseColumn[_]]
+    }
   }
 }
