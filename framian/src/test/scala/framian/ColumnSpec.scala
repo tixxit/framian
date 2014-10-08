@@ -172,14 +172,6 @@ abstract class BaseColumnSpec extends Specification with ScalaCheck {
     }
   }
 
-  "shift" should {
-    "move column rows up" in {
-      val col = mkCol(Value(1), NA, NA, NM, Value(5))
-      col.shift(2).slice(0 to 6) must_== Vector(NA, NA, Value(1), NA, NA, NM, Value(5))
-      col.shift(-2).slice(-2 to 2) must_== Vector(Value(1), NA, NA, NM, Value(5))
-    }
-  }
-
   "reindex" should {
     "return empty column for empty array" in {
       val col = mkCol(Value(1), Value(2)).reindex(Array())
@@ -249,6 +241,15 @@ abstract class BaseColumnSpec extends Specification with ScalaCheck {
     "NA all values out of range" in check { (col: Column[Int], len: Int, indices: List[Int]) =>
       val len0 = len & 0x7FFFFFFF
       col.force(len0).slice(indices.filter(_ >= len0)).forall(_ == NA)
+    }
+  }
+
+  "shift" should {
+    "shift all rows" in check { (col: Column[Int], rows0: Int, indices0: List[Int]) =>
+      val rows = rows0 % 100 // Keep it sane for DenseColumns sake.
+      val indices = indices0.filter(_ < Int.MaxValue - 100).filter(_ > Int.MinValue + 100)
+      val shifted = col.shift(rows)
+      indices.map(shifted(_)) must_== indices.map(_ - rows).map(col(_))
     }
   }
 }
@@ -356,6 +357,10 @@ class EvalColumnSpec extends BaseColumnSpec {
 
     "return dense columns from force" in {
       Column.eval(Value(_)).force(5) must beAnInstanceOf[DenseColumn[_]]
+    }
+
+    "not overflow index on shift" in {
+      Column.eval(Value(_)).shift(1)(Int.MinValue) must_== NA
     }
   }
 }

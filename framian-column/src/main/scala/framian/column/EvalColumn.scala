@@ -1,6 +1,8 @@
 package framian
 package column
 
+import spire.macros.{ Checked, ArithmeticOverflowException }
+
 private[framian] case class EvalColumn[A](f: Int => Cell[A]) extends BoxedColumn[A] {
   override def apply(row: Int): Cell[A] = f(row)
 
@@ -32,6 +34,12 @@ private[framian] case class EvalColumn[A](f: Int => Cell[A]) extends BoxedColumn
       }
     }
 
-  def shift(n: Int): Column[A] = EvalColumn(row => f(row - n))
+  def shift(n: Int): Column[A] = EvalColumn { row =>
+    try {
+      f(Checked.minus(row, n))
+    } catch { case (_: ArithmeticOverflowException) =>
+      NA
+    }
+  }
 }
 
