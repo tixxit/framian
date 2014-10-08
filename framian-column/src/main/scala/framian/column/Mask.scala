@@ -11,17 +11,18 @@ import scala.collection.mutable.ArrayBuilder
 
 import spire.implicits._
 
-final class Mask(private val bits: Array[Long], val size: Int) {
+final class Mask(private val bits: Array[Long], val size: Int) extends (Int => Boolean) {
   def max: Option[Int] =
     if (bits.length == 0) {
       None
     } else {
-      val word = bits(bits.length - 1)
+      val hi = bits.length - 1
+      val word = bits(hi)
       var i = 64
       while (i > 0) {
         i -= 1
         if ((word & (1L << i)) != 0)
-          return Some(i)
+          return Some((hi << 6) | i)
       }
       None
     }
@@ -85,10 +86,10 @@ final class Mask(private val bits: Array[Long], val size: Int) {
     val hi = n >>> 6
     val bit = 1L << (n & 0x3F)
 
-    if (hi < bits.length && (bits(hi) & bit) == 0) {
+    if (hi < bits.length && (bits(hi) & bit) != 0) {
       this
     } else {
-      val len = math.max(bits.length, n)
+      val len = math.max(bits.length, hi + 1)
       val bits0 = Arrays.copyOf(bits, len)
       bits0(hi) |= bit
       new Mask(bits0, size + 1)

@@ -202,6 +202,39 @@ abstract class BaseColumnSpec extends Specification with ScalaCheck {
     }
   }
 
+  val genMask: Gen[Mask] = for {
+    rows0 <- arbitrary[List[Int]]
+    rows = rows0.map(_ & 0xFF)
+  } yield Mask(rows: _*)
+
+  implicit val arbMask: Arbitrary[Mask] = Arbitrary(genMask)
+
+  "mask" should {
+    "turn all masked rows into NAs" in check { (col: Column[Int], mask: Mask) =>
+      val masked = col.mask(mask)
+      mask.toSet.forall(i => masked(i) == NA)
+    }
+
+    "retain unmasked rows as-is" in check { (col: Column[Int], rows: List[Int], mask: Mask) =>
+      val validRows = rows.toSet -- mask.toSet
+      val masked = col.mask(mask)
+      validRows.forall(i => col(i) == masked(i))
+    }
+  }
+
+  "setNA" should {
+    "set the specified row to NA" in check { (col: Column[Int], row: Int) =>
+      val col0 = col.setNA(row)
+      col0(row) must_== NA
+    }
+
+    "not modify other rows" in check { (col: Column[Int], row: Int, rows: List[Int]) =>
+      val validRows = rows.toSet - row
+      val col0 = col.setNA(row)
+      validRows.forall(i => col(i) == col0(i))
+    }
+  }
+
   "force" should {
     "return empty column when size is 0" in check { (col: Column[Int], indices: List[Int]) =>
       val empty = col.force(0)
