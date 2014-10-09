@@ -9,9 +9,19 @@ import org.scalacheck.Arbitrary.arbitrary
 import spire.algebra._
 import spire.syntax.monoid._
 
-class ColumnSpec extends Specification {
+class ColumnSpec extends Specification with ScalaCheck {
   def slice[A](col: Column[A])(indices: Int*): Vector[Cell[A]] =
     indices.toVector map (col(_))
+
+  def genColumn[A](gen: Gen[A]): Gen[Column[A]] = for {
+    cellValues <- Gen.listOf(CellGenerators.genCell(gen, (2, 1, 1)))
+    dense <- arbitrary[Boolean]
+  } yield {
+    val col = Column(cellValues: _*)
+    if (dense) col else Column.eval(row => col(row))
+  }
+
+  implicit def arbColumn[A: Arbitrary]: Arbitrary[Column[A]] = Arbitrary(genColumn(arbitrary[A]))
 
   "Column construction" should {
     "wrap arrays" in {
@@ -47,74 +57,22 @@ class ColumnSpec extends Specification {
     }
   }
 
-  "Column" should {
-    val col = Column(NM, NA, Value("a"))
-
-    //"know which rows are values" in {
-    //  col.isValueAt(0) must beFalse
-    //  col.isValueAt(1) must beFalse
-    //  col.isValueAt(2) must beTrue
-    //  col.isValueAt(3) must beFalse
-    //}
-
-    //"return correct non value" in {
-    //  col.nonValueAt(-1) must_== NA
-    //  col.nonValueAt(0) must_== NM
-    //  col.nonValueAt(1) must_== NA
-    //  col.nonValueAt(3) must_== NA
-    //}
-
-    //"filter filters values to NA" in {
-    //  val col0 = Column.fromArray(Array.range(0, 40))
-    //  val col1 = col0 filter (_ % 2 == 0)
-    //  (0 until 40 by 2) map (col1 isValueAt _) must contain(beTrue).forall
-    //  (1 until 40 by 2) map (col1 nonValueAt _) must contain(be_==(NA)).forall
-    //}
-
-    //"map should map values" in {
-    //  val col0 = Column.fromArray(Array(1, 2, 3, 4))
-    //  val col1 = col0 map { x => x * x }
-    //  slice(col1)(-1, 0, 1, 2, 3, 4) must_== Vector(NA, Value(1), Value(4), Value(9), Value(16), NA)
-    //}
-
-    //"masked column should mask rows" in {
-    //  val col0 = Column.fromCells(Vector(NM, Value(1), Value(2), NM))
-    //  val col1 = col0.mask(Set(2, 3))
-    //  col1(0) must_== NA
-    //  col1(1) must_== NA
-    //  col1(2) must_== Value(2)
-    //  col1(3) must_== NM
-    //}
-
-    //"mask infinite column" in {
-    //  val col0 = Column(_.toString)
-    //  val col1 = col0 mask (_ != 42)
-    //  (-5 to 41) map (col1 isValueAt _) must contain(beTrue).forall
-    //  (43 to 100) map (col1 isValueAt _) must contain(beTrue).forall
-    //  col1(42) must_== NA
-    //}
-
-    //"reindex row with reindex" in {
-    //  val col = Column.fromArray(Array.range(1, 5)).reindex((4 to 0 by -1).toArray)
-    //  slice(col)(0, 1, 2, 3, 4) must_== Vector(NA, Value(4), Value(3), Value(2), Value(1))
-    //}
-
-    //"reindex turns values outside of range to NA" in {
-    //  val col = Column.fromArray(Array.range(1, 5)).reindex((4 to 0 by -1).toArray)
-    //  col(-1) must_== NA
-    //  col(5) must_== NA
-    //  col(6) must_== NA
-    //  col(Int.MinValue) must_== NA
-    //}
-  }
-
-  "Column Monoid" should {
-    "have an empty id" in {
-      val col = Monoid[Column[Int]].id
-      slice(col)(Int.MinValue, 0, 1, 2, Int.MaxValue) must contain(be_==(NA)).forall
+  "Monoid[Column[A]]" should {
+    "left identity" in check { (col0: Column[Int], indices: List[Int]) =>
+      val col1 = Monoid[Column[Int]].id orElse col0
+      indices.map(col0(_)) must_== indices.map(col1(_))
     }
-    
-    // TODO: ScalaCheck tests for monoid properties. Spire provides this.
+
+    "right identity" in check { (col0: Column[Int], indices: List[Int]) =>
+      val col1 = col0 orElse Monoid[Column[Int]].id
+      indices.map(col0(_)) must_== indices.map(col1(_))
+    }
+
+    "associative" in check { (a: Column[Int], b: Column[Int], c: Column[Int], indices: List[Int]) =>
+      val col0 = ((a orElse b) orElse c)
+      val col1 = (a orElse (b orElse c))
+      indices.map(col0(_)) must_== indices.map(col1(_))
+    }
   }
 }
 
