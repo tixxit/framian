@@ -113,44 +113,30 @@ class ColumnSpec extends Specification {
       val col = Monoid[Column[Int]].id
       slice(col)(Int.MinValue, 0, 1, 2, Int.MaxValue) must contain(be_==(NA)).forall
     }
-
-    "be left biased" in {
-      val a = Column.eval(row => Value(row))
-      val b = Column.eval(row => Value(-row))
-      (a |+| b)(1) must_== Value(1)
-      (a |+| b)(2) must_== Value(2)
-      (b |+| a)(1) must_== Value(-1)
-      (b |+| a)(2) must_== Value(-2)
-    }
-
-    "ignore non values" in {
-      //                                     0,        1,  2,  3,  4,  5,        6,        7
-      val a = Column(Value(1), Value(2), NA, NA, NM, NM,       NA,       NM)
-      val b = Column(      NA,       NM, NA, NM, NA, NM, Value(1), Value(2))
-      val col = a |+| b
-
-      col(0) must_== Value(1)
-      col(1) must_== Value(2)
-      col(2) must_== NA
-      col(3) must_== NM
-      col(4) must_== NM
-      col(5) must_== NM
-      col(6) must_== Value(1)
-      col(7) must_== Value(2)
-    }
     
     // TODO: ScalaCheck tests for monoid properties. Spire provides this.
   }
 }
 
 abstract class BaseColumnSpec extends Specification with ScalaCheck {
-  import ColumnGenerators._
-
   implicit class ColumnOps[A](col: Column[A]) {
     def slice(rows: Seq[Int]): Vector[Cell[A]] = rows.map(col(_))(collection.breakOut)
   }
 
   def mkCol[A](cells: Cell[A]*): Column[A]
+
+  def genColumn[A](gen: Gen[A]): Gen[Column[A]] = for {
+    cellValues <- Gen.listOf(CellGenerators.genCell(gen, (2, 1, 1)))
+  } yield mkCol(cellValues: _*)
+
+  val genMask: Gen[Mask] = for {
+    rows0 <- arbitrary[List[Int]]
+    rows = rows0.map(_ & 0xFF)
+  } yield Mask(rows: _*)
+
+  implicit def arbColumn[A: Arbitrary]: Arbitrary[Column[A]] = Arbitrary(genColumn(arbitrary[A]))
+
+  implicit val arbMask: Arbitrary[Mask] = Arbitrary(genMask)
 
   "foreach" should {
     "bail early on NM values" in {
@@ -194,13 +180,6 @@ abstract class BaseColumnSpec extends Specification with ScalaCheck {
     }
   }
 
-  val genMask: Gen[Mask] = for {
-    rows0 <- arbitrary[List[Int]]
-    rows = rows0.map(_ & 0xFF)
-  } yield Mask(rows: _*)
-
-  implicit val arbMask: Arbitrary[Mask] = Arbitrary(genMask)
-
   "mask" should {
     "turn all masked rows into NAs" in check { (col: Column[Int], mask: Mask) =>
       val masked = col.mask(mask)
@@ -238,9 +217,9 @@ abstract class BaseColumnSpec extends Specification with ScalaCheck {
       col.force(len).slice(0 until len) must_== col.slice(0 until len)
     }
 
-    "NA all values out of range" in check { (col: Column[Int], len: Int, indices: List[Int]) =>
-      val len0 = len & 0x7FFFFFFF
-      col.force(len0).slice(indices.filter(_ >= len0)).forall(_ == NA)
+    "NA all values out of range" in check { (col: Column[Int], len0: Int, indices: List[Int]) =>
+      val len = len0 & 0x7FFFF
+      col.force(len).slice(indices.filter(_ >= len)).forall(_ == NA)
     }
   }
 
@@ -250,6 +229,33 @@ abstract class BaseColumnSpec extends Specification with ScalaCheck {
       val indices = indices0.filter(_ < Int.MaxValue - 100).filter(_ > Int.MinValue + 100)
       val shifted = col.shift(rows)
       indices.map(shifted(_)) must_== indices.map(_ - rows).map(col(_))
+    }
+  }
+
+  "orElse" should {
+
+    "be left biased" in {
+      val a = mkCol(Value(0), Value(1), Value(2))
+      val b = mkCol(Value(0), Value(-1), Value(-2))
+      (a orElse b)(1) must_== Value(1)
+      (a orElse b)(2) must_== Value(2)
+      (b orElse a)(1) must_== Value(-1)
+      (b orElse a)(2) must_== Value(-2)
+    }
+
+    "ignore non values" in {
+      val a = mkCol(Value(1), Value(2), NA, NA, NM, NM,       NA,       NM)
+      val b = mkCol(      NA,       NM, NA, NM, NA, NM, Value(1), Value(2))
+      val col = a orElse b
+
+      col(0) must_== Value(1)
+      col(1) must_== Value(2)
+      col(2) must_== NA
+      col(3) must_== NM
+      col(4) must_== NM
+      col(5) must_== NM
+      col(6) must_== Value(1)
+      col(7) must_== Value(2)
     }
   }
 }

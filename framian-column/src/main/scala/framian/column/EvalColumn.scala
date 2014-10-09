@@ -29,6 +29,10 @@ private[framian] case class EvalColumn[A](f: Int => Cell[A]) extends BoxedColumn
   def orElse[A0 >: A](that: Column[A0]): Column[A0] =
     EvalColumn { row =>
       f(row) match {
+        case NM => that(row) match {
+          case NA => NM
+          case cell => cell
+        }
         case NA => that(row)
         case cell => cell
       }
