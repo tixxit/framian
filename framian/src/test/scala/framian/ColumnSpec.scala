@@ -96,6 +96,33 @@ abstract class BaseColumnSpec extends Specification with ScalaCheck {
 
   implicit val arbMask: Arbitrary[Mask] = Arbitrary(genMask)
 
+  "foldRow" should {
+    "return value for Value row" in {
+      val col = mkCol(NA, Value(42))
+      col.foldRow(1)(0, 0, a => 2 + a) must_== 44
+    }
+
+    "return NA value for NA row" in {
+      val col = mkCol(NA, NA)
+      col.foldRow(1)(true, false, _ => false) must beTrue
+    }
+
+    "return NM value for NM row" in {
+      val col = mkCol(NA, NM)
+      col.foldRow(1)(false, true, _ => false) must beTrue
+    }
+
+    "fold rows of columns" in check { (col: Column[Int], indices: List[Int]) =>
+      val expected = indices.map(col(_)).map {
+        case Value(a) => a.toString
+        case NA => "NA"
+        case NM => "NM"
+      }
+      val actual = indices.map(col.foldRow(_)("NA", "NM", _.toString))
+      actual must_== expected
+    }
+  }
+
   "foreach" should {
     "bail early on NM values" in {
       val col = mkCol(Value(1), Value(2), NM, Value(4))
