@@ -78,8 +78,8 @@ case class MergedUntypedColumn(left: UntypedColumn, right: UntypedColumn) extend
 }
 
 case class ConcatColumn(col0: UntypedColumn, col1: UntypedColumn, offset: Int) extends UntypedColumn {
-  def cast[A: ColumnTyper]: Column[A] = ???
-    // col0.cast[A].force(offset) orElse col1.cast[A].shift(offset).mask(Mask.from
+  def cast[A: ColumnTyper]: Column[A] =
+    col0.cast[A].force(offset) orElse col1.cast[A].shift(offset).mask(Mask.range(0, offset))
   def mask(na: Mask): UntypedColumn =
     ConcatColumn(col0.mask(na), col1.mask(na.filter(_ >= offset).map(_ - offset)), offset)
   def shift(rows: Int): UntypedColumn =

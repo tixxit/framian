@@ -366,14 +366,14 @@ class FrameSpec extends Specification with ScalaCheck {
       6 :: 9.2 :: HNil
     ).withRowIndex(Index.fromKeys("a", "a", "b", "c", "c", "c"))
 
-    "reduce groups" in {
-      dups.mapRowGroups { (row, f) =>
-        val reduced = f.reduceFrame(reduce.Sum[Double]).to[List]
-        ColOrientedFrame(Index.fromKeys(row), Series(reduced map { case (key, value) =>
-          key -> TypedColumn(Column(value))
-        }: _*))
-      } must_== dups.reduceFrameByKey(reduce.Sum[Double])
-    }
+    //"reduce groups" in {
+    //  dups.mapRowGroups { (row, f) =>
+    //    val reduced = f.reduceFrame(reduce.Sum[Double]).to[List]
+    //    ColOrientedFrame(Index.fromKeys(row), Series(reduced map { case (key, value) =>
+    //      key -> TypedColumn(Column(value))
+    //    }: _*))
+    //  } must_== dups.reduceFrameByKey(reduce.Sum[Double])
+    //}
 
     "replace groups with constant" in {
       val const = Frame.fromRows("repeat" :: HNil)

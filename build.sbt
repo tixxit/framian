@@ -30,11 +30,11 @@ lazy val root = project.
   )
 
 lazy val framianColumn = project.
-  in(file("framian-column")).
-  enablePlugins(BenchmarkPlugin)
+  in(file("framian-column"))
 
 lazy val framian = project.
   in(file("framian")).
+  enablePlugins(BenchmarkPlugin).
   dependsOn(framianColumn)
 
 lazy val framianJsonBase = project.

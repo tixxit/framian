@@ -97,3 +97,15 @@ class ColumnMacros[C <: /*blackbox.*/Context](val c: C) {
   }
 }
 
+object ColumnMacros {
+  def foldRowImpl[A, B](c: Context)(row: c.Expr[Int])(na: c.Expr[B], nm: c.Expr[B], f: c.Expr[A => B]): c.Expr[B] =
+    new ColumnMacros[c.type](c).foldRow(row)(na, nm, f)
+
+  def foreachImpl[A, U](c: Context)(from: c.Expr[Int], until: c.Expr[Int], rows: c.Expr[Int => Int])(f: c.Expr[(Int, A) => U]): c.Expr[Boolean] = {
+    import c.universe._
+    new ColumnMacros[c.type](c).foreach(from, until, rows, c.Expr[Boolean](q"true"))(f)
+  }
+
+  def foreachExtraImpl[A, U](c: Context)(from: c.Expr[Int], until: c.Expr[Int], rows: c.Expr[Int => Int], abortOnNM: c.Expr[Boolean])(f: c.Expr[(Int, A) => U]): c.Expr[Boolean] =
+    new ColumnMacros[c.type](c).foreach(from, until, rows, abortOnNM)(f)
+}

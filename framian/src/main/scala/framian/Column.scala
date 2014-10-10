@@ -4,7 +4,6 @@ import scala.language.experimental.macros
 
 import scala.{specialized => sp }
 import scala.annotation.unspecialized
-import scala.reflect.macros.Context
 
 import spire.algebra.{ Semigroup, Monoid }
 
@@ -13,12 +12,12 @@ import framian.column._
 sealed trait Column[+A] { // TODO: Can't specialize in 2.10, but can in 2.11.
 
   // @unspecialized -- See TODO above.
-  def foldRow[B](row: Int)(na: B, nm: B, f: A => B): B = macro Column.foldRowImpl[A, B]
+  def foldRow[B](row: Int)(na: B, nm: B, f: A => B): B = macro ColumnMacros.foldRowImpl[A, B]
 
   /**
    * Equivalent to calling `foreach(from, until, rows, true)(f)`.
    */
-  def foreach[U](from: Int, until: Int, rows: Int => Int)(f: (Int, A) => U): Boolean = macro Column.foreachImpl[A, U]
+  def foreach[U](from: Int, until: Int, rows: Int => Int)(f: (Int, A) => U): Boolean = macro ColumnMacros.foreachImpl[A, U]
 
   /**
    * Iterates from `from` until `until`, and for each value `i` in this range,
@@ -40,7 +39,7 @@ sealed trait Column[+A] { // TODO: Can't specialize in 2.10, but can in 2.11.
    * @param abortOnNM terminate early if an `NM` is found
    * @return true if no NMs were found (or `abortOnNM` is false) and terminate completed successfully, false otherwise
    */
-  def foreach[U](from: Int, until: Int, rows: Int => Int, abortOnNM: Boolean)(f: (Int, A) => U): Boolean = macro Column.foreachExtraImpl[A, U]
+  def foreach[U](from: Int, until: Int, rows: Int => Int, abortOnNM: Boolean)(f: (Int, A) => U): Boolean = macro ColumnMacros.foreachExtraImpl[A, U]
 
   /**
    * Returns the [[Cell]] at row `row`.
@@ -259,15 +258,4 @@ object Column {
       def op(lhs: Column[A], rhs: Column[A]): Column[A] =
         lhs orElse rhs
     }
-
-  def foldRowImpl[A, B](c: Context)(row: c.Expr[Int])(na: c.Expr[B], nm: c.Expr[B], f: c.Expr[A => B]): c.Expr[B] =
-    new ColumnMacros[c.type](c).foldRow(row)(na, nm, f)
-
-  def foreachImpl[A, U](c: Context)(from: c.Expr[Int], until: c.Expr[Int], rows: c.Expr[Int => Int])(f: c.Expr[(Int, A) => U]): c.Expr[Boolean] = {
-    import c.universe._
-    new ColumnMacros[c.type](c).foreach(from, until, rows, c.Expr[Boolean](q"true"))(f)
-  }
-
-  def foreachExtraImpl[A, U](c: Context)(from: c.Expr[Int], until: c.Expr[Int], rows: c.Expr[Int => Int], abortOnNM: c.Expr[Boolean])(f: c.Expr[(Int, A) => U]): c.Expr[Boolean] =
-    new ColumnMacros[c.type](c).foreach(from, until, rows, abortOnNM)(f)
 }
