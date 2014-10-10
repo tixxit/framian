@@ -21,6 +21,10 @@ tags
 Gemfile
 Gemfile.lock
 
+# sbt-extras local cache
+project/.boot
+project/.ivy
+
 
 # temp files
 .~*

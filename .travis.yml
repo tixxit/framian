@@ -8,8 +8,8 @@ jdk:
 install:
 - ./.travis-cache.sh
 script:
-- sbt ++$TRAVIS_SCALA_VERSION update compile test:compile
-- sbt ++$TRAVIS_SCALA_VERSION test
+- sbt ++$TRAVIS_SCALA_VERSION -no-share update compile test:compile
+- sbt ++$TRAVIS_SCALA_VERSION -no-share test
 notifications:
   flowdock:
     secure: J4wkM5yk5Llrliv2T+/zr6WJkny24nU/oWASHewKBTx9IfeF1EJOSsGAAFTbKCf+DVIVysUwu7fTNnH7+JgPm0OPXmAwSlCxJcMVsutZzdY6CnWpovrVg0FnNV6/Fovz7Npf9SgVh7k1LijHGM7nMcGpFg9pIf5nvtrwytk8K80=
