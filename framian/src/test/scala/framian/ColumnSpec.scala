@@ -262,6 +262,26 @@ abstract class BaseColumnSpec extends Specification with ScalaCheck {
       col(7) must_== Value(2)
     }
   }
+
+  "memoize" should {
+    "calculate values at most once (pessimistic)" in check { (col: Column[Int], indices: List[Int]) =>
+      var hit = false
+      val col0 = col.map { a => hit = true; a }.memoize(false)
+      indices.map(col0(_))
+      hit = false
+      indices.map(col0(_))
+      hit must_== false
+    }
+
+    "calculate values at most once (optimistic, no thread contention)" in check { (col: Column[Int], indices: List[Int]) =>
+      var hit = false
+      val col0 = col.map { a => hit = true; a }.memoize(true)
+      indices.map(col0(_))
+      hit = false
+      indices.map(col0(_))
+      hit must_== false
+    }
+  }
 }
 
 class DenseColumnSpec extends BaseColumnSpec {
