@@ -42,7 +42,7 @@ private[framian] sealed trait DenseColumn[@sp(Int,Long,Double) A] extends Unboxe
       if (nmValues(i)) {
         bldr.addNM()
       } else if (naValues(i)) {
-        bldr.addNM()
+        bldr.addNA()
       } else {
         bldr.add(f(valueAt(i)))
       }

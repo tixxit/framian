@@ -116,6 +116,26 @@ abstract class BaseColumnSpec extends Specification with ScalaCheck {
     }
   }
 
+  "map" should {
+    "map each cell in the column" in check { (col: Column[Int], indices: List[Int]) =>
+      val f: Int => String = { n => (n * 23).toString }
+      val col0 = col.map(f)
+      indices.map(col(_)).map(_.map(f)) must_== indices.map(col0(_))
+    }
+  }
+
+  "flatMap" should {
+    "flatMap each cell in the column" in check { (col: Column[Int], indices: List[Int]) =>
+      val f: Int => Cell[String] = { n =>
+        if (n % 3 == 0) Value((n * 23).toString)
+        else if (n % 3 == 1) NA
+        else NM
+      }
+      val col0 = col.flatMap(f)
+      indices.map(col(_)).map(_.flatMap(f)) must_== indices.map(col0(_))
+    }
+  }
+
   "reindex" should {
     "return empty column for empty array" in {
       val col = mkCol(Value(1), Value(2)).reindex(Array())
@@ -191,7 +211,6 @@ abstract class BaseColumnSpec extends Specification with ScalaCheck {
   }
 
   "orElse" should {
-
     "be left biased" in {
       val a = mkCol(Value(0), Value(1), Value(2))
       val b = mkCol(Value(0), Value(-1), Value(-2))
