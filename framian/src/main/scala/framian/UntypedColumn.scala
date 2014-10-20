@@ -38,6 +38,7 @@ import framian.column._
  */
 trait UntypedColumn extends ColumnLike[UntypedColumn] {
   def cast[A: ColumnTyper]: Column[A]
+  def orElse(that: UntypedColumn): UntypedColumn = MergedUntypedColumn(this, that)
 }
 
 object UntypedColumn {
