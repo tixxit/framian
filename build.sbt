@@ -15,10 +15,8 @@ maxErrors in ThisBuild := 5
 
 
 resolvers in ThisBuild ++= Seq(
-  "Typesafe Repo"             at "http://repo.typesafe.com/typesafe/releases/",
-  Resolver.url("Side Typesafe Repo", url("http://repo.typesafe.com/typesafe/maven-ivy-releases"))(Resolver.ivyStylePatterns),
-  "Sonatype Snapshots"        at "http://oss.sonatype.org/content/repositories/snapshots",
-  "Sonatype Releases"         at "http://oss.sonatype.org/content/repositories/releases"
+  Resolver.sonatypeRepo("releases"),
+  Resolver.typesafeRepo("releases")
 )
 
 lazy val root = project.

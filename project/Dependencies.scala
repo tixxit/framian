@@ -4,15 +4,15 @@ object Dependencies {
 
   object V {
     val Play_22            = "2.2.3"
-    val Play_23            = "2.3.1"
+    val Play_23            = "2.3.5"
 
     val Spire              = "0.7.4"
     val Shapeless          = "2.0.0"
     val Discipline         = "0.2.1"
 
     // Test libraries
-    val Specs2             = "2.3.12"
-    val ScalaCheck         = "1.11.4"
+    val Specs2             = "2.4.2"
+    val ScalaCheck         = "1.11.6"
 
     val Jmh                = "1.0"
   }

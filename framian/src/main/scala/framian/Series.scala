@@ -23,20 +23,15 @@ package framian
 
 import scala.annotation.tailrec
 import scala.collection.generic.CanBuildFrom
-import scala.collection.mutable.{ ArrayBuilder, Builder }
-import scala.collection.{ IterableLike, Iterable }
+import scala.collection.mutable
 import scala.reflect.ClassTag
 
 import spire.algebra._
-import spire.math._
 import spire.std.double._
 import spire.std.int._
-import spire.syntax.additiveMonoid._
 import spire.syntax.monoid._
 import spire.syntax.order._
 import spire.syntax.cfor._
-
-import spire.compat._
 
 import framian.column._
 import framian.reduce.Reducer
@@ -88,10 +83,11 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
       private var i = 0
       private var pair: (K, V) = _
       private def findNext(): Unit = {
-        while (i < index.size) {
-          column.foldRow(index.indexAt(i))((), (), { v =>
+        var notFound = true
+        while (i < index.size && notFound) {
+          notFound = column.foldRow(index.indexAt(i))(true, true, { v =>
             pair = (index.keyAt(i), v)
-            return ()
+            false
           })
           i += 1
         }
@@ -732,60 +728,60 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     reducer.reduce(column, indices, 0, index.size)
   }
 
-  /** Returns the [[reduce.Count]] reduction of this series.
-    * @return the [[reduce.Count]] reduction of this series.
-    * @see [[reduce.Count]]
+  /** Returns the [[framian.reduce.Count]] reduction of this series.
+    * @return the [[framian.reduce.Count]] reduction of this series.
+    * @see [[framian.reduce.Count]]
     */
   def count: Cell[Int] =
     this.reduce(framian.reduce.Count)
 
-  /** Returns the [[reduce.First]] reduction of this series.
-    * @return the [[reduce.First]] reduction of this series.
-    * @see [[reduce.First]]
+  /** Returns the [[framian.reduce.First]] reduction of this series.
+    * @return the [[framian.reduce.First]] reduction of this series.
+    * @see [[framian.reduce.First]]
     * @see [[firstN]]
     * @see [[last]]
     */
   def first: Cell[V] =
     this.reduce(framian.reduce.First[V])
 
-  /** Returns the [[reduce.FirstN]] reduction of this series.
-    * @return the [[reduce.FirstN]] reduction of this series.
-    * @see [[reduce.FirstN]]
+  /** Returns the [[framian.reduce.FirstN]] reduction of this series.
+    * @return the [[framian.reduce.FirstN]] reduction of this series.
+    * @see [[framian.reduce.FirstN]]
     * @see [[first]]
     * @see [[lastN]]
     */
   def firstN(n: Int): Cell[List[V]] =
     this.reduce(framian.reduce.FirstN[V](n))
 
-  /** Returns the [[reduce.Last]] reduction of this series.
-    * @return the [[reduce.Last]] reduction of this series.
-    * @see [[reduce.Last]]
+  /** Returns the [[framian.reduce.Last]] reduction of this series.
+    * @return the [[framian.reduce.Last]] reduction of this series.
+    * @see [[framian.reduce.Last]]
     * @see [[lastN]]
     * @see [[first]]
     */
   def last: Cell[V] =
     this.reduce(framian.reduce.Last[V])
 
-  /** Returns the [[reduce.LastN]] reduction of this series.
-    * @return the [[reduce.LastN]] reduction of this series.
-    * @see [[reduce.LastN]]
+  /** Returns the [[framian.reduce.LastN]] reduction of this series.
+    * @return the [[framian.reduce.LastN]] reduction of this series.
+    * @see [[framian.reduce.LastN]]
     * @see [[last]]
     * @see [[firstN]]
     */
   def lastN(n: Int): Cell[List[V]] =
     this.reduce(framian.reduce.LastN[V](n))
 
-  /** Returns the [[reduce.Max]] reduction of this series.
-    * @return the [[reduce.Max]] reduction of this series.
-    * @see [[reduce.Max]]
+  /** Returns the [[framian.reduce.Max]] reduction of this series.
+    * @return the [[framian.reduce.Max]] reduction of this series.
+    * @see [[framian.reduce.Max]]
     * @see [[min]]
     */
   def max(implicit ev0: Order[V]): Cell[V] =
     this.reduce(framian.reduce.Max[V])
 
-  /** Returns the [[reduce.Min]] reduction of this series.
-    * @return the [[reduce.Min]] reduction of this series.
-    * @see [[reduce.Min]]
+  /** Returns the [[framian.reduce.Min]] reduction of this series.
+    * @return the [[framian.reduce.Min]] reduction of this series.
+    * @see [[framian.reduce.Min]]
     * @see [[max]]
     */
   def min(implicit ev0: Order[V]): Cell[V] =
@@ -793,7 +789,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
 
   /** Returns the `AdditiveMonoid` reduction of this series.
     * @return the `AdditiveMonoid` reduction of this series.
-    * @see [[reduce.MonoidReducer]]
+    * @see [[framian.reduce.MonoidReducer]]
     * @see [[sumNonEmpty]]
     * @see [[product]]
     */
@@ -802,7 +798,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
 
   /** Returns the `AdditiveSemigroup` reduction of this series.
     * @return the `AdditiveSemigroup` reduction of this series.
-    * @see [[reduce.SemigroupReducer]]
+    * @see [[framian.reduce.SemigroupReducer]]
     * @see [[sum]]
     * @see [[productNonEmpty]]
     */
@@ -811,7 +807,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
 
   /** Returns the `MultiplicativeMonoid` reduction of this series.
     * @return the `MultiplicativeMonoid` reduction of this series.
-    * @see [[reduce.MonoidReducer]]
+    * @see [[framian.reduce.MonoidReducer]]
     * @see [[productNonEmpty]]
     * @see [[sum]]
     */
@@ -820,39 +816,39 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
 
   /** Returns the `MultiplicativeSemigroup` reduction of this series.
     * @return the `MultiplicativeSemigroup` reduction of this series.
-    * @see [[reduce.SemigroupReducer]]
+    * @see [[framian.reduce.SemigroupReducer]]
     * @see [[product]]
     * @see [[sumNonEmpty]]
     */
   def productNonEmpty(implicit ev0: MultiplicativeSemigroup[V]): Cell[V] =
     this.reduce(framian.reduce.SemigroupReducer[V](ev0.multiplicative))
 
-  /** Returns the [[reduce.Mean]] reduction of this series.
-    * @return the [[reduce.Mean]] reduction of this series.
-    * @see [[reduce.Mean]]
+  /** Returns the [[framian.reduce.Mean]] reduction of this series.
+    * @return the [[framian.reduce.Mean]] reduction of this series.
+    * @see [[framian.reduce.Mean]]
     * @see [[median]]
     */
   def mean(implicit ev0: Field[V]): Cell[V] =
     this.reduce(framian.reduce.Mean[V])
 
-  /** Returns the [[reduce.Median]] reduction of this series.
-    * @return the [[reduce.Median]] reduction of this series.
-    * @see [[reduce.Median]]
+  /** Returns the [[framian.reduce.Median]] reduction of this series.
+    * @return the [[framian.reduce.Median]] reduction of this series.
+    * @see [[framian.reduce.Median]]
     * @see [[mean]]
     */
   def median(implicit ev0: ClassTag[V], ev1: Field[V], ev2: Order[V]): Cell[V] =
     this.reduce(framian.reduce.Median[V])
 
-  /** Returns the [[reduce.Unique]] reduction of this series.
-    * @return the [[reduce.Unique]] reduction of this series.
-    * @see [[reduce.Unique]]
+  /** Returns the [[framian.reduce.Unique]] reduction of this series.
+    * @return the [[framian.reduce.Unique]] reduction of this series.
+    * @see [[framian.reduce.Unique]]
     */
   def unique: Cell[Set[V]] =
     this.reduce(framian.reduce.Unique[V])
 
-  /** Returns the [[reduce.Exists]] reduction of this series.
-    * @return the [[reduce.Exists]] reduction of this series.
-    * @see [[reduce.Exists]]
+  /** Returns the [[framian.reduce.Exists]] reduction of this series.
+    * @return the [[framian.reduce.Exists]] reduction of this series.
+    * @see [[framian.reduce.Exists]]
     * @see [[forall]]
     */
   def exists(p: V => Boolean): Boolean = {
@@ -861,9 +857,9 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     cell.get
   }
 
-  /** Returns the [[reduce.ForAll]] reduction of this series.
-    * @return the [[reduce.ForAll]] reduction of this series.
-    * @see [[reduce.ForAll]]
+  /** Returns the [[framian.reduce.ForAll]] reduction of this series.
+    * @return the [[framian.reduce.ForAll]] reduction of this series.
+    * @see [[framian.reduce.ForAll]]
     * @see [[exists]]
     */
   def forall(p: V => Boolean): Boolean = {
@@ -883,60 +879,60 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     Series(Index.ordered(keys), Column(values: _*))
   }
 
-  /** Returns the [[reduce.Count]] reduction of this series by key.
-    * @return the [[reduce.Count]] reduction of this series by key.
-    * @see [[reduce.Count]]
+  /** Returns the [[framian.reduce.Count]] reduction of this series by key.
+    * @return the [[framian.reduce.Count]] reduction of this series by key.
+    * @see [[framian.reduce.Count]]
     */
   def countByKey: Series[K, Int] =
     this.reduceByKey(framian.reduce.Count)
 
-  /** Returns the [[reduce.First]] reduction of this series by key.
-    * @return the [[reduce.First]] reduction of this series by key.
-    * @see [[reduce.First]]
+  /** Returns the [[framian.reduce.First]] reduction of this series by key.
+    * @return the [[framian.reduce.First]] reduction of this series by key.
+    * @see [[framian.reduce.First]]
     * @see [[firstN]]
     * @see [[last]]
     */
   def firstByKey: Series[K, V] =
     this.reduceByKey(framian.reduce.First[V])
 
-  /** Returns the [[reduce.FirstN]] reduction of this series by key.
-    * @return the [[reduce.FirstN]] reduction of this series by key.
-    * @see [[reduce.FirstN]]
+  /** Returns the [[framian.reduce.FirstN]] reduction of this series by key.
+    * @return the [[framian.reduce.FirstN]] reduction of this series by key.
+    * @see [[framian.reduce.FirstN]]
     * @see [[first]]
     * @see [[lastN]]
     */
   def firstNByKey(n: Int): Series[K, List[V]] =
     this.reduceByKey(framian.reduce.FirstN[V](n))
 
-  /** Returns the [[reduce.Last]] reduction of this series by key.
-    * @return the [[reduce.Last]] reduction of this series by key.
-    * @see [[reduce.Last]]
+  /** Returns the [[framian.reduce.Last]] reduction of this series by key.
+    * @return the [[framian.reduce.Last]] reduction of this series by key.
+    * @see [[framian.reduce.Last]]
     * @see [[lastN]]
     * @see [[first]]
     */
   def lastByKey: Series[K, V] =
     this.reduceByKey(framian.reduce.Last[V])
 
-  /** Returns the [[reduce.LastN]] reduction of this series by key.
-    * @return the [[reduce.LastN]] reduction of this series by key.
-    * @see [[reduce.LastN]]
+  /** Returns the [[framian.reduce.LastN]] reduction of this series by key.
+    * @return the [[framian.reduce.LastN]] reduction of this series by key.
+    * @see [[framian.reduce.LastN]]
     * @see [[last]]
     * @see [[firstN]]
     */
   def lastNByKey(n: Int): Series[K, List[V]] =
     this.reduceByKey(framian.reduce.LastN[V](n))
 
-  /** Returns the [[reduce.Max]] reduction of this series by key.
-    * @return the [[reduce.Max]] reduction of this series by key.
-    * @see [[reduce.Max]]
+  /** Returns the [[framian.reduce.Max]] reduction of this series by key.
+    * @return the [[framian.reduce.Max]] reduction of this series by key.
+    * @see [[framian.reduce.Max]]
     * @see [[min]]
     */
   def maxByKey(implicit ev0: Order[V]): Series[K, V] =
     this.reduceByKey(framian.reduce.Max[V])
 
-  /** Returns the [[reduce.Min]] reduction of this series by key.
-    * @return the [[reduce.Min]] reduction of this series by key.
-    * @see [[reduce.Min]]
+  /** Returns the [[framian.reduce.Min]] reduction of this series by key.
+    * @return the [[framian.reduce.Min]] reduction of this series by key.
+    * @see [[framian.reduce.Min]]
     * @see [[max]]
     */
   def minByKey(implicit ev0: Order[V]): Series[K, V] =
@@ -944,7 +940,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
 
   /** Returns the `AdditiveMonoid` reduction of this series by key.
     * @return the `AdditiveMonoid` reduction of this series by key.
-    * @see [[reduce.MonoidReducer]]
+    * @see [[framian.reduce.MonoidReducer]]
     * @see [[sumNonEmpty]]
     * @see [[product]]
     */
@@ -953,7 +949,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
 
   /** Returns the `AdditiveSemigroup` reduction of this series by key.
     * @return the `AdditiveSemigroup` reduction of this series by key.
-    * @see [[reduce.SemigroupReducer]]
+    * @see [[framian.reduce.SemigroupReducer]]
     * @see [[sum]]
     * @see [[productNonEmpty]]
     */
@@ -962,7 +958,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
 
   /** Returns the `MultiplicativeMonoid` reduction of this series by key.
     * @return the `MultiplicativeMonoid` reduction of this series by key.
-    * @see [[reduce.MonoidReducer]]
+    * @see [[framian.reduce.MonoidReducer]]
     * @see [[productNonEmpty]]
     * @see [[sum]]
     */
@@ -971,47 +967,47 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
 
   /** Returns the `MultiplicativeSemigroup` reduction of this series by key.
     * @return the `MultiplicativeSemigroup` reduction of this series by key.
-    * @see [[reduce.SemigroupReducer]]
+    * @see [[framian.reduce.SemigroupReducer]]
     * @see [[product]]
     * @see [[sumNonEmpty]]
     */
   def productNonEmptyByKey(implicit ev0: MultiplicativeSemigroup[V]): Series[K, V] =
     this.reduceByKey(framian.reduce.SemigroupReducer[V](ev0.multiplicative))
 
-  /** Returns the [[reduce.Mean]] reduction of this series by key.
-    * @return the [[reduce.Mean]] reduction of this series by key.
-    * @see [[reduce.Mean]]
+  /** Returns the [[framian.reduce.Mean]] reduction of this series by key.
+    * @return the [[framian.reduce.Mean]] reduction of this series by key.
+    * @see [[framian.reduce.Mean]]
     * @see [[median]]
     */
   def meanByKey(implicit ev0: Field[V]): Series[K, V] =
     this.reduceByKey(framian.reduce.Mean[V])
 
-  /** Returns the [[reduce.Median]] reduction of this series by key.
-    * @return the [[reduce.Median]] reduction of this series by key.
-    * @see [[reduce.Median]]
+  /** Returns the [[framian.reduce.Median]] reduction of this series by key.
+    * @return the [[framian.reduce.Median]] reduction of this series by key.
+    * @see [[framian.reduce.Median]]
     * @see [[mean]]
     */
   def medianByKey(implicit ev0: ClassTag[V], ev1: Field[V], ev2: Order[V]): Series[K, V] =
     this.reduceByKey(framian.reduce.Median[V])
 
-  /** Returns the [[reduce.Unique]] reduction of this series by key.
-    * @return the [[reduce.Unique]] reduction of this series by key.
-    * @see [[reduce.Unique]]
+  /** Returns the [[framian.reduce.Unique]] reduction of this series by key.
+    * @return the [[framian.reduce.Unique]] reduction of this series by key.
+    * @see [[framian.reduce.Unique]]
     */
   def uniqueByKey: Series[K, Set[V]] =
     this.reduceByKey(framian.reduce.Unique[V])
 
-  /** Returns the [[reduce.Exists]] reduction of this series by key.
-    * @return the [[reduce.Exists]] reduction of this series by key.
-    * @see [[reduce.Exists]]
+  /** Returns the [[framian.reduce.Exists]] reduction of this series by key.
+    * @return the [[framian.reduce.Exists]] reduction of this series by key.
+    * @see [[framian.reduce.Exists]]
     * @see [[forall]]
     */
   def existsByKey(p: V => Boolean): Series[K, Boolean] =
     this.reduceByKey(framian.reduce.Exists(p))
 
-  /** Returns the [[reduce.ForAll]] reduction of this series by key.
-    * @return the [[reduce.ForAll]] reduction of this series by key.
-    * @see [[reduce.ForAll]]
+  /** Returns the [[framian.reduce.ForAll]] reduction of this series by key.
+    * @return the [[framian.reduce.ForAll]] reduction of this series by key.
+    * @see [[framian.reduce.ForAll]]
     * @see [[exists]]
     */
   def forallByKey(p: V => Boolean): Series[K, Boolean] =
@@ -1112,8 +1108,8 @@ object Series {
 
   implicit def cbf[K: Order: ClassTag, V]: CanBuildFrom[Series[_, _], (K, Cell[V]), Series[K, V]] =
     new CanBuildFrom[Series[_, _], (K, Cell[V]), Series[K, V]] {
-      def apply(): Builder[(K, Cell[V]), Series[K, V]] = Series.newUnorderedBuilder[K ,V]
-      def apply(from: Series[_, _]): Builder[(K, Cell[V]), Series[K, V]] = apply()
+      def apply(): mutable.Builder[(K, Cell[V]), Series[K, V]] = Series.newUnorderedBuilder[K ,V]
+      def apply(from: Series[_, _]): mutable.Builder[(K, Cell[V]), Series[K, V]] = apply()
     }
 
   private def newBuilder[K: ClassTag : Order, V](isOrdered: Boolean): AbstractSeriesBuilder[K, V] =
@@ -1138,7 +1134,7 @@ object Series {
 }
 
 
-private abstract class AbstractSeriesBuilder[K: ClassTag: Order, V: GenColumnBuilder] extends Builder[(K, Cell[V]), Series[K, V]] {
+private abstract class AbstractSeriesBuilder[K: ClassTag: Order, V: GenColumnBuilder] extends mutable.Builder[(K, Cell[V]), Series[K, V]] {
   protected val keyBldr = Array.newBuilder[K]
   protected val colBldr = Column.newBuilder[V]()
 

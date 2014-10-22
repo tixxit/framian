@@ -116,7 +116,9 @@ trait Frame[Row, Col] {
     * column.
     */
   def reduceFrame[V: ColumnTyper, R: ClassTag: ColumnTyper](reducer: Reducer[V, R]): Series[Col, R] =
-    Series.fromCells(columnsAs[V].map { case (col, series) => col -> series.reduce(reducer) })
+    Series.fromCells(columnsAs[V].map { case (col, series) =>
+      col -> series.reduce(reducer)
+    })
 
   def reduceFrameByKey[V: ColumnTyper, R: ClassTag: ColumnTyper](reducer: Reducer[V, R]): Frame[Row, Col] =
     columnsAs[V].foldLeft(Frame.empty[Row, Col]) { case (acc, (key, col)) =>
@@ -851,7 +853,8 @@ private final case class RowView[K](
 
   def cast[B: ColumnTyper]: Column[B] = Column.eval[B] { colIdx =>
     for {
-      col <- cols(index.indexAt(colIdx))
+      col <- if (colIdx >= 0 && colIdx < index.size) cols(index.indexAt(colIdx))
+             else NA
       value <- trans(col).cast[B].apply(row)
     } yield value
   }
