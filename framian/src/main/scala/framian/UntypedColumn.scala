@@ -87,9 +87,9 @@ case class ConcatColumn(col0: UntypedColumn, col1: UntypedColumn, offset: Int) e
       if (row < offset) row else offset
     }
     val index1 = index.map { row =>
-      if (row < offset) offset - 1 else row
+      if (row < offset) -1 else row - offset
     }
-    MergedUntypedColumn(col0.setNA(offset).reindex(index0), col1.setNA(offset - 1).reindex(index1))
+    MergedUntypedColumn(col0.setNA(offset).reindex(index0), col1.setNA(-1).reindex(index1))
   }
   def setNA(row: Int): UntypedColumn =
     if (row < offset) ConcatColumn(col0.setNA(row), col1, offset)
