@@ -850,7 +850,8 @@ private final case class RowView[K](
 
   def cast[B: ColumnTyper]: Column[B] = Column.wrap[B] { colIdx =>
     for {
-      col <- cols(index.indexAt(colIdx))
+      col <- if (colIdx >= 0 && colIdx < index.size) cols(index.indexAt(colIdx))
+             else NA
       value <- trans(col).cast[B].apply(row)
     } yield value
   }
