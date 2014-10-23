@@ -21,19 +21,19 @@ resolvers in ThisBuild ++= Seq(
 
 lazy val root = project.
   in(file(".")).
-  aggregate(framianColumn, framian, framianJsonBase, framianJsonPlay).
+  aggregate(framianMacros, framian, framianJsonBase, framianJsonPlay).
   settings(
     publish := (),
     publishLocal := ()
   )
 
-lazy val framianColumn = project.
-  in(file("framian-column"))
+lazy val framianMacros = project.
+  in(file("framian-macros"))
 
 lazy val framian = project.
   in(file("framian")).
   enablePlugins(BenchmarkPlugin).
-  dependsOn(framianColumn)
+  dependsOn(framianMacros)
 
 lazy val framianJsonBase = project.
   in(file("framian-json-base")).
