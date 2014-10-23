@@ -75,100 +75,100 @@ class MapWithSmallReadBenchmark {
     data.pesMemoColumn.map(data.f)
 }
 
-//class ColumnMapBenchmark {
-//  import Data.work
-//
-//  @Benchmark
-//  def dense(data: MapData): Int =
-//    work(data.denseColumn.map(data.f), data.size)
-//
-//  @Benchmark
-//  def eval(data: MapData): Int =
-//    work(data.evalColumn.map(data.f), data.size)
-//
-//  @Benchmark
-//  def optimisticMemoized(data: MapData): Int =
-//    work(data.optMemoColumn.map(data.f), data.size)
-//
-//  @Benchmark
-//  def pessimisticMemoized(data: MapData): Int =
-//    work(data.pesMemoColumn.map(data.f), data.size)
-//}
+class ColumnMapBenchmark {
+  import Data.work
 
-//class ManyReadBenchmark {
-//  import Data.work
-//
-//  @Benchmark
-//  def dense(data: MapData): Int = {
-//    val col = data.denseColumn.map(data.f)
-//    work(col, data.size) +
-//    work(col, data.size) +
-//    work(col, data.size) +
-//    work(col, data.size) +
-//    work(col, data.size)
-//  }
-//
-//  @Benchmark
-//  def eval(data: MapData): Int = {
-//    val col = data.evalColumn.map(data.f)
-//    work(col, data.size) +
-//    work(col, data.size) +
-//    work(col, data.size) +
-//    work(col, data.size) +
-//    work(col, data.size)
-//  }
-//
-//  @Benchmark
-//  def optimisticMemoized(data: MapData): Int = {
-//    val col = data.optMemoColumn.map(data.f)
-//    work(col, data.size) +
-//    work(col, data.size) +
-//    work(col, data.size) +
-//    work(col, data.size) +
-//    work(col, data.size)
-//  }
-//
-//  @Benchmark
-//  def pessimisticMemoized(data: MapData): Int = {
-//    val col = data.pesMemoColumn.map(data.f)
-//    work(col, data.size) +
-//    work(col, data.size) +
-//    work(col, data.size) +
-//    work(col, data.size) +
-//    work(col, data.size)
-//  }
-//}
+  @Benchmark
+  def dense(data: MapData): Int =
+    work(data.denseColumn.map(data.f), data.size)
 
-//class ManyMapBenchmark {
-//  import Data.work
-//
-//  private def mult(col: Column[Int], f: Int => Int, i: Int): Column[Int] =
-//    if (i == 0) col else mult(col.map(f), f, i - 1)
-//
-//  @Benchmark
-//  def dense5(data: MapData): Int = work(mult(data.denseColumn, data.f, 5), data.size)
-//
-//  @Benchmark
-//  def dense10(data: MapData): Int = work(mult(data.denseColumn, data.f, 10), data.size)
-//
-//  @Benchmark
-//  def dense20(data: MapData): Int = work(mult(data.denseColumn, data.f, 20), data.size)
-//
-//  @Benchmark
-//  def dense40(data: MapData): Int = work(mult(data.denseColumn, data.f, 40), data.size)
-//
-//  @Benchmark
-//  def eval5(data: MapData): Int = work(mult(data.evalColumn, data.f, 5), data.size)
-//
-//  @Benchmark
-//  def eval10(data: MapData): Int = work(mult(data.evalColumn, data.f, 10), data.size)
-//
-//  @Benchmark
-//  def eval20(data: MapData): Int = work(mult(data.evalColumn, data.f, 20), data.size)
-//
-//  @Benchmark
-//  def eval40(data: MapData): Int = work(mult(data.evalColumn, data.f, 40), data.size)
-//}
+  @Benchmark
+  def eval(data: MapData): Int =
+    work(data.evalColumn.map(data.f), data.size)
+
+  @Benchmark
+  def optimisticMemoized(data: MapData): Int =
+    work(data.optMemoColumn.map(data.f), data.size)
+
+  @Benchmark
+  def pessimisticMemoized(data: MapData): Int =
+    work(data.pesMemoColumn.map(data.f), data.size)
+}
+
+class ManyReadBenchmark {
+  import Data.work
+
+  @Benchmark
+  def dense(data: MapData): Int = {
+    val col = data.denseColumn.map(data.f)
+    work(col, data.size) +
+    work(col, data.size) +
+    work(col, data.size) +
+    work(col, data.size) +
+    work(col, data.size)
+  }
+
+  @Benchmark
+  def eval(data: MapData): Int = {
+    val col = data.evalColumn.map(data.f)
+    work(col, data.size) +
+    work(col, data.size) +
+    work(col, data.size) +
+    work(col, data.size) +
+    work(col, data.size)
+  }
+
+  @Benchmark
+  def optimisticMemoized(data: MapData): Int = {
+    val col = data.optMemoColumn.map(data.f)
+    work(col, data.size) +
+    work(col, data.size) +
+    work(col, data.size) +
+    work(col, data.size) +
+    work(col, data.size)
+  }
+
+  @Benchmark
+  def pessimisticMemoized(data: MapData): Int = {
+    val col = data.pesMemoColumn.map(data.f)
+    work(col, data.size) +
+    work(col, data.size) +
+    work(col, data.size) +
+    work(col, data.size) +
+    work(col, data.size)
+  }
+}
+
+class ManyMapBenchmark {
+  import Data.work
+
+  private def mult(col: Column[Int], f: Int => Int, i: Int): Column[Int] =
+    if (i == 0) col else mult(col.map(f), f, i - 1)
+
+  @Benchmark
+  def dense5(data: MapData): Int = work(mult(data.denseColumn, data.f, 5), data.size)
+
+  @Benchmark
+  def dense10(data: MapData): Int = work(mult(data.denseColumn, data.f, 10), data.size)
+
+  @Benchmark
+  def dense20(data: MapData): Int = work(mult(data.denseColumn, data.f, 20), data.size)
+
+  @Benchmark
+  def dense40(data: MapData): Int = work(mult(data.denseColumn, data.f, 40), data.size)
+
+  @Benchmark
+  def eval5(data: MapData): Int = work(mult(data.evalColumn, data.f, 5), data.size)
+
+  @Benchmark
+  def eval10(data: MapData): Int = work(mult(data.evalColumn, data.f, 10), data.size)
+
+  @Benchmark
+  def eval20(data: MapData): Int = work(mult(data.evalColumn, data.f, 20), data.size)
+
+  @Benchmark
+  def eval40(data: MapData): Int = work(mult(data.evalColumn, data.f, 40), data.size)
+}
 
 @State(Scope.Benchmark)
 class MapData extends Data {

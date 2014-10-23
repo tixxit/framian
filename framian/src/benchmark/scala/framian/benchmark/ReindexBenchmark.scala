@@ -7,25 +7,25 @@ import org.openjdk.jmh.annotations.{ Benchmark, Scope, State }
 import framian.Column
 import framian.column.Mask
 
-//class ColumnReindexBenchmark {
-//  import Data.work
-//
-//  @Benchmark
-//  def dense(data: ReindexData): Int =
-//    work(data.denseColumn.reindex(data.indices), data.size)
-//
-//  @Benchmark
-//  def eval(data: ReindexData): Int =
-//    work(data.evalColumn.reindex(data.indices), data.size)
-//
-//  @Benchmark
-//  def optimisticMemoized(data: ReindexData): Int =
-//    work(data.optMemoColumn.reindex(data.indices), data.size)
-//
-//  @Benchmark
-//  def pessimisticMemoized(data: ReindexData): Int =
-//    work(data.pesMemoColumn.reindex(data.indices), data.size)
-//}
+class ColumnReindexBenchmark {
+  import Data.work
+
+  @Benchmark
+  def dense(data: ReindexData): Int =
+    work(data.denseColumn.reindex(data.indices), data.size)
+
+  @Benchmark
+  def eval(data: ReindexData): Int =
+    work(data.evalColumn.reindex(data.indices), data.size)
+
+  @Benchmark
+  def optimisticMemoized(data: ReindexData): Int =
+    work(data.optMemoColumn.reindex(data.indices), data.size)
+
+  @Benchmark
+  def pessimisticMemoized(data: ReindexData): Int =
+    work(data.pesMemoColumn.reindex(data.indices), data.size)
+}
 
 @State(Scope.Benchmark)
 class ReindexData extends Data {
