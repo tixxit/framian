@@ -80,14 +80,14 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     */
   def denseIterator: Iterator[(K, V)] =
     new Iterator[(K, V)] {
-      private var i = 0
+      private var i = -1
       private var pair: (K, V) = _
       private def findNext(): Unit = {
-        var notFound = true
-        while (i < index.size && notFound) {
-          notFound = column.foldRow(index.indexAt(i))(true, true, { v =>
+        i += 1
+        while (i < index.size) {
+          column.foldRow(index.indexAt(i))((), (), { v =>
             pair = (index.keyAt(i), v)
-            false
+            return ()
           })
           i += 1
         }

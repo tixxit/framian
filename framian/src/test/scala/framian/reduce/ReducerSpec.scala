@@ -5,8 +5,10 @@ import scala.reflect.ClassTag
 
 import spire.math.Rational
 import spire.std.double._
+import spire.std.bigDecimal._
 import spire.std.int._
 import spire.std.string._
+import spire.syntax.std.seq._
 
 import org.specs2.ScalaCheck
 import org.specs2.matcher.Parameters
@@ -360,13 +362,14 @@ class ReducerSpec extends Specification with ScalaCheck with SeriesClassifiers {
     }
 
     "return the mean value of a series" in {
-      check1[MeaningfulSeries[Int, Double], Prop] { case MeaningfulSeries(series) =>
+      check1[MeaningfulSeries[Int, Rational], Prop] { case MeaningfulSeries(series) =>
         classifyEmpty(series) {
           classifySparse(series) {
             if (series.values.isEmpty) {
-              series.reduce(Mean[Double]) must_== NA
+              series.reduce(Mean[Rational]) must_== NA
             } else {
-              series.reduce(Mean[Double]) must_== Value(series.values.sum / series.values.length)
+              val mean = series.values.qsum / series.values.length
+              series.reduce(Mean[Rational]) must_== Value(mean)
             }
           }
         }
