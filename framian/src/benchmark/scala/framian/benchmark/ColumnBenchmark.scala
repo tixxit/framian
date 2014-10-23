@@ -73,8 +73,3 @@ class DoubleData {
   val na0: BitSet = na.toBitSet
   val nm0: BitSet = nm.toBitSet
 }
-
-object Data {
-  def mask(rng: Random, n: Int, p: Double = 0.1): Mask =
-    Mask(Seq.fill(1000)(rng.nextDouble).zipWithIndex.filter(_._1 < p).map(_._2): _*)
-}
