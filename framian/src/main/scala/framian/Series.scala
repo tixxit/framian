@@ -462,6 +462,13 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   }
 
   /**
+   * Map the value of this series to a cell. This allows values to be turned
+   * into [[NonValue]]s (ie. [[NA]] and [[NM]]).
+   */
+  def flatMapCell[W](f: V => Cell[W]): Series[K, W] =
+    Series(index, column.flatMap(f))
+
+  /**
    * Transforms the cells in this series using `f`.
    */
   def cellMap[W](f: Cell[V] => Cell[W]): Series[K, W] = {
