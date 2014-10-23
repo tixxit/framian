@@ -3,6 +3,8 @@ package benchmark
 
 import scala.util.Random
 
+import framian.column.Mask
+
 trait Data {
   val size: Int = 1000
   val rng: Random = new Random(42)
