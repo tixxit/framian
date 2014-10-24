@@ -2,11 +2,12 @@ package framian
 package column
 
 import scala.language.experimental.macros
-import scala.reflect.macros.Context
 
 import spire.macros.{ SyntaxUtil, InlineUtil }
 
-class ColumnMacros[C <: /*blackbox.*/Context](val c: C) {
+import framian.macroutil.compat.{ Context, freshTermName }
+
+class ColumnMacros[C <: Context](val c: C) {
   import c.universe._
 
   val util = new SyntaxUtil[c.type](c)
@@ -16,14 +17,14 @@ class ColumnMacros[C <: /*blackbox.*/Context](val c: C) {
     if (util.isClean(e)) {
       (e.tree, Nil)
     } else {
-      val name = newTermName(c.fresh("norm$"))
+      val name = freshTermName(c, "norm$")
       (q"$name", List(q"val $name = $e"))
     }
 
   def foldRow[A, B](row: c.Expr[Int])(na: c.Expr[B], nm: c.Expr[B], f: c.Expr[A => B]): c.Expr[B] = {
-    val col = newTermName(c.fresh("foldRow$col$"))
-    val value = newTermName(c.fresh("foldRow$value$"))
-    val r = newTermName(c.fresh("foldRow$row$"))
+    val col = freshTermName(c, "foldRow$col$")
+    val value = freshTermName(c, "foldRow$value$")
+    val r = freshTermName(c, "foldRow$row$")
     val (iter, prefix) = sanitize(f)
 
     val tree = q"""
@@ -53,11 +54,11 @@ class ColumnMacros[C <: /*blackbox.*/Context](val c: C) {
   }
 
   def foreach[A, U](from: c.Expr[Int], until: c.Expr[Int], rows: c.Expr[Int => Int], abortOnNM: c.Expr[Boolean])(f: c.Expr[(Int, A) => U]): c.Expr[Boolean] = {
-    val col = newTermName(c.fresh("foreach$col$"))
-    val value = newTermName(c.fresh("foreach$value$"))
-    val row = newTermName(c.fresh("foreach$row$"))
-    val nm = newTermName(c.fresh("foreach$nm$"))
-    val i = newTermName(c.fresh("foreach$i$"))
+    val col = freshTermName(c, "foreach$col$")
+    val value = freshTermName(c, "foreach$value$")
+    val row = freshTermName(c, "foreach$row$")
+    val nm = freshTermName(c, "foreach$nm$")
+    val i = freshTermName(c, "foreach$i$")
     val (getRow, stmts0) = sanitize(rows)
     val (iter, stmts1) = sanitize(f)
 
