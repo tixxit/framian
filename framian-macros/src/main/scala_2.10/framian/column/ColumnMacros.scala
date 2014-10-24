@@ -6,7 +6,7 @@ import scala.reflect.macros.Context
 
 import spire.macros.{ SyntaxUtil, InlineUtil }
 
-class ColumnMacros[C <: /*blackbox.*/Context](val c: C) {
+class ColumnMacros[C <: Context](val c: C) {
   import c.universe._
 
   val util = new SyntaxUtil[c.type](c)
