@@ -66,12 +66,17 @@ final class Mask(private val bits: Array[Long], val size: Int) extends (Int => B
   def &(that: Mask): Mask = {
     val size = math.min(bits.length, that.bits.length)
     val bits0 = Arrays.copyOf(that.bits, size)
+    var len = 0
     var i = 0
     while (i < bits0.length) {
-      bits0(i) &= bits(i)
+      val word = bits0(i) & bits(i)
+      bits0(i) = word
+      if (word != 0)
+        len = i + 1
       i += 1
     }
-    Mask.fromBits(bits0)
+    val bits1 = if (len != i) Arrays.copyOf(bits0, len) else bits0
+    Mask.fromBits(bits1)
   }
 
   final def ++(that: Mask): Mask = this | that
@@ -102,8 +107,12 @@ final class Mask(private val bits: Array[Long], val size: Int) extends (Int => B
 
     if (hi < bits.length && (bits(hi) & bit) != 0) {
       val bits0 = Arrays.copyOf(bits, bits.length)
-      bits0(hi) ^= bit
-      new Mask(bits0, size - 1)
+      val word = bits0(hi) ^ bit
+      bits0(hi) = word
+      val bits1 =
+        if (word != 0 || bits0.length > hi + 1) bits0
+        else Arrays.copyOf(bits0, bits0.length - 1)
+      new Mask(bits1, size - 1)
     } else {
       this
     }
@@ -174,8 +183,15 @@ object Mask {
     bldr.result()
   }
 
-  def range(from: Int, until: Int): Mask =
-    Mask(from.until(until): _*)
+  def range(from: Int, until: Int): Mask = {
+    val bldr = new MaskBuilder
+    var i = from
+    while (i < until) {
+      bldr += i
+      i += 1
+    }
+    bldr.result()
+  }
 
   final def fromBits(bits: Array[Long]): Mask = {
     var i = 0

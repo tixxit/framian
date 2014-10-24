@@ -38,6 +38,11 @@ class MaskSpec extends Specification with ScalaCheck {
     "unset bit of value removed" in check { (mask: Mask, bit: Int) =>
       (mask - bit)(bit) must beFalse
     }
+
+    "shrink underlying array when top words zero'd out" in {
+      val a = Mask(1, 100)
+      (a - 100).max must_== Some(1)
+    }
   }
 
   "filter" should {
@@ -128,6 +133,12 @@ class MaskSpec extends Specification with ScalaCheck {
       val mask = a & b
       val bits = a.toSet & b.toSet
       bits.forall(mask) must beTrue
+    }
+
+    "shrink array if top zero'd out" in {
+      val a = Mask(1, 100)
+      val b = Mask(1, 101)
+      (a & b).max must_== Some(1)
     }
   }
 
