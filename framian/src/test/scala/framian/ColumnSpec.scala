@@ -13,12 +13,14 @@ class ColumnSpec extends Specification with ScalaCheck {
   def slice[A](col: Column[A])(indices: Int*): Vector[Cell[A]] =
     indices.toVector map (col(_))
 
+  def mkEval[A](col: Column[A]): Column[A] = Column.eval(row => col(row))
+
   def genColumn[A](gen: Gen[A]): Gen[Column[A]] = for {
     cellValues <- Gen.listOf(CellGenerators.genCell(gen, (2, 1, 1)))
     dense <- arbitrary[Boolean]
   } yield {
     val col = Column(cellValues: _*)
-    if (dense) col else Column.eval(row => col(row))
+    if (dense) col else mkEval(col)
   }
 
   implicit def arbColumn[A: Arbitrary]: Arbitrary[Column[A]] = Arbitrary(genColumn(arbitrary[A]))
@@ -57,6 +59,12 @@ class ColumnSpec extends Specification with ScalaCheck {
     }
   }
 
+  "orElse with longer right side and NM" in {
+    val b = Column[Int]()
+    val c = Column[Int](NA, NM, NM)
+    (b orElse c)(1) must_== NM
+  }
+
   "Monoid[Column[A]]" should {
     "left identity" in check { (col0: Column[Int], indices: List[Int]) =>
       val col1 = Monoid[Column[Int]].id orElse col0
@@ -68,7 +76,7 @@ class ColumnSpec extends Specification with ScalaCheck {
       indices.map(col0(_)) must_== indices.map(col1(_))
     }
 
-    "associative" in check { (a: Column[Int], b: Column[Int], c: Column[Int], indices: List[Int]) =>
+    "associative" in check4NoShrink { (a: Column[Int], b: Column[Int], c: Column[Int], indices: List[Int]) =>
       val col0 = ((a orElse b) orElse c)
       val col1 = (a orElse (b orElse c))
       indices.map(col0(_)) must_== indices.map(col1(_))

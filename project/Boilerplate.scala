@@ -271,15 +271,19 @@ object Boilerplate {
       val classTagCase = if (config.name != "Generic") {
         block"""
         |      case ${name}Column(values0, naValues0, nmValues0) =>
-        |        val xs = copyArray(values, spire.math.max(values.length, values0.length))
-        |        val nm = (nmValues & (nmValues0 | naValues0)) | (naValues & nmValues0)
+        |        val len = spire.math.max(values.length, values0.length)
+        |        val naL = naValues | Mask.range(values.length, len)
+        |        val naR = naValues0 | Mask.range(values0.length, len)
+        |        // We could save an op here, but we expect |NA| >> |NM.
+        |        val nm = (nmValues & nmValues0) | (nmValues & naR) | (naL & nmValues0)
+        |        val xs = copyArray(values, len)
         |        var i = 0
         |        while (i < values0.length) {
         |          if (i >= values.length || naValues(i) || nmValues(i))
         |            xs(i) = values0(i)
         |          i += 1
         |        }
-        |        ${name}Column(xs, naValues & naValues0, nm).asInstanceOf[Column[A0]]
+        |        ${name}Column(xs, naL & naR, nm).asInstanceOf[Column[A0]]
         |
         """
       } else ""
