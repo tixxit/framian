@@ -33,7 +33,13 @@ lazy val framianMacros = project.
 lazy val framian = project.
   in(file("framian")).
   enablePlugins(BenchmarkPlugin).
-  dependsOn(framianMacros)
+  dependsOn(framianMacros).
+  settings(
+    // map framian-macros project classes and sources into framian
+    mappings in (Compile, packageBin) <++= mappings in (framianMacros, Compile, packageBin),
+    mappings in (Compile, packageSrc) <++= mappings in (framianMacros, Compile, packageSrc)
+  )
+
 
 lazy val framianJsonBase = project.
   in(file("framian-json-base")).
