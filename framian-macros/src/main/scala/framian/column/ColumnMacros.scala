@@ -17,7 +17,7 @@ class ColumnMacros[C <: /*blackbox.*/Context](val c: C) {
       (e.tree, Nil)
     } else {
       val name = newTermName(c.fresh("norm$"))
-      (q"name", List(q"val $name = $e"))
+      (q"$name", List(q"val $name = $e"))
     }
 
   def foldRow[A, B](row: c.Expr[Int])(na: c.Expr[B], nm: c.Expr[B], f: c.Expr[A => B]): c.Expr[B] = {

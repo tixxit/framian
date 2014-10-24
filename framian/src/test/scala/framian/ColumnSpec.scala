@@ -149,6 +149,14 @@ abstract class BaseColumnSpec extends Specification with ScalaCheck {
       }
       bldr.result() must_== List(3, 2, 1)
     }
+
+    "work with functions that can't be inlined" in {
+      val col = mkCol(Value(1), NA, Value(2), NA, Value(3))
+      var bldr = List.newBuilder[Int]
+      val f: (Int, Int) => Unit = { (i, n) => bldr += n }
+      col.foreach(0, 5, n => 4 - n)(f)
+      bldr.result() must_== List(3, 2, 1)
+    }
   }
 
   "map" should {
