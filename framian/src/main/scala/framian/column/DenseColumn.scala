@@ -31,8 +31,6 @@ private[framian] sealed trait DenseColumn[@sp(Int,Long,Double) A] extends Unboxe
     if ((row < 0 || row >= values.length) && !nmValues(row)) this
     else Column.dense(values, naValues + row, nmValues - row).asInstanceOf[Column[A]]
 
-  def cellMap[B](f: Cell[A] => Cell[B]): Column[B] = Column.eval(apply _).cellMap(f)
-
   def memoize(optimistic: Boolean): Column[A] = this
 
   def flatMap[B](f: A => Cell[B]): Column[B] = {

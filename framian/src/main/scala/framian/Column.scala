@@ -47,12 +47,6 @@ sealed trait Column[+A] { // TODO: Can't specialize in 2.10, but can in 2.11.
   def apply(row: Int): Cell[A]
 
   /**
-   * Maps the cells of this [[Column]] using `f`. This method will always force
-   * the column into an eval column and should be used with caution.
-   */
-  def cellMap[B](f: Cell[A] => Cell[B]): Column[B]
-
-  /**
    * Map all values of this `Column` using `f`. All [[NA]] and [[NM]] values
    * remain as they were.
    */
@@ -146,6 +140,13 @@ sealed trait Column[+A] { // TODO: Can't specialize in 2.10, but can in 2.11.
 }
 
 trait BoxedColumn[A] extends Column[A] {
+
+  /**
+   * Maps the cells of this [[Column]] using `f`. This method will always force
+   * the column into an eval column and should be used with caution.
+   */
+  def cellMap[B](f: Cell[A] => Cell[B]): Column[B]
+
   def map[@sp(Int,Long,Double) B](f: A => B): Column[B] = cellMap {
     case Value(a) => Value(f(a))
     case (nonValue: NonValue) => nonValue
