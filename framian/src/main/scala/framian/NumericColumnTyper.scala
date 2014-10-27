@@ -148,7 +148,7 @@ object NumericColumnTyper {
 
 import NumericColumnTyper._
 
-final class IntColumnTyper extends ColumnTyper[Int] {
+private[framian] final class IntColumnTyper extends ColumnTyper[Int] {
   private def safeToInt[A](n: A)(implicit f: A => ScalaNumericAnyConversions): Cell[Int] = {
     val m = f(n).toInt
     if (n == m) Value(m) else NM
@@ -176,7 +176,7 @@ final class IntColumnTyper extends ColumnTyper[Int] {
   }
 }
 
-final class LongColumnTyper extends NumericColumnTyper[Long] {
+private[framian] final class LongColumnTyper extends NumericColumnTyper[Long] {
   private def safeToLong[A](n: A)(implicit f: A => ScalaNumericAnyConversions): Option[Long] = {
     val m = f(n).toLong
     if (n == m) Some(m) else None
@@ -211,13 +211,13 @@ final class LongColumnTyper extends NumericColumnTyper[Long] {
     )
 }
 
-final class FloatColumnTyper extends ColumnTyper[Float] {
+private[framian] final class FloatColumnTyper extends ColumnTyper[Float] {
   private val doubleTyper = new DoubleColumnTyper
   def cast(col: TypedColumn[_]): Column[Float] =
     doubleTyper.cast(col) map (_.toFloat)
 }
 
-final class DoubleColumnTyper extends NumericColumnTyper[Double] {
+private[framian] final class DoubleColumnTyper extends NumericColumnTyper[Double] {
   def castValue(x: Any): Option[Double] =
     foldValue(x)(
       n => Some(n.toDouble),
@@ -241,7 +241,7 @@ final class DoubleColumnTyper extends NumericColumnTyper[Double] {
     )
 }
 
-final class BigIntTyper extends NumericColumnTyper[BigInt] {
+private[framian] final class BigIntTyper extends NumericColumnTyper[BigInt] {
   def castValue(x: Any): Option[BigInt] =
     foldValue(x)(
       n => Some(BigInt(n)),
@@ -265,7 +265,7 @@ final class BigIntTyper extends NumericColumnTyper[BigInt] {
     )
 }
 
-final class BigDecimalTyper extends NumericColumnTyper[BigDecimal] {
+private[framian] final class BigDecimalTyper extends NumericColumnTyper[BigDecimal] {
   def castValue(x: Any): Option[BigDecimal] =
     foldValue(x)(
       n => Some(BigDecimal(n)),
@@ -289,7 +289,7 @@ final class BigDecimalTyper extends NumericColumnTyper[BigDecimal] {
     )
 }
 
-final class RationalTyper extends NumericColumnTyper[Rational] {
+private[framian] final class RationalTyper extends NumericColumnTyper[Rational] {
   def castValue(x: Any): Option[Rational] =
     foldValue(x)(
       n => Some(Rational(n)),
@@ -313,7 +313,7 @@ final class RationalTyper extends NumericColumnTyper[Rational] {
     )
 }
 
-final class NumberTyper extends NumericColumnTyper[Number] {
+private[framian] final class NumberTyper extends NumericColumnTyper[Number] {
   def castValue(x: Any): Option[Number] =
     foldValue(x)(
       n => Some(Number(n)),

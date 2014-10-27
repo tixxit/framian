@@ -33,6 +33,8 @@ import scala.annotation.{ unspecialized => unspec }
 import spire.algebra._
 import spire.syntax.cfor._
 
+import framian.columns._
+
 /**
  * A `Column` represents an `Int`-indexed set of values. The defining
  * characteristic is that a column is always defined for all `Int` values. In
@@ -41,7 +43,7 @@ import spire.syntax.cfor._
  * instance, ties a `Column` together with an [[Index]] to restrict the set of
  * rows being used.
  */
-trait Column[@spec(Int,Long,Float,Double) +A] extends ColumnLike[Column[A]] {
+trait Column[@spec(Int,Long,Float,Double) +A] extends ColumnLike[Column[A]] { self =>
 
   /** Returns `true` if a value is present at index `row`
     *
@@ -118,6 +120,13 @@ trait Column[@spec(Int,Long,Float,Double) +A] extends ColumnLike[Column[A]] {
   def reindex(f: Int => Int): Column[A] = new ContramappedColumn(f, this)
 
   /**
+   * Returns a [[Column]] whose cells have been transformed with `f`.
+   */
+  def cellMap[B](f: Cell[A] => Cell[B]): Column[B] = Column.wrap { row =>
+    f(self.apply(row))
+  }
+
+  /**
    * Force a specific row to be not available (`NA`).
    */
   def setNA(row: Int): Column[A] = new SetNAColumn(row, this)
@@ -167,36 +176,4 @@ object Column extends ColumnAlgebras {
   }
 
   def builder[A: ClassTag]: ColumnBuilder[A] = new ColumnBuilder[A]
-
-  // implicit def columnOps[A](lhs: Column[A]) = new ColumnOps[A](lhs)
 }
-
-// // This class is required to get around some spec/macro bugs.
-// final class ColumnOps[A](lhs: Column[A]) {
-//   def map0[B](f: A => B): Column[B] = macro ColumnOps.mapImpl[A, B]
-// 
-//   def zipMap
-// }
-// 
-// object ColumnOps {
-//   def zipMapImpl[A, B, C](c: Context)(rhs: c.Expr[B])(f: c.Expr[(A, B) => C]): c.Expr[Column[C]] = {
-//   }
-// 
-//   def mapImpl[A, B: c.WeakTypeTag](c: Context)(f: c.Expr[A => B]): c.Expr[Column[B]] = {
-//     import c.universe._
-//     val lhs = c.prefix.tree match {
-//       case Apply(TypeApply(_, _), List(lhs)) => lhs
-//       case t => c.abort(c.enclosingPosition,
-//         "Cannot extract subject of op (tree = %s)" format t)
-//     }
-// 
-//     c.Expr[Column[B]](c.resetLocalAttrs(q"""{
-//       new Column[${weakTypeTag[B]}] {
-//         val col = ${lhs}
-//         def exists(row: Int): Boolean = col.exists(row)
-//         def missing(row: Int): Missing = col.missing(row)
-//         def value(row: Int): ${weakTypeTag[B]} = $f.apply(col.value(row))
-//       }
-//     }"""))
-//   }
-// }

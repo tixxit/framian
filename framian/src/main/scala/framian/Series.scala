@@ -21,24 +21,19 @@
 
 package framian
 
-import language.higherKinds
-
 import scala.annotation.tailrec
 import scala.collection.generic.CanBuildFrom
-import scala.collection.mutable.{ ArrayBuilder, Builder }
-import scala.collection.{ IterableLike, Iterable }
+import scala.collection.mutable
 import scala.reflect.ClassTag
 
 import spire.algebra._
-import spire.math._
+import spire.std.double._
 import spire.std.int._
-import spire.syntax.additiveMonoid._
 import spire.syntax.monoid._
 import spire.syntax.order._
 import spire.syntax.cfor._
 
-import spire.compat._
-
+import framian.columns.MappedColumn
 import framian.reduce.Reducer
 import framian.util.TrivialMetricSpace
 
@@ -47,6 +42,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   private implicit def classTag = index.classTag
   private implicit def order = index.order
 
+  @inline
   def size: Int = index.size
 
   /** Returns this series as a collection of key/value pairs. */
@@ -87,25 +83,145 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
       k -> column.valueAt(ix)
     }
 
+
+  /** Applies a function `f` to all key-cell pairs of the series.
+    *
+    * The series is traversed in index order.
+    *
+    * @param  f  the function that is applied for its side-effect
+    *            to every key-cell pair. The result of the
+    *            function `f` is discarded
+    * @see [[foreachCells]]
+    * @see [[foreachDense]]
+    * @see [[foreachKeys]]
+    * @see [[foreachValues]]
+    */
+  def foreach[U](f: (K, Cell[V]) => U): Unit = {
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      f(index.keyAt(i), column(index.indexAt(i)))
+    }
+  }
+
+
+  /** Applies a function `f` to all key-value pairs of the series.
+    *
+    * The series is traversed in index order.
+    *
+    * This method assumes that the series is dense, so it will skip
+    * over any non value cells if, in fact, the series is sparse.
+    *
+    * @param  f  the function that is applied for its side-effect
+    *            to every key-value pair. The result of the
+    *            function `f` is discarded
+    * @see [[foreach]]
+    * @see [[foreachCells]]
+    * @see [[foreachKeys]]
+    * @see [[foreachValues]]
+    */
+  def foreachDense[U](f: (K, V) => U): Unit = {
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      val ix = index.indexAt(i)
+      if (column.isValueAt(ix)) {
+        f(index.keyAt(i), column.valueAt(ix))
+      }
+    }
+  }
+
+
+  /** Applies a function `f` to all keys of the series.
+    *
+    * The series is traversed in index order.
+    *
+    * @param  f  the function that is applied for its side-effect
+    *            to every key. The result of the
+    *            function `f` is discarded
+    * @see [[foreach]]
+    * @see [[foreachCells]]
+    * @see [[foreachDense]]
+    * @see [[foreachValues]]
+    */
+  def foreachKeys[U](f: K => U): Unit = {
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      f(index.keyAt(i))
+    }
+  }
+
+
+  /** Applies a function `f` to all cells of the series.
+    *
+    * The series is traversed in index order.
+    *
+    * @param  f  the function that is applied for its side-effect
+    *            to every cell. The result of the
+    *            function `f` is discarded
+    * @see [[foreach]]
+    * @see [[foreachDense]]
+    * @see [[foreachKeys]]
+    * @see [[foreachValues]]
+    */
+  def foreachCells[U](f: Cell[V] => U): Unit = {
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      f(column(index.indexAt(i)))
+    }
+  }
+
+
+  /** Applies a function `f` to all values of the series.
+    *
+    * The series is traversed in index order.
+    *
+    * This method assumes that the series is dense, so it will skip
+    * over any non value cells if, in fact, the series is sparse.
+    *
+    * @param  f  the function that is applied for its side-effect
+    *            to every value. The result of the
+    *            function `f` is discarded
+    * @see [[foreach]]
+    * @see [[foreachCells]]
+    * @see [[foreachDense]]
+    * @see [[foreachKeys]]
+    */
+  def foreachValues[U](f: V => U): Unit = {
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      val ix = index.indexAt(i)
+      if (column.isValueAt(ix)) {
+        f(column.valueAt(ix))
+      }
+    }
+  }
+
   /** Returns the keys of this series as a vector in index order.
     *
     * @return a vector of the keys of the series.
+    * @see [[cells]]
     * @see [[values]]
     */
-  def keys: Vector[K] =
-    index.map(_._1)(collection.breakOut)
+  def keys: Vector[K] = {
+    val builder = Vector.newBuilder[K]
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      builder += index.keyAt(i)
+    }
+    builder.result()
+  }
 
-  /** Return the values of this series as a vector in index order.
+
+  /** Return the cells of this series as a vector in index order.
     *
     * The series may be sparse, so the vector contains [[Cell]]s
     * rather than just plain values.
     *
     * @return a sparse vector of the values of the series.
-    * @see [[denseValues]]
+    * @see [[keys]]
+    * @see [[values]]
     */
+  def cells: Vector[Cell[V]] = {
+    val builder = Vector.newBuilder[Cell[V]]
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      builder += column(index.indexAt(i))
+    }
+    builder.result()
+  }
 
-  def values: Vector[Cell[V]] =
-    index.map { case (_, i) => column(i) }(collection.breakOut)
 
   /** Returns the values of this series as a vector in index order.
     *
@@ -114,24 +230,53 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     * the [[NonValue]]s are ignored.
     *
     * @return a dense vector of the values of the series.
+    * @see [[keys]]
     * @see [[values]]
     * @note The `Vector` returned by this method is related to
     * the `Vector` returned by [[values]]
     * {{{
-    * series.values.collect { case Value(v) => v } == series.denseValues
+    * series.cells.collect { case Value(v) => v } == series.values
     * }}}
     * however, this method uses a more efficient access pattern
     * to the underlying data.
     */
-  def denseValues: Vector[V] =
-    index.collect { case (_, ix) if column.isValueAt(ix) =>
-      column.valueAt(ix)
-    }(collection.breakOut)
+  def values: Vector[V] = {
+    val builder = Vector.newBuilder[V]
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      val ix = index.indexAt(i)
+      if (column.isValueAt(ix)) {
+        builder += column.valueAt(ix)
+      }
+    }
+    builder.result()
+  }
 
+
+  @inline
   def keyAt(i: Int): K = index.keyAt(i)
-  def valueAt(i: Int): Cell[V] = column(index.indexAt(i))
 
+  @inline
+  def cellAt(i: Int): Cell[V] = column(index.indexAt(i))
+
+  @inline
+  def valueAt(i: Int): V = column.valueAt(index.indexAt(i))
+
+  @inline
   def apply(key: K): Cell[V] = index.get(key) map (column(_)) getOrElse NA
+
+  /**
+   * Returns all cells with with key of `key`.
+   */
+  def getCells(key: K): Vector[Cell[V]] =
+    index.getAll(key).map { case (_, row) => column(row) } (collection.breakOut)
+
+  /**
+   * Returns all values with with key of `key`.
+   */
+  def getValues(key: K): Vector[V] =
+    index.getAll(key).collect {
+      case (_, row) if column.isValueAt(row) => column.valueAt(row)
+    } (collection.breakOut)
 
   /**
    * Returns `true` if at least 1 value exists in this series. A series with
@@ -142,36 +287,39 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     var seenValue = false
     while (i < index.size && !seenValue) {
       val row = index.indexAt(i)
-      seenValue = seenValue & column.isValueAt(row)
+      seenValue = seenValue | column.isValueAt(row)
       i += 1
     }
     seenValue
   }
 
   /**
-   * Merges 2 series together using a semigroup to append values.
+   * Combines 2 series together using the functions provided to handle each
+   * case. If a value exists in both `this` and `that`, then `both` is used
+   * to combine the value to a new one, otherwise either `left` or `right`
+   * are used, unless both are missing, then the missing value is returned
+   * ([[NA]] is both are [[NA]] and [[NM]] otherwise).
    */
-  def merge[VV >: V: Semigroup: ClassTag](that: Series[K, VV]): Series[K, VV] = {
+  def combine[W, X: ClassTag](that: Series[K, W])(left: V => X, right: W => X, both: (V, W) => X): Series[K, X] = {
     val merger = Merger[K](Merge.Outer)
     val (keys, lIndices, rIndices) = Index.cogroup(this.index, that.index)(merger).result()
     val lCol = this.column
     val rCol = that.column
 
-    // TODO: Remove duplication between this and zipMap.
-    val bldr = Column.builder[VV]
+    val bldr = Column.builder[X]
     cfor(0)(_ < lIndices.length, _ + 1) { i =>
       val l = lIndices(i)
       val r = rIndices(i)
       val lExists = lCol.isValueAt(l)
       val rExists = rCol.isValueAt(r)
       if (lExists && rExists) {
-        bldr.addValue((lCol.valueAt(l): VV) |+| rCol.valueAt(r))
+        bldr.addValue(both(lCol.valueAt(l), rCol.valueAt(r)))
       } else if (lExists) {
         if (rCol.nonValueAt(r) == NM) bldr.addNM()
-        else bldr.addValue(lCol.valueAt(l))
+        else bldr.addValue(left(lCol.valueAt(l)))
       } else if (rExists) {
         if (lCol.nonValueAt(l) == NM) bldr.addNM()
-        else bldr.addValue(rCol.valueAt(r))
+        else bldr.addValue(right(rCol.valueAt(r)))
       } else {
         bldr.addNonValue(if (lCol.nonValueAt(l) == NM) NM else rCol.nonValueAt(r))
       }
@@ -181,9 +329,25 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   }
 
   /**
-   * Merges 2 series together, taking the first non-NA or NM value.
+   * Merges 2 series together using a semigroup to append values.
+   */
+  def merge[VV >: V: Semigroup: ClassTag](that: Series[K, VV]): Series[K, VV] =
+    combine(that)(v => v, v => v, (v, w) => (v: VV) |+| (w: VV))
+
+  /**
+   * Concatenates `that` onto the end of `this` [[Series]].
    */
   def ++[VV >: V: ClassTag](that: Series[K, VV]): Series[K, VV] = {
+    val bldr = Series.newUnorderedBuilder[K, VV]
+    this.foreach(bldr.append)
+    that.foreach(bldr.append)
+    bldr.result()
+  }
+
+  /**
+   * Merges 2 series together, taking the first non-NA or NM value.
+   */
+  def orElse[VV >: V: ClassTag](that: Series[K, VV]): Series[K, VV] = {
     val merger = Merger[K](Merge.Outer)
     val (keys, lIndices, rIndices) = Index.cogroup(this.index, that.index)(merger).result()
     val lCol = this.column
@@ -257,23 +421,20 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
    * Convert this Series to a single column [[Frame]].
    */
   def toFrame[C: Order: ClassTag](col: C)(implicit tt: ClassTag[V]): Frame[K, C] =
-    Frame(index, col -> TypedColumn(column))
+    ColOrientedFrame(index, Series(col -> TypedColumn(column)))
 
   def toFrame(implicit tt: ClassTag[V]): Frame[K, Int] = {
     import spire.std.int._
-    Frame[K, Int](index, 0 -> TypedColumn(column))
+    toFrame(0)
   }
 
   def closestKeyTo(k: K, tolerance: Double)(implicit K0: MetricSpace[K, Double], K1: Order[K]): Option[K] =
     apply(k) match {
       case Value(v) => Some(k)
       case _ =>
-        val possibleDates =
-          keys.filter { key =>
-            val distance = K0.distance(key, k)
-            (distance <= tolerance)
-          }
-        possibleDates.headOption
+        keys.collectFirst {
+          case key if MetricSpace.closeTo[K, Double](k, key, tolerance) => key
+        }
     }
 
   /**
@@ -292,29 +453,157 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     Series(index, new MappedColumn(f, column)) // TODO: Use a macro here?
 
   /**
-   * Filter the this series by its keys.
+   * Map the values of this series, using both the *key* and *value* of each
+   * cell.
    */
-  def filterKeys(p: K => Boolean): Series[K, V] = {
-    val b = new SeriesBuilder[K, V]
-    b.sizeHint(this.size)
-    for ((k, ix) <- index.iterator) {
-      if (p(k)) {
-        b += (k -> column(ix))
+  def mapValuesWithKeys[W: ClassTag](f: (K, V) => W): Series[K, W] = {
+    val bldr = Column.builder[W]
+    index.foreach { (k, row) =>
+      bldr += column(row).map(v => f(k, v))
+    }
+    Series(index.resetIndices, bldr.result())
+  }
+
+  /**
+   * Transforms the cells in this series using `f`.
+   */
+  def cellMap[W: ClassTag](f: Cell[V] => Cell[W]): Series[K, W] = {
+    val bldr = Column.builder[W]
+    index.foreach { (k, row) =>
+      bldr += f(column(row))
+    }
+    Series(index.resetIndices, bldr.result())
+  }
+
+  /**
+   * Transforms the cells, indexed by their key, in this series using `f`.
+   */
+  def cellMapWithKeys[W: ClassTag](f: (K, Cell[V]) => Cell[W]): Series[K, W] = {
+    val bldr = Column.builder[W]
+    index.foreach { (k, row) =>
+      bldr += f(k, column(row))
+    }
+    Series(index.resetIndices, bldr.result())
+  }
+
+  /** Select all key-cell pairs of this series where the pairs
+    * satisfy a predicate.
+    *
+    * This method preserves the orderedness of the underlying index.
+    *
+    * @param  p  the predicate used to test key-cell pairs.
+    * @return a new series consisting of all key-cell pairs of this
+    *   series where the pairs satisfy the given predicate `p`.
+    * @see [[filterByKeys]]
+    * @see [[filterByCells]]
+    * @see [[filterByValues]]
+    */
+  def filterEntries(p: (K, Cell[V]) => Boolean)(implicit ev: ClassTag[V]): Series[K, V] = {
+    val b = Series.newBuilder[K, V](index.isOrdered)
+    b.sizeHint(index.size)
+    for ((k, ix) <- index) {
+      val cell = column(ix)
+      if (p(k, cell)) {
+        b.append(k, cell)
       }
     }
     b.result()
   }
 
-  /**
-   * Filter the values of this series only.
-   */
-  def filterValues(p: Cell[V] => Boolean): Series[K, V] = {
-    val b = new SeriesBuilder[K, V]
+
+  /** Select all key-cell pairs of this series where the keys
+    * satisfy a predicate.
+    *
+    * This method preserves the orderedness of the underlying index.
+    *
+    * @param  p  the predicate used to test keys.
+    * @return a new series consisting of all key-call pairs of this
+    *   series where the keys satisfy the given predicate `p`.
+    * @see [[filterEntries]]
+    * @see [[filterByCells]]
+    * @see [[filterByValues]]
+    * @note This method is a specialized and optimized version of
+    * [[filterEntries]], where
+    * {{{
+    *   s.filterEntries { (k, _) => p(k) } == s.filterByKeys(p)
+    * }}}
+    */
+  def filterByKeys(p: K => Boolean)(implicit ev: ClassTag[V]): Series[K, V] = {
+    val b = Series.newBuilder[K, V](index.isOrdered)
     b.sizeHint(this.size)
-    for ((k, ix) <- index.iterator) {
-      val cell = column(ix)
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      val k = index.keyAt(i)
+      if (p(k)) {
+        b.append(k, column(index.indexAt(i)))
+      }
+    }
+    b.result()
+  }
+
+
+  /** Select all key-cell pairs of this series where the cells
+    * satisfy a predicate.
+    *
+    * This method preserves the orderedness of the underlying index.
+    *
+    * @param  p  the predicate used to test cells.
+    * @return a new series consisting of all key-call pairs of this
+    *   series where the cells satisfy the given predicate `p`.
+    * @see [[filterEntries]]
+    * @see [[filterByKeys]]
+    * @see [[filterByValues]]
+    * @note This method is a specialized and optimized version of
+    * [[filterEntries]], where
+    * {{{
+    *   s.filterEntries { (_, c) => p(c) } == s.filterByCells(p)
+    * }}}
+    */
+  def filterByCells(p: Cell[V] => Boolean)(implicit ev: ClassTag[V]): Series[K, V] = {
+    val b = Series.newBuilder[K, V](index.isOrdered)
+    b.sizeHint(this.size)
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      val cell = column(index.indexAt(i))
       if (p(cell)) {
-        b += (k -> cell)
+        b.append(index.keyAt(i), cell)
+      }
+    }
+    b.result()
+  }
+
+
+  /** Selects all key-value pairs of this series where the values
+    * satisfy a predicate.
+    *
+    * This method preserves the orderedness of the underlying index.
+    * It also assumes this series is dense, so any non values will
+    * also be filtered out. The column that backs the new series
+    * will be dense.
+    *
+    * @param  p  the predicate used to test values.
+    * @return a new series consisting of all key-value pairs of this
+    *   series where the values satisfy the given predicate `p`.
+    * @see [[filterEntries]]
+    * @see [[filterByKeys]]
+    * @see [[filterByCells]]
+    * @note This method is a specialized and optimized version of
+    * [[filterEntries]], where
+    * {{{
+    *   s.filterEntries {
+    *     case (_, Value(v)) => p(v)
+    *     case _ => false
+    *   } == s.filterByValues(p)
+    * }}}
+    */
+  def filterByValues(p: V => Boolean)(implicit ev: ClassTag[V]): Series[K, V] = {
+    val b = Series.newBuilder[K, V](index.isOrdered)
+    b.sizeHint(this.size)
+    cfor(0)(_ < index.size, _ + 1) { i =>
+      val ix = index.indexAt(i)
+      if (column.isValueAt(ix)) {
+        val v = column.valueAt(ix)
+        if (p(v)) {
+          b.appendValue(index.keyAt(i), v)
+        }
       }
     }
     b.result()
@@ -453,60 +742,60 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     reducer.reduce(column, indices, 0, index.size)
   }
 
-  /** Returns the [[reduce.Count]] reduction of this series.
-    * @return the [[reduce.Count]] reduction of this series.
-    * @see [[reduce.Count]]
+  /** Returns the [[framian.reduce.Count]] reduction of this series.
+    * @return the [[framian.reduce.Count]] reduction of this series.
+    * @see [[framian.reduce.Count]]
     */
   def count: Cell[Int] =
     this.reduce(framian.reduce.Count)
 
-  /** Returns the [[reduce.First]] reduction of this series.
-    * @return the [[reduce.First]] reduction of this series.
-    * @see [[reduce.First]]
+  /** Returns the [[framian.reduce.First]] reduction of this series.
+    * @return the [[framian.reduce.First]] reduction of this series.
+    * @see [[framian.reduce.First]]
     * @see [[firstN]]
     * @see [[last]]
     */
   def first: Cell[V] =
     this.reduce(framian.reduce.First[V])
 
-  /** Returns the [[reduce.FirstN]] reduction of this series.
-    * @return the [[reduce.FirstN]] reduction of this series.
-    * @see [[reduce.FirstN]]
+  /** Returns the [[framian.reduce.FirstN]] reduction of this series.
+    * @return the [[framian.reduce.FirstN]] reduction of this series.
+    * @see [[framian.reduce.FirstN]]
     * @see [[first]]
     * @see [[lastN]]
     */
   def firstN(n: Int): Cell[List[V]] =
     this.reduce(framian.reduce.FirstN[V](n))
 
-  /** Returns the [[reduce.Last]] reduction of this series.
-    * @return the [[reduce.Last]] reduction of this series.
-    * @see [[reduce.Last]]
+  /** Returns the [[framian.reduce.Last]] reduction of this series.
+    * @return the [[framian.reduce.Last]] reduction of this series.
+    * @see [[framian.reduce.Last]]
     * @see [[lastN]]
     * @see [[first]]
     */
   def last: Cell[V] =
     this.reduce(framian.reduce.Last[V])
 
-  /** Returns the [[reduce.LastN]] reduction of this series.
-    * @return the [[reduce.LastN]] reduction of this series.
-    * @see [[reduce.LastN]]
+  /** Returns the [[framian.reduce.LastN]] reduction of this series.
+    * @return the [[framian.reduce.LastN]] reduction of this series.
+    * @see [[framian.reduce.LastN]]
     * @see [[last]]
     * @see [[firstN]]
     */
   def lastN(n: Int): Cell[List[V]] =
     this.reduce(framian.reduce.LastN[V](n))
 
-  /** Returns the [[reduce.Max]] reduction of this series.
-    * @return the [[reduce.Max]] reduction of this series.
-    * @see [[reduce.Max]]
+  /** Returns the [[framian.reduce.Max]] reduction of this series.
+    * @return the [[framian.reduce.Max]] reduction of this series.
+    * @see [[framian.reduce.Max]]
     * @see [[min]]
     */
   def max(implicit ev0: Order[V]): Cell[V] =
     this.reduce(framian.reduce.Max[V])
 
-  /** Returns the [[reduce.Min]] reduction of this series.
-    * @return the [[reduce.Min]] reduction of this series.
-    * @see [[reduce.Min]]
+  /** Returns the [[framian.reduce.Min]] reduction of this series.
+    * @return the [[framian.reduce.Min]] reduction of this series.
+    * @see [[framian.reduce.Min]]
     * @see [[max]]
     */
   def min(implicit ev0: Order[V]): Cell[V] =
@@ -514,7 +803,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
 
   /** Returns the `AdditiveMonoid` reduction of this series.
     * @return the `AdditiveMonoid` reduction of this series.
-    * @see [[reduce.MonoidReducer]]
+    * @see [[framian.reduce.MonoidReducer]]
     * @see [[sumNonEmpty]]
     * @see [[product]]
     */
@@ -523,7 +812,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
 
   /** Returns the `AdditiveSemigroup` reduction of this series.
     * @return the `AdditiveSemigroup` reduction of this series.
-    * @see [[reduce.SemigroupReducer]]
+    * @see [[framian.reduce.SemigroupReducer]]
     * @see [[sum]]
     * @see [[productNonEmpty]]
     */
@@ -532,7 +821,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
 
   /** Returns the `MultiplicativeMonoid` reduction of this series.
     * @return the `MultiplicativeMonoid` reduction of this series.
-    * @see [[reduce.MonoidReducer]]
+    * @see [[framian.reduce.MonoidReducer]]
     * @see [[productNonEmpty]]
     * @see [[sum]]
     */
@@ -541,39 +830,39 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
 
   /** Returns the `MultiplicativeSemigroup` reduction of this series.
     * @return the `MultiplicativeSemigroup` reduction of this series.
-    * @see [[reduce.SemigroupReducer]]
+    * @see [[framian.reduce.SemigroupReducer]]
     * @see [[product]]
     * @see [[sumNonEmpty]]
     */
   def productNonEmpty(implicit ev0: MultiplicativeSemigroup[V]): Cell[V] =
     this.reduce(framian.reduce.SemigroupReducer[V](ev0.multiplicative))
 
-  /** Returns the [[reduce.Mean]] reduction of this series.
-    * @return the [[reduce.Mean]] reduction of this series.
-    * @see [[reduce.Mean]]
+  /** Returns the [[framian.reduce.Mean]] reduction of this series.
+    * @return the [[framian.reduce.Mean]] reduction of this series.
+    * @see [[framian.reduce.Mean]]
     * @see [[median]]
     */
   def mean(implicit ev0: Field[V]): Cell[V] =
     this.reduce(framian.reduce.Mean[V])
 
-  /** Returns the [[reduce.Median]] reduction of this series.
-    * @return the [[reduce.Median]] reduction of this series.
-    * @see [[reduce.Median]]
+  /** Returns the [[framian.reduce.Median]] reduction of this series.
+    * @return the [[framian.reduce.Median]] reduction of this series.
+    * @see [[framian.reduce.Median]]
     * @see [[mean]]
     */
   def median(implicit ev0: ClassTag[V], ev1: Field[V], ev2: Order[V]): Cell[V] =
     this.reduce(framian.reduce.Median[V])
 
-  /** Returns the [[reduce.Unique]] reduction of this series.
-    * @return the [[reduce.Unique]] reduction of this series.
-    * @see [[reduce.Unique]]
+  /** Returns the [[framian.reduce.Unique]] reduction of this series.
+    * @return the [[framian.reduce.Unique]] reduction of this series.
+    * @see [[framian.reduce.Unique]]
     */
   def unique: Cell[Set[V]] =
     this.reduce(framian.reduce.Unique[V])
 
-  /** Returns the [[reduce.Exists]] reduction of this series.
-    * @return the [[reduce.Exists]] reduction of this series.
-    * @see [[reduce.Exists]]
+  /** Returns the [[framian.reduce.Exists]] reduction of this series.
+    * @return the [[framian.reduce.Exists]] reduction of this series.
+    * @see [[framian.reduce.Exists]]
     * @see [[forall]]
     */
   def exists(p: V => Boolean): Boolean = {
@@ -582,9 +871,9 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     cell.get
   }
 
-  /** Returns the [[reduce.ForAll]] reduction of this series.
-    * @return the [[reduce.ForAll]] reduction of this series.
-    * @see [[reduce.ForAll]]
+  /** Returns the [[framian.reduce.ForAll]] reduction of this series.
+    * @return the [[framian.reduce.ForAll]] reduction of this series.
+    * @see [[framian.reduce.ForAll]]
     * @see [[exists]]
     */
   def forall(p: V => Boolean): Boolean = {
@@ -604,60 +893,60 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     Series(Index.ordered(keys), Column.fromCells(values))
   }
 
-  /** Returns the [[reduce.Count]] reduction of this series by key.
-    * @return the [[reduce.Count]] reduction of this series by key.
-    * @see [[reduce.Count]]
+  /** Returns the [[framian.reduce.Count]] reduction of this series by key.
+    * @return the [[framian.reduce.Count]] reduction of this series by key.
+    * @see [[framian.reduce.Count]]
     */
   def countByKey: Series[K, Int] =
     this.reduceByKey(framian.reduce.Count)
 
-  /** Returns the [[reduce.First]] reduction of this series by key.
-    * @return the [[reduce.First]] reduction of this series by key.
-    * @see [[reduce.First]]
+  /** Returns the [[framian.reduce.First]] reduction of this series by key.
+    * @return the [[framian.reduce.First]] reduction of this series by key.
+    * @see [[framian.reduce.First]]
     * @see [[firstN]]
     * @see [[last]]
     */
   def firstByKey: Series[K, V] =
     this.reduceByKey(framian.reduce.First[V])
 
-  /** Returns the [[reduce.FirstN]] reduction of this series by key.
-    * @return the [[reduce.FirstN]] reduction of this series by key.
-    * @see [[reduce.FirstN]]
+  /** Returns the [[framian.reduce.FirstN]] reduction of this series by key.
+    * @return the [[framian.reduce.FirstN]] reduction of this series by key.
+    * @see [[framian.reduce.FirstN]]
     * @see [[first]]
     * @see [[lastN]]
     */
   def firstNByKey(n: Int): Series[K, List[V]] =
     this.reduceByKey(framian.reduce.FirstN[V](n))
 
-  /** Returns the [[reduce.Last]] reduction of this series by key.
-    * @return the [[reduce.Last]] reduction of this series by key.
-    * @see [[reduce.Last]]
+  /** Returns the [[framian.reduce.Last]] reduction of this series by key.
+    * @return the [[framian.reduce.Last]] reduction of this series by key.
+    * @see [[framian.reduce.Last]]
     * @see [[lastN]]
     * @see [[first]]
     */
   def lastByKey: Series[K, V] =
     this.reduceByKey(framian.reduce.Last[V])
 
-  /** Returns the [[reduce.LastN]] reduction of this series by key.
-    * @return the [[reduce.LastN]] reduction of this series by key.
-    * @see [[reduce.LastN]]
+  /** Returns the [[framian.reduce.LastN]] reduction of this series by key.
+    * @return the [[framian.reduce.LastN]] reduction of this series by key.
+    * @see [[framian.reduce.LastN]]
     * @see [[last]]
     * @see [[firstN]]
     */
   def lastNByKey(n: Int): Series[K, List[V]] =
     this.reduceByKey(framian.reduce.LastN[V](n))
 
-  /** Returns the [[reduce.Max]] reduction of this series by key.
-    * @return the [[reduce.Max]] reduction of this series by key.
-    * @see [[reduce.Max]]
+  /** Returns the [[framian.reduce.Max]] reduction of this series by key.
+    * @return the [[framian.reduce.Max]] reduction of this series by key.
+    * @see [[framian.reduce.Max]]
     * @see [[min]]
     */
   def maxByKey(implicit ev0: Order[V]): Series[K, V] =
     this.reduceByKey(framian.reduce.Max[V])
 
-  /** Returns the [[reduce.Min]] reduction of this series by key.
-    * @return the [[reduce.Min]] reduction of this series by key.
-    * @see [[reduce.Min]]
+  /** Returns the [[framian.reduce.Min]] reduction of this series by key.
+    * @return the [[framian.reduce.Min]] reduction of this series by key.
+    * @see [[framian.reduce.Min]]
     * @see [[max]]
     */
   def minByKey(implicit ev0: Order[V]): Series[K, V] =
@@ -665,7 +954,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
 
   /** Returns the `AdditiveMonoid` reduction of this series by key.
     * @return the `AdditiveMonoid` reduction of this series by key.
-    * @see [[reduce.MonoidReducer]]
+    * @see [[framian.reduce.MonoidReducer]]
     * @see [[sumNonEmpty]]
     * @see [[product]]
     */
@@ -674,7 +963,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
 
   /** Returns the `AdditiveSemigroup` reduction of this series by key.
     * @return the `AdditiveSemigroup` reduction of this series by key.
-    * @see [[reduce.SemigroupReducer]]
+    * @see [[framian.reduce.SemigroupReducer]]
     * @see [[sum]]
     * @see [[productNonEmpty]]
     */
@@ -683,7 +972,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
 
   /** Returns the `MultiplicativeMonoid` reduction of this series by key.
     * @return the `MultiplicativeMonoid` reduction of this series by key.
-    * @see [[reduce.MonoidReducer]]
+    * @see [[framian.reduce.MonoidReducer]]
     * @see [[productNonEmpty]]
     * @see [[sum]]
     */
@@ -692,47 +981,47 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
 
   /** Returns the `MultiplicativeSemigroup` reduction of this series by key.
     * @return the `MultiplicativeSemigroup` reduction of this series by key.
-    * @see [[reduce.SemigroupReducer]]
+    * @see [[framian.reduce.SemigroupReducer]]
     * @see [[product]]
     * @see [[sumNonEmpty]]
     */
   def productNonEmptyByKey(implicit ev0: MultiplicativeSemigroup[V]): Series[K, V] =
     this.reduceByKey(framian.reduce.SemigroupReducer[V](ev0.multiplicative))
 
-  /** Returns the [[reduce.Mean]] reduction of this series by key.
-    * @return the [[reduce.Mean]] reduction of this series by key.
-    * @see [[reduce.Mean]]
+  /** Returns the [[framian.reduce.Mean]] reduction of this series by key.
+    * @return the [[framian.reduce.Mean]] reduction of this series by key.
+    * @see [[framian.reduce.Mean]]
     * @see [[median]]
     */
   def meanByKey(implicit ev0: Field[V]): Series[K, V] =
     this.reduceByKey(framian.reduce.Mean[V])
 
-  /** Returns the [[reduce.Median]] reduction of this series by key.
-    * @return the [[reduce.Median]] reduction of this series by key.
-    * @see [[reduce.Median]]
+  /** Returns the [[framian.reduce.Median]] reduction of this series by key.
+    * @return the [[framian.reduce.Median]] reduction of this series by key.
+    * @see [[framian.reduce.Median]]
     * @see [[mean]]
     */
   def medianByKey(implicit ev0: ClassTag[V], ev1: Field[V], ev2: Order[V]): Series[K, V] =
     this.reduceByKey(framian.reduce.Median[V])
 
-  /** Returns the [[reduce.Unique]] reduction of this series by key.
-    * @return the [[reduce.Unique]] reduction of this series by key.
-    * @see [[reduce.Unique]]
+  /** Returns the [[framian.reduce.Unique]] reduction of this series by key.
+    * @return the [[framian.reduce.Unique]] reduction of this series by key.
+    * @see [[framian.reduce.Unique]]
     */
   def uniqueByKey: Series[K, Set[V]] =
     this.reduceByKey(framian.reduce.Unique[V])
 
-  /** Returns the [[reduce.Exists]] reduction of this series by key.
-    * @return the [[reduce.Exists]] reduction of this series by key.
-    * @see [[reduce.Exists]]
+  /** Returns the [[framian.reduce.Exists]] reduction of this series by key.
+    * @return the [[framian.reduce.Exists]] reduction of this series by key.
+    * @see [[framian.reduce.Exists]]
     * @see [[forall]]
     */
   def existsByKey(p: V => Boolean): Series[K, Boolean] =
     this.reduceByKey(framian.reduce.Exists(p))
 
-  /** Returns the [[reduce.ForAll]] reduction of this series by key.
-    * @return the [[reduce.ForAll]] reduction of this series by key.
-    * @see [[reduce.ForAll]]
+  /** Returns the [[framian.reduce.ForAll]] reduction of this series by key.
+    * @return the [[framian.reduce.ForAll]] reduction of this series by key.
+    * @see [[framian.reduce.ForAll]]
     * @see [[exists]]
     */
   def forallByKey(p: V => Boolean): Series[K, Boolean] =
@@ -784,8 +1073,8 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   }
 
   override def toString: String =
-    (keys zip values).map { case (key, value) =>
-      s"$key -> $value"
+    (keys zip cells).map { case (key, cell) =>
+      s"$key -> $cell"
     }.mkString("Series(", ", ", ")")
 
   override def equals(that0: Any): Boolean = that0 match {
@@ -820,7 +1109,7 @@ object Series {
   }
 
   def fromCells[K: Order: ClassTag, V: ClassTag](col: TraversableOnce[(K, Cell[V])]): Series[K, V] = {
-    val bldr = new SeriesBuilder[K ,V]
+    val bldr = Series.newUnorderedBuilder[K ,V]
     bldr ++= col
     bldr.result()
   }
@@ -831,32 +1120,68 @@ object Series {
   def fromMap[K: Order: ClassTag, V: ClassTag](kvMap: Map[K, V]): Series[K, V] =
     Series(Index(kvMap.keys.toArray), Column.fromArray(kvMap.values.toArray))
 
-  implicit def cbf[K: Order: ClassTag, V]: CanBuildFrom[Series[_, _], (K, Cell[V]), Series[K, V]] =
+  implicit def cbf[K: Order: ClassTag, V : ClassTag]: CanBuildFrom[Series[_, _], (K, Cell[V]), Series[K, V]] =
     new CanBuildFrom[Series[_, _], (K, Cell[V]), Series[K, V]] {
-      def apply(): Builder[(K, Cell[V]), Series[K, V]] = new SeriesBuilder[K, V]
-      def apply(from: Series[_, _]): Builder[(K, Cell[V]), Series[K, V]] = apply()
+      def apply(): mutable.Builder[(K, Cell[V]), Series[K, V]] = Series.newUnorderedBuilder[K ,V]
+      def apply(from: Series[_, _]): mutable.Builder[(K, Cell[V]), Series[K, V]] = apply()
+    }
+
+  private def newBuilder[K : ClassTag : Order, V : ClassTag](isOrdered: Boolean): AbstractSeriesBuilder[K, V] =
+    if (isOrdered) newOrderedBuilder else newUnorderedBuilder
+
+  private def newUnorderedBuilder[K : ClassTag : Order, V : ClassTag]: AbstractSeriesBuilder[K, V] =
+    new AbstractSeriesBuilder[K, V] {
+      def result(): Series[K, V] =
+        Series(
+          Index(this.keyBldr.result()),
+          this.colBldr.result())
+    }
+
+  private def newOrderedBuilder[K : ClassTag : Order, V : ClassTag]: AbstractSeriesBuilder[K, V] =
+    new AbstractSeriesBuilder[K, V] {
+      def result(): Series[K, V] =
+        Series(
+          Index.ordered(this.keyBldr.result()),
+          this.colBldr.result())
     }
 }
 
-private final class SeriesBuilder[K: Order: ClassTag, V] extends Builder[(K, Cell[V]), Series[K,V]] {
-  val keys = ArrayBuilder.make[K]()
-  val values = ArrayBuilder.make[Cell[V]]()
 
-  def +=(elem: (K, Cell[V])) = {
-    keys += elem._1
-    values += elem._2
+private abstract class AbstractSeriesBuilder[K : ClassTag : Order, V : ClassTag] extends mutable.Builder[(K, Cell[V]), Series[K, V]] {
+  protected val keyBldr = Array.newBuilder[K]
+  protected val colBldr = new ColumnBuilder[V]
+
+  def +=(elem: (K, Cell[V])): this.type = {
+    keyBldr += elem._1
+    colBldr += elem._2
+    this
+  }
+
+  def append(k: K, c: Cell[V]): this.type = {
+    keyBldr += k
+    colBldr += c
+    this
+  }
+
+  def appendValue(k: K, v: V): this.type = {
+    keyBldr += k
+    colBldr.addValue(v)
+    this
+  }
+
+  def appendNonValue(k: K, nonValue: NonValue): this.type = {
+    keyBldr += k
+    colBldr.addNonValue(nonValue)
     this
   }
 
   def clear(): Unit = {
-    keys.clear()
-    values.clear()
+    keyBldr.clear()
+    colBldr.clear()
   }
 
-  def result(): Series[K, V] = Series(Index.unordered(keys.result()), Column.fromCells(values.result()))
-
   override def sizeHint(size: Int): Unit = {
-    keys.sizeHint(size)
-    values.sizeHint(size)
+    keyBldr.sizeHint(size)
+    colBldr.sizeHint(size)
   }
 }

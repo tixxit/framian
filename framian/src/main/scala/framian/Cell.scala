@@ -158,6 +158,28 @@ sealed trait Cell[+A] {
   @inline final def filterNot(p: A => Boolean): Cell[A] =
     if (isNonValue || !p(this.get)) this else NA
 
+  /** If this cell is a [[NonValue]] and `pf` is defined for it, then this
+    * will return `Value(pf(this))`, otherwise it will return this cell as-is.
+    *
+    * @param pf the partial function to map the non-value.
+    * @see [[recoverWith]]
+    */
+  final def recover[A0 >: A](pf: PartialFunction[NonValue, A0]): Cell[A0] = this match {
+    case (nonValue: NonValue) if pf isDefinedAt nonValue => Value(pf(nonValue))
+    case value => value
+  }
+
+  /** If this cell is a [[NonValue]] and `pf` is defined for it, then this
+    * will return `pf(this)`, otherwise it will return this cell as-is.
+    *
+    * @param pf the partial function to map the non-value.
+    * @see [[recover]]
+    */
+  final def recoverWith[A0 >: A](pf: PartialFunction[NonValue, Cell[A0]]): Cell[A0] = this match {
+    case (nonValue: NonValue) if pf isDefinedAt nonValue => pf(nonValue)
+    case value => value
+  }
+
   /** Returns true if this [[Cell]]'s value is available and
     * meaningful ''and'' the predicate `p` returns true when applied
     * to that value. Otherwise, returns false.
@@ -254,8 +276,6 @@ object Cell extends CellInstances {
     case Some(a) => Value(a)
     case None => nonValue
   }
-
-  implicit def cell2Iterable[A](cell: Cell[A]): Iterable[A] = cell.toList
 }
 
 /** The supertype of non values, [[NA]] (''Not Available'') and
@@ -322,11 +342,14 @@ final case class Value[+A](get: A) extends Cell[A] {
   }
 }
 
-trait CellInstances0 {
-  implicit def cellEq[A: Eq]: Eq[Cell[A]] = new CellEq[A]
+object CellInstances {
+  trait CellInstances0 {
+    implicit def cellEq[A: Eq]: Eq[Cell[A]] = new CellEq[A]
+  }
 }
 
-trait CellInstances extends CellInstances0 {
+
+trait CellInstances extends CellInstances.CellInstances0 {
   implicit def cellOrder[A: Order]: Order[Cell[A]] = new CellOrder[A]
   implicit def cellMonoid[A: Semigroup]: Monoid[Cell[A]] = new CellMonoid[A]
 }
