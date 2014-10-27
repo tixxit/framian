@@ -87,7 +87,7 @@ object Csv {
       col -> (TypedColumn(numCol.result()) orElse TypedColumn(strCol.result()))
     })
 
-    Frame.fromColumns(
+    ColOrientedFrame(
       Index(Array.range(0, rows.size)),
       Index(Array.range(0, cols.size)),
       columns
