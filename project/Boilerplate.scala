@@ -370,6 +370,8 @@ object Boilerplate {
         |  def result() = ${name}Column(values.result(), na.result(), nm.result())
         |
         |  def clear(): Unit = { i = 0; values.clear(); na.clear(); nm.clear() }
+        |
+        |  override def sizeHint(size: Int): Unit = values.sizeHint(size)
         |}
         |
       """
@@ -458,6 +460,8 @@ object Boilerplate {
         |  }
         |
         |  def clear(): Unit = { i = 0; values.clear(); na.clear(); nm.clear() }
+        |
+        |  override def sizeHint(size: Int): Unit = values.sizeHint(size)
         |}
       """
     }

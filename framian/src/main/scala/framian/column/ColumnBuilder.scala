@@ -5,7 +5,9 @@ import framian.Cell
 
 import scala.reflect.ClassTag
 
-trait ColumnBuilder[@specialized(Int,Long,Double) A] {
+import scala.collection.mutable.Builder
+
+trait ColumnBuilder[@specialized(Int,Long,Double) A] extends Builder[Cell[A], Column[A]] {
   def addValue(a: A): this.type
   def addNA(): this.type
   def addNM(): this.type

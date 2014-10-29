@@ -1176,6 +1176,6 @@ private abstract class AbstractSeriesBuilder[K: ClassTag: Order, V: GenColumnBui
 
   override def sizeHint(size: Int): Unit = {
     keyBldr.sizeHint(size)
-    // colBldr.sizeHint(size)
+    colBldr.sizeHint(size)
   }
 }
