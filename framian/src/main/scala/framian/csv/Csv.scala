@@ -4,6 +4,8 @@ package csv
 import spire.std.int._
 import spire.std.string._
 
+import framian.column.ColumnBuilder
+
 sealed abstract class Csv {
   val format: CsvFormat
   val rows: Vector[Either[CsvError, CsvRow]]
@@ -67,7 +69,7 @@ object Csv {
   private[csv] def toFrame(rows: Vector[CsvRow]): Frame[Int, Int] = {
     val cols = rows.foldLeft(Map.empty[Int,(ColumnBuilder[BigDecimal],ColumnBuilder[String])]) { (acc0, row) =>
         row.cells.zipWithIndex.foldLeft(acc0) { case (acc, (cell, colIdx)) =>
-          val (numCol, strCol) = acc.getOrElse(colIdx, (new ColumnBuilder[BigDecimal], new ColumnBuilder[String]))
+          val (numCol, strCol) = acc.getOrElse(colIdx, (Column.newBuilder[BigDecimal](), Column.newBuilder[String]()))
           cell match {
             case CsvCell.Data(value) =>
               numCol += scala.util.Try(BigDecimal(value)).map(Value(_)).getOrElse(NA)
@@ -82,9 +84,9 @@ object Csv {
           acc + (colIdx -> (numCol, strCol))
         }
     }
-
-    val columns = Column.fromMap(cols.map { case (col, (numCol, strCol)) =>
-      col -> (TypedColumn(numCol.result()) orElse TypedColumn(strCol.result()))
+    
+    val columns = Column.eval(cols.map { case (col, (numCol, strCol)) =>
+      col -> Value(TypedColumn(numCol.result()) orElse TypedColumn(strCol.result()))
     })
 
     ColOrientedFrame(

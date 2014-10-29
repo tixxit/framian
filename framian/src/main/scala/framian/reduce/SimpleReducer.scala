@@ -31,15 +31,8 @@ abstract class SimpleReducer[A: ClassTag, B] extends Reducer[A, B] {
 
   final def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Cell[B] = {
     val bldr = ArrayBuilder.make[A]
-    cfor(start)(_ < end, _ + 1) { i =>
-      val row = indices(i)
-      if (column.isValueAt(row)) {
-        bldr += column.valueAt(row)
-      } else if (column.nonValueAt(row) == NM) {
-        return NM
-      }
-    }
-    reduce(bldr.result())
+    val success = column.foreach(start, end, indices(_)) { (_, a) => bldr += a }
+    if (success) reduce(bldr.result()) else NM
   }
 
   def reduce(data: Array[A]): Cell[B]

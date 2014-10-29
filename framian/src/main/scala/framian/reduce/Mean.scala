@@ -30,21 +30,14 @@ import spire.syntax.field._
 final class Mean[A: Field] extends Reducer[A, A] {
 
   def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Cell[A] = {
-    @tailrec def loop(i: Int, sum: A, count: Int): Cell[A] = if (i < end) {
-      val row = indices(i)
-      if (column.isValueAt(row)) {
-        loop(i + 1, sum + column.valueAt(row), count + 1)
-      } else if (column.nonValueAt(row) == NA) {
-        loop(i + 1, sum, count)
-      } else {
-        NM
-      }
-    } else if (count > 0) {
-      Value(sum / count)
-    } else {
-      NA
+    var m = Field[A].zero
+    var n = 0
+    val success = column.foreach(start, end, indices(_)) { (_, x) =>
+      n += 1
+      m = m + (x - m) / n
     }
-
-    loop(start, Field[A].zero, 0)
+    if (!success) NM
+    else if (n == 0) NA
+    else Value(m)
   }
 }

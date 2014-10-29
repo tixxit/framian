@@ -27,9 +27,9 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
   "equals" should {
     "have a sane equality" in {
       Series("a" -> 0, "b" -> 1, "c" -> 2) must_!= Series("b" -> 1, "a" -> 0, "c" -> 2)
-      Series("a" -> 7) must_== Series(Index.fromKeys("a"), Column.fromArray(Array(7)))
-      Series("a" -> 7) must_== Series(Index("a" -> 0), Column(_ => 7))
-      Series("a" -> 7) must_== Series(Index("a" -> 42), Column(_ => 7))
+      Series("a" -> 7) must_== Series(Index.fromKeys("a"), Column.dense(Array(7)))
+      Series("a" -> 7) must_== Series(Index("a" -> 0), Column.eval(_ => Value(7)))
+      Series("a" -> 7) must_== Series(Index("a" -> 42), Column.eval(_ => Value(7)))
       Series.empty[String, String] must_== Series.empty[String, String]
     }
   }
@@ -445,7 +445,7 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
 
   def series[K: Order: ClassTag, V](kvs: (K, Cell[V])*): Series[K, V] = {
     val (keys, cells) = kvs.unzip
-    Series(Index.fromKeys(keys: _*), Column.fromCells(cells.toVector))
+    Series(Index.fromKeys(keys: _*), Column(cells: _*))
   }
 
   "rollForward" should {

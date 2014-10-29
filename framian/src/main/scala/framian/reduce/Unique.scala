@@ -25,17 +25,10 @@ package reduce
 import spire.syntax.cfor._
 
 final class Unique[A] extends Reducer[A, Set[A]] {
-
+  // TODO: This should probably just be a Monoid reducer.
   final def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Cell[Set[A]] = {
     val bldr = Set.newBuilder[A]
-    cfor(start)(_ < end, _ + 1) { i =>
-      val row = indices(i)
-      if (column.isValueAt(row)) {
-        bldr += column.valueAt(row)
-      } else if (column.nonValueAt(row) == NM) {
-        return NM
-      }
-    }
-    Value(bldr.result())
+    val success = column.foreach(start, end, indices(_)) { (i, a) => bldr += a }
+    if (success) Value(bldr.result()) else NM
   }
 }

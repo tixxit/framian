@@ -24,7 +24,6 @@ package reduce
 
 import scala.annotation.tailrec
 
-
 /** A [[Reducer]] that exististentially quantifies a predicate
   * as a reduction over a collection of [[Cell]]s.
   *
@@ -63,14 +62,11 @@ import scala.annotation.tailrec
 final class Exists[A](p: A => Boolean) extends Reducer[A, Boolean] {
 
   def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Value[Boolean] = {
-    @tailrec def loop(i: Int): Value[Boolean] = if (i < end) {
-      val row = indices(i)
-      if (column.isValueAt(row)) {
-        if (p(column.valueAt(row))) Value(true) else loop(i + 1)
-      } else loop(i + 1)
-    } else Value(false)
-
-    loop(start)
+    column.foreach(start, end, indices(_)) { (_, a) =>
+      if (p(a))
+        return Value(true)
+    }
+    Value(false)
   }
 }
 
@@ -115,15 +111,9 @@ final class Exists[A](p: A => Boolean) extends Reducer[A, Boolean] {
 final class ForAll[A](p: A => Boolean) extends Reducer[A, Boolean] {
 
   def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Value[Boolean] = {
-    @tailrec def loop(i: Int): Value[Boolean] = if (i < end) {
-      val row = indices(i)
-      if (column.isValueAt(row)) {
-        if (p(column.valueAt(row))) loop(i + 1) else Value(false)
-      } else if (column.nonValueAt(row) == NA) {
-        loop(i + 1)
-      } else Value(false)
-    } else Value(true)
-
-    loop(start)
+    Value(column.foreach(start, end, indices(_)) { (_, a) =>
+      if (!p(a))
+        return Value(false)
+    })
   }
 }

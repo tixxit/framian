@@ -30,31 +30,18 @@ import spire.syntax.semigroup._
 class SemigroupReducer[A: Semigroup] extends Reducer[A, A] {
 
   def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Cell[A] = {
-    @tailrec def loop0(i: Int): Cell[A] = if (i < end) {
-      val row = indices(i)
-      if (column.isValueAt(row)) {
-        loop1(i + 1, column.valueAt(row))
-      } else if (column.nonValueAt(row) == NA) {
-        loop0(i + 1)
+    var sum: A = null.asInstanceOf[A]
+    var isEmpty = true
+    val success = column.foreach(start, end, indices(_)) { (_, a) =>
+      if (isEmpty) {
+        sum = a
+        isEmpty = false
       } else {
-        NM
+        sum = sum |+| a
       }
-    } else NA
-
-    @tailrec def loop1(i: Int, acc: A): Cell[A] = if (i < end) {
-      val row = indices(i)
-      if (column.isValueAt(row)) {
-        val value = column.valueAt(row)
-        loop1(i + 1, acc |+| value)
-      } else if (column.nonValueAt(row) == NA) {
-        loop1(i + 1, acc)
-      } else {
-        NM
-      }
-    } else {
-      Value(acc)
     }
-
-    loop0(start)
+    if (!success) NM
+    else if (isEmpty) NA
+    else Value(sum)
   }
 }
