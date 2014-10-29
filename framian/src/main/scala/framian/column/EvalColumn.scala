@@ -63,6 +63,11 @@ private[framian] case class EvalColumn[A](f: Int => Cell[A]) extends BoxedColumn
     try {
       f(Checked.minus(row, n))
     } catch { case (_: ArithmeticOverflowException) =>
+      // If we overflow, then it means that `row - n` overflowed and, hence,
+      // wrapped around. Since `shift` is meant to just shift rows, and not
+      // wrap them back around, we return an NA. So, if we have a `Column`
+      // defined for all rows, and shift it forward 1 row, then
+      // `Column(Int.MinValue)` should return `NA`.
       NA
     }
   }

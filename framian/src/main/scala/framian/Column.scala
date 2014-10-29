@@ -90,9 +90,24 @@ sealed trait Column[+A] { // TODO: Can't specialize in 2.10, but can in 2.11.
   def filter(p: A => Boolean): Column[A]
 
   /**
-   * Returns a column that will fallback to `that` for any row that is [[NA]].
-   * That is, row `i` is defined as `this(i) orElse that(i)`, though may be
-   * more efficient.
+   * Returns a column that will fallback to `that` for any row that is [[NA]],
+   * or if the row is [[NM]] and the row in `that` is a [[Value]], then that
+   * is returned, otherwise [[NM]] is returned.  That is, row `i` is defined as
+   * `this(i) orElse that(i)`, though may be more efficient.
+   *
+   * To put the definition in more definite terms:
+   *
+   * {{{
+   * Value(a) orElse Value(b) == Value(a)
+   * Value(a) orElse       NA == Value(a)
+   * Value(a) orElse       NM == Value(a)
+   *       NA orElse Value(b) == Value(b)
+   *       NA orElse       NA ==       NA
+   *       NA orElse       NM ==       NM
+   *       NM orElse Value(b) == Value(b)
+   *       NM orElse       NM ==       NM
+   *       NM orElse       NA ==       NM
+   * }}}
    *
    * @param that the column to fallback on for NA values
    */
