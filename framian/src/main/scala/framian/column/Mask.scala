@@ -32,11 +32,35 @@ import scala.collection.mutable.ArrayBuilder
 
 import spire.implicits._
 
+/**
+ * A `Mask` provides a dense bitset implementation. This replaces uses of
+ * `BitSet`. The major difference is that we don't box the `Int`s.
+ *
+ * An explanation of some of the arithmetic you'll see here:
+ *
+ * We store the bits in array of words. Each word contains 64 bits and the
+ * words are in order. So, the word containing bit `n` is `n &gt;&gt;&gt; 6` -
+ * we simply drop the lower 6 bits (divide by 64). If `n` is set, then the bit
+ * `n &amp; 0x3FL`, in word `bits(n &gt;&gt;&gt; 6)` will be `true`. We can
+ * check this by masking the word with `1L &lt;&lt; (n &amp; 0x3FL)` and
+ * checking if the result is non-zero.
+ *
+ * An invariant of the underlying `bits` array is that the highest order word
+ * (ie. `bits(bits.length - 1)`) is always non-zero (except if `bits` has 0
+ * length). This sometimes means we must *trim* the array for some operations
+ * that could possibly zero out the highest order word (eg. intersection and
+ * subtraction.
+ */
 final class Mask(private val bits: Array[Long], val size: Int) extends (Int => Boolean) {
+  import Mask.trim
+
   def max: Option[Int] =
     if (bits.length == 0) {
       None
     } else {
+      // An invariant of all Masks is that the highest order word always has
+      // at least 1 bit set. So, we can just loop through all 64 bits in the
+      // highest word (highest to lowest) and return the first set one.
       val hi = bits.length - 1
       val word = bits(hi)
       var i = 64
@@ -52,6 +76,7 @@ final class Mask(private val bits: Array[Long], val size: Int) extends (Int => B
     if (bits.length == 0) {
       None
     } else {
+      // We can cheat here and simply use `foreach` + `return`.
       foreach(i => return Some(i))
       None
     }
@@ -74,7 +99,10 @@ final class Mask(private val bits: Array[Long], val size: Int) extends (Int => B
   }
 
   def |(that: Mask): Mask = {
+    // We can simply | all the words together. The new bits array will be as
+    // long as the largest of this.bits and that.bits.
     val size = math.max(bits.length, that.bits.length)
+    // copyOf will zero out the top bits, which is exactly what we want.
     val bits0 = Arrays.copyOf(that.bits, size)
     var i = 0
     while (i < bits.length) {
@@ -85,19 +113,17 @@ final class Mask(private val bits: Array[Long], val size: Int) extends (Int => B
   }
 
   def &(that: Mask): Mask = {
+    // We can simply & all the words together. The new bits array will be as
+    // long as the shortest of this.bits and that.bits.
     val size = math.min(bits.length, that.bits.length)
     val bits0 = Arrays.copyOf(that.bits, size)
-    var len = 0
     var i = 0
     while (i < bits0.length) {
       val word = bits0(i) & bits(i)
       bits0(i) = word
-      if (word != 0)
-        len = i + 1
       i += 1
     }
-    val bits1 = if (len != i) Arrays.copyOf(bits0, len) else bits0
-    Mask.fromBits(bits1)
+    Mask.fromBits(bits0)
   }
 
   final def ++(that: Mask): Mask = this | that
@@ -109,10 +135,11 @@ final class Mask(private val bits: Array[Long], val size: Int) extends (Int => B
   }
 
   def +(n: Int): Mask = {
-    val hi = n >>> 6
-    val bit = 1L << (n & 0x3F)
+    val hi = n >>> 6           // The offset of the word this bit is in.
+    val bit = 1L << (n & 0x3F) // The bit position in the word n is in.
 
     if (hi < bits.length && (bits(hi) & bit) != 0) {
+      // The bit is already set, so we're done!
       this
     } else {
       val len = math.max(bits.length, hi + 1)
@@ -128,13 +155,11 @@ final class Mask(private val bits: Array[Long], val size: Int) extends (Int => B
 
     if (hi < bits.length && (bits(hi) & bit) != 0) {
       val bits0 = Arrays.copyOf(bits, bits.length)
-      val word = bits0(hi) ^ bit
+      val word = bits0(hi) ^ bit // This will flip the bit off without changing the others.
       bits0(hi) = word
-      val bits1 =
-        if (word != 0 || bits0.length > hi + 1) bits0
-        else Arrays.copyOf(bits0, bits0.length - 1)
-      new Mask(bits1, size - 1)
+      new Mask(trim(bits0), size - 1)
     } else {
+      // The bit isn't set, so we're done!
       this
     }
   }
@@ -152,7 +177,7 @@ final class Mask(private val bits: Array[Long], val size: Int) extends (Int => B
   }
 
   def apply(n: Int): Boolean = {
-    val hi = n >>> 6
+    val hi = n >>> 6 // The offset of the word containing bit n.
     if (hi < bits.length)
       (bits(hi) & (1L << (n & 0x3F))) != 0L
     else
@@ -196,14 +221,23 @@ final class Mask(private val bits: Array[Long], val size: Int) extends (Int => B
 object Mask {
   def newBuilder: MaskBuilder = new MaskBuilder
 
+  /** An empty mask where all bits are unset. */
   final val empty = new Mask(new Array[Long](0), 0)
 
+  /**
+   * Returns a [[Mask]] where only the bits in `elems` are set to true and all
+   * others are false.
+   */
   def apply(elems: Int*): Mask = {
     val bldr = new MaskBuilder
     elems.foreach(bldr += _)
     bldr.result()
   }
 
+  /**
+   * Returns a [[Mask]] with all bits from `from` to `until` (exclusive) set
+   * and all others unset.
+   */
   def range(from: Int, until: Int): Mask = {
     val bldr = new MaskBuilder
     var i = from
@@ -214,6 +248,11 @@ object Mask {
     bldr.result()
   }
 
+  /**
+   * Create a Mask from an array of words representing the actual bit mask
+   * itself. Please see [[Mask]] for a description of what `bits` should look
+   * like.
+   */
   final def fromBits(bits: Array[Long]): Mask = {
     var i = 0
     var size = 0
@@ -221,22 +260,46 @@ object Mask {
       size += bitCount(bits(i))
       i += 1
     }
-    new Mask(bits, size)
+    new Mask(trim(bits), size)
+  }
+
+  // We need to ensure the highest order word is not 0, so we work backwards
+  // and find the first, non-zero word, then trim the array so it becomes the
+  // highest order word.
+  private def trim(bits: Array[Long]): Array[Long] = {
+    var i = bits.length
+    while (i > 0 && bits(i - 1) == 0) {
+      i -= 1
+    }
+    if (i == bits.length) bits else Arrays.copyOf(bits, i)
   }
 }
 
 final class MaskBuilder {
+  // bits.length may be larger than we need it, so `len` is the actual minimal
+  // length required to store the bitset, with the highest order, non-zero word
+  // at bits(len - 1).
   var len = 0
+
+  // The total number of 1 bits in the bitset.
   var size = 0
+
+  // The packed bitset.
   var bits = new Array[Long](8)
 
+  /**
+   * Occasionally we have to enlarge the array if we haven't allocated enough
+   * storage. We attempt to ~double the size of the current array.
+   */
   private def resize(newLen: Int): Unit = {
+    // Note: we won't ever require an array larger than 0x03FFFFFF, so we don't
+    // need to worry about the length overflowing below.
     bits = Arrays.copyOf(bits, highestOneBit(newLen) * 2)
     len = newLen
   }
 
   def +=(n: Int): this.type = {
-    val i = n >>> 6
+    val i = n >>> 6 // The offset of the word containing the bit n.
     if (i >= bits.length)
       resize(i + 1)
     if (i >= len)
@@ -244,6 +307,7 @@ final class MaskBuilder {
     val word = bits(i)
     val bit = 1L << (n & 0x3F)
     if ((word & bit) == 0) {
+      // The bit isn't already set, so we add it and increase the size.
       bits(i) = word | bit
       size += 1
     }
