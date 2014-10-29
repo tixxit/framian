@@ -6,7 +6,7 @@ object Dependencies {
     val Play_22            = "2.2.3"
     val Play_23            = "2.3.5"
 
-    val Spire              = "0.7.4"
+    val Spire              = "0.8.2"
     val Shapeless          = "2.0.0"
     val Discipline         = "0.2.1"
 
