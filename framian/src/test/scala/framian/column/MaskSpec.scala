@@ -154,4 +154,18 @@ class MaskSpec extends Specification with ScalaCheck {
       setBits.forall(mask) must beTrue
     }
   }
+
+  "equals" should {
+    "always be equal for equivalent masks" in check { (a: Mask) =>
+      val b = Mask(a.toSet.toSeq: _*)
+      a must_== b
+    }
+
+    "should not throw IOOE when size are equal but lengths are not" in {
+      val a = Mask(1, 2, 3)
+      val b = Mask(1000, 1001, 2000)
+      (a == b) must not(throwA[Exception])
+      (b == a) must not(throwA[Exception])
+    }
+  }
 }

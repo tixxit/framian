@@ -41,9 +41,15 @@ import spire.implicits._
  * We store the bits in array of words. Each word contains 64 bits and the
  * words are in order. So, the word containing bit `n` is `n &gt;&gt;&gt; 6` -
  * we simply drop the lower 6 bits (divide by 64). If `n` is set, then the bit
- * `n &amp; 0x3FL`, in word `bits(n &gt;&gt;&gt; 6)` will be `true`. We can
- * check this by masking the word with `1L &lt;&lt; (n &amp; 0x3FL)` and
- * checking if the result is non-zero.
+ * `n &amp; 0x3FL` (the last 6 bits - ie n % 64 if n was an unsigned int), in
+ * word `bits(n &gt;&gt;&gt; 6)` will be `true`. We can check this by masking
+ * the word with `1L &lt;&lt; (n &amp; 0x3FL)` and checking if the result is
+ * non-zero.
+ *
+ * Note that we use shift-without-carry (`&gt;&gt;&gt;`) and intersection
+ * (`&amp;`) to divide and mod by 64 instead of using `/` and `%` because they
+ * do not behave correctly with negative numbers; they carry the sign through
+ * in the result, and we want the absolute value.
  *
  * An invariant of the underlying `bits` array is that the highest order word
  * (ie. `bits(bits.length - 1)`) is always non-zero (except if `bits` has 0
@@ -201,11 +207,14 @@ final class Mask(private val bits: Array[Long], val size: Int) extends (Int => B
 
   override def equals(that: Any): Boolean = that match {
     case (that: Mask) if this.size == that.size =>
+      // We bail early in the while loop, so if that.bits.length < this.bits.length,
+      // then that.bits.length cannot be a prefix of this.bits.length, otherwise their
+      // sizes would be different. So, i will never be out of bounds of either.
       var i = 0
       while (i < bits.length) {
         val w0 = bits(i)
         val w1 = that.bits(i)
-        if ((w0 ^ w1) != 0)
+        if (w0 != w1)
           return false
         i += 1
       }
