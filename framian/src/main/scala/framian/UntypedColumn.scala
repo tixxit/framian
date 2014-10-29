@@ -55,7 +55,7 @@ object UntypedColumn {
 }
 
 final case object EmptyUntypedColumn extends UntypedColumn {
-  def cast[A: ColumnTyper]: Column[A] = Column.Empty
+  def cast[A: ColumnTyper]: Column[A] = Column.empty[A]()
   def mask(na: Mask): UntypedColumn = EmptyUntypedColumn
   def shift(rows: Int): UntypedColumn = EmptyUntypedColumn
   def reindex(index: Array[Int]): UntypedColumn = EmptyUntypedColumn

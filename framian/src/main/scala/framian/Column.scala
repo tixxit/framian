@@ -259,24 +259,9 @@ object Column {
   def empty[A](nmValues: Mask = Mask.empty): Column[A] =
     AnyColumn[A](new Array[Any](0), Mask.empty, nmValues)
 
-  /**
-   * A column that returns [[NA]] for all rows.
-   */
-  final object Empty extends BoxedColumn[Nothing] {
-    def cellMap[B](f: Cell[Nothing] => Cell[B]): Column[B] = EvalColumn(row => f(NA))
-    def apply(row: Int): Cell[Nothing] = NA
-    def mask(mask: Mask): Column[Nothing] = this
-    def setNA(row: Int): Column[Nothing] = this
-    def reindex(index: Array[Int]): Column[Nothing] = this
-    def force(len: Int): Column[Nothing] = this
-    def memoize(optimistic: Boolean): Column[Nothing] = this
-    def orElse[A0 >: Nothing](that: Column[A0]): Column[A0] = that
-    def shift(n: Int): Column[Nothing] = this
-  }
-
   implicit def columnMonoid[A]: Monoid[Column[A]] =
     new Monoid[Column[A]] {
-      def id: Column[A] = Empty
+      def id: Column[A] = empty[A]()
       def op(lhs: Column[A], rhs: Column[A]): Column[A] =
         lhs orElse rhs
     }

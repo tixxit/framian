@@ -1085,8 +1085,8 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
 }
 
 object Series {
-  import spire.std.int._
-  def empty[K: Order: ClassTag, V]: Series[K, V] = Series(Index.empty[K], Column.Empty)
+
+  def empty[K: Order: ClassTag, V]: Series[K, V] = Series(Index.empty[K], Column.empty[V]())
 
   def apply[K, V](index: Index[K], column: Column[V]): Series[K, V] =
     new Series(index, column)

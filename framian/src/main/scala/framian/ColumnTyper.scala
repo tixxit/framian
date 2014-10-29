@@ -71,7 +71,7 @@ final class DefaultColumnTyper[A: ClassTag] extends ColumnTyper[A] {
     if (classTag[A].runtimeClass isAssignableFrom col.classTagA.runtimeClass) {
       col.column.asInstanceOf[Column[A]]
     } else {
-      Column.Empty
+      Column.empty[A]()
     }
 }
 

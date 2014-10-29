@@ -596,7 +596,7 @@ object Frame {
    * Create an empty `Frame` with no values.
    */
   def empty[Row: ClassTag: Order, Col: ClassTag: Order]: Frame[Row, Col] =
-    ColOrientedFrame[Row, Col](Index.empty[Row], Index.empty[Col], Column.Empty)
+    ColOrientedFrame[Row, Col](Index.empty[Row], Index.empty[Col], Column.empty())
 
   /**
    * Populates a homogeneous `Frame` given the rows/columns of the table. The
