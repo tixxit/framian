@@ -28,7 +28,7 @@ import spire.math._
 
 import shapeless._
 
-import framian.columns.CastColumn
+import framian.column._
 
 trait ColumnTyper[@spec(Int,Long,Float,Double) A] {
   def cast(col: TypedColumn[_]): Column[A]
@@ -71,15 +71,17 @@ final class DefaultColumnTyper[A: ClassTag] extends ColumnTyper[A] {
     if (classTag[A].runtimeClass isAssignableFrom col.classTagA.runtimeClass) {
       col.column.asInstanceOf[Column[A]]
     } else {
-      Column.empty[A]
+      Column.empty[A]()
     }
 }
 
 final class TypeableColumnTyper[A: ClassTag: Typeable] extends ColumnTyper[A] {
+  import shapeless.syntax.typeable._
+
   def cast(col: TypedColumn[_]): Column[A] =
     if (classTag[A].runtimeClass isAssignableFrom col.classTagA.runtimeClass) {
       col.column.asInstanceOf[Column[A]]
     } else {
-      new CastColumn[A](col.column)
+      col.column.flatMap { a => Cell.fromOption(a.cast[A]) }
     }
 }

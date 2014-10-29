@@ -33,7 +33,7 @@ import spire.syntax.monoid._
 import spire.syntax.order._
 import spire.syntax.cfor._
 
-import framian.columns.MappedColumn
+import framian.column._
 import framian.reduce.Reducer
 import framian.util.TrivialMetricSpace
 
@@ -79,10 +79,29 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     * to the underlying data.
     */
   def denseIterator: Iterator[(K, V)] =
-    index.iterator collect { case (k, ix) if column.isValueAt(ix) =>
-      k -> column.valueAt(ix)
-    }
+    new Iterator[(K, V)] {
+      private var i = -1
+      private var pair: (K, V) = _
+      private def findNext(): Unit = {
+        i += 1
+        while (i < index.size) {
+          column.foldRow(index.indexAt(i))((), (), { v =>
+            pair = (index.keyAt(i), v)
+            return ()
+          })
+          i += 1
+        }
+      }
 
+      findNext()
+
+      def hasNext: Boolean = i < index.size
+      def next(): (K, V) = {
+        val result = pair
+        findNext()
+        result
+      }
+    }
 
   /** Applies a function `f` to all key-cell pairs of the series.
     *
@@ -120,10 +139,8 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     */
   def foreachDense[U](f: (K, V) => U): Unit = {
     cfor(0)(_ < index.size, _ + 1) { i =>
-      val ix = index.indexAt(i)
-      if (column.isValueAt(ix)) {
-        f(index.keyAt(i), column.valueAt(ix))
-      }
+      val row = index.indexAt(i)
+      column.foldRow(row)((), (), f(index.keyAt(i), _))
     }
   }
 
@@ -183,10 +200,8 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     */
   def foreachValues[U](f: V => U): Unit = {
     cfor(0)(_ < index.size, _ + 1) { i =>
-      val ix = index.indexAt(i)
-      if (column.isValueAt(ix)) {
-        f(column.valueAt(ix))
-      }
+      val row = index.indexAt(i)
+      column.foldRow(row)((), (), f)
     }
   }
 
@@ -242,12 +257,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     */
   def values: Vector[V] = {
     val builder = Vector.newBuilder[V]
-    cfor(0)(_ < index.size, _ + 1) { i =>
-      val ix = index.indexAt(i)
-      if (column.isValueAt(ix)) {
-        builder += column.valueAt(ix)
-      }
-    }
+    foreachValues(builder += _)
     builder.result()
   }
 
@@ -258,8 +268,11 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   @inline
   def cellAt(i: Int): Cell[V] = column(index.indexAt(i))
 
-  @inline
-  def valueAt(i: Int): V = column.valueAt(index.indexAt(i))
+  def valueAt(i: Int): V = {
+    val row = index.indexAt(i)
+    def error: V = throw new NoSuchElementException(s"No value at row $row")
+    column.foldRow(row)(error, error, { v => v: V })
+  }
 
   @inline
   def apply(key: K): Cell[V] = index.get(key) map (column(_)) getOrElse NA
@@ -273,10 +286,13 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   /**
    * Returns all values with with key of `key`.
    */
-  def getValues(key: K): Vector[V] =
-    index.getAll(key).collect {
-      case (_, row) if column.isValueAt(row) => column.valueAt(row)
-    } (collection.breakOut)
+  def getValues(key: K): Vector[V] = {
+    val bldr = Vector.newBuilder[V]
+    index.getAll(key).foreach { (_, row) =>
+      column.foldRow(row)((), (), bldr += _)
+    }
+    bldr.result()
+  }
 
   /**
    * Returns `true` if at least 1 value exists in this series. A series with
@@ -287,7 +303,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     var seenValue = false
     while (i < index.size && !seenValue) {
       val row = index.indexAt(i)
-      seenValue = seenValue | column.isValueAt(row)
+      seenValue = column.foldRow(row)(false, false, _ => true)
       i += 1
     }
     seenValue
@@ -300,29 +316,31 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
    * are used, unless both are missing, then the missing value is returned
    * ([[NA]] is both are [[NA]] and [[NM]] otherwise).
    */
-  def combine[W, X: ClassTag](that: Series[K, W])(left: V => X, right: W => X, both: (V, W) => X): Series[K, X] = {
+  def combine[W, X](that: Series[K, W])(left: V => X, right: W => X, both: (V, W) => X): Series[K, X] = {
     val merger = Merger[K](Merge.Outer)
     val (keys, lIndices, rIndices) = Index.cogroup(this.index, that.index)(merger).result()
     val lCol = this.column
     val rCol = that.column
 
-    val bldr = Column.builder[X]
+    val bldr = Column.newBuilder[X]()
     cfor(0)(_ < lIndices.length, _ + 1) { i =>
       val l = lIndices(i)
       val r = rIndices(i)
-      val lExists = lCol.isValueAt(l)
-      val rExists = rCol.isValueAt(r)
-      if (lExists && rExists) {
-        bldr.addValue(both(lCol.valueAt(l), rCol.valueAt(r)))
-      } else if (lExists) {
-        if (rCol.nonValueAt(r) == NM) bldr.addNM()
-        else bldr.addValue(left(lCol.valueAt(l)))
-      } else if (rExists) {
-        if (lCol.nonValueAt(l) == NM) bldr.addNM()
-        else bldr.addValue(right(rCol.valueAt(r)))
-      } else {
-        bldr.addNonValue(if (lCol.nonValueAt(l) == NM) NM else rCol.nonValueAt(r))
-      }
+      lCol.foldRow(l)(
+        rCol.foldRow(r)(
+          bldr.addNA(),
+          bldr.addNM(),
+          { w => bldr.addValue(right(w)) }
+        ),
+        bldr.addNM(),
+        { v =>
+          rCol.foldRow(r)(
+            bldr.addValue(left(v)),
+            bldr.addNM(),
+            { w => bldr.addValue(both(v, w)) }
+          )
+        }
+      )
     }
 
     Series(Index.ordered(keys), bldr.result())
@@ -337,7 +355,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   /**
    * Concatenates `that` onto the end of `this` [[Series]].
    */
-  def ++[VV >: V: ClassTag](that: Series[K, VV]): Series[K, VV] = {
+  def ++[VV >: V](that: Series[K, VV]): Series[K, VV] = {
     val bldr = Series.newUnorderedBuilder[K, VV]
     this.foreach(bldr.append)
     that.foreach(bldr.append)
@@ -347,31 +365,12 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   /**
    * Merges 2 series together, taking the first non-NA or NM value.
    */
-  def orElse[VV >: V: ClassTag](that: Series[K, VV]): Series[K, VV] = {
+  def orElse[VV >: V](that: Series[K, VV]): Series[K, VV] = {
     val merger = Merger[K](Merge.Outer)
     val (keys, lIndices, rIndices) = Index.cogroup(this.index, that.index)(merger).result()
-    val lCol = this.column
-    val rCol = that.column
-
-    // TODO: Remove duplication between this and zipMap.
-    val bldr = Column.builder[VV]
-    cfor(0)(_ < lIndices.length, _ + 1) { i =>
-      val l = lIndices(i)
-      val r = rIndices(i)
-      val lExists = lCol.isValueAt(l)
-      val rExists = rCol.isValueAt(r)
-      if (lExists && rExists) {
-        bldr.addValue(lCol.valueAt(l): VV)
-      } else if (lExists) {
-        bldr.addValue(lCol.valueAt(l))
-      } else if (rExists) {
-        bldr.addValue(rCol.valueAt(r))
-      } else {
-        bldr.addNonValue(if (lCol.nonValueAt(l) == NM) NM else rCol.nonValueAt(r))
-      }
-    }
-
-    Series(Index.ordered(keys), bldr.result())
+    val lCol = this.column.reindex(lIndices)
+    val rCol = that.column.reindex(rIndices)
+    Series(Index.ordered(keys), lCol orElse rCol)
   }
 
   /**
@@ -386,27 +385,25 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
    * Performs an inner join on this `Series` with `that`. Each pair of values
    * for a matching key is passed to `f`.
    */
-  def zipMap[W, X: ClassTag](that: Series[K, W])(f: (V, W) => X): Series[K, X] = {
+  def zipMap[W, X](that: Series[K, W])(f: (V, W) => X): Series[K, X] = {
     val joiner = Joiner[K](Join.Inner)
     val (keys, lIndices, rIndices) = Index.cogroup(this.index, that.index)(joiner).result()
-    val bldr = Column.builder[X]
 
+    // TODO: Add zipMap method to Column, then reindex/zipMap instead!
+    val bldr = Column.newBuilder[X]()
     val lCol = this.column
     val rCol = that.column
     cfor(0)(_ < lIndices.length, _ + 1) { i =>
       val l = lIndices(i)
       val r = rIndices(i)
-      val lExists = lCol.isValueAt(l)
-      val rExists = rCol.isValueAt(r)
-      if (lExists && rExists) {
-        bldr.addValue(f(lCol.valueAt(l), rCol.valueAt(r)))
-      } else if (lExists) {
-        bldr.addNonValue(rCol.nonValueAt(r))
-      } else if (rExists) {
-        bldr.addNonValue(lCol.nonValueAt(l))
-      } else {
-        bldr.addNonValue(if (lCol.nonValueAt(l) == NM) NM else rCol.nonValueAt(r))
-      }
+      lCol.foldRow(l)(
+        if (rCol(r) == NM) bldr.addNM() else bldr.addNA(),
+        bldr.addNM(),
+        { v =>
+          rCol.foldRow(r)(bldr.addNA(), bldr.addNM(), { w =>
+            bldr.addValue(f(v, w))
+          })
+        })
     }
     Series(Index.ordered(keys), bldr.result())
   }
@@ -450,14 +447,14 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
    * the Series.
    */
   def mapValues[W](f: V => W): Series[K, W] =
-    Series(index, new MappedColumn(f, column)) // TODO: Use a macro here?
+    Series(index, column.map(f))
 
   /**
    * Map the values of this series, using both the *key* and *value* of each
    * cell.
    */
-  def mapValuesWithKeys[W: ClassTag](f: (K, V) => W): Series[K, W] = {
-    val bldr = Column.builder[W]
+  def mapValuesWithKeys[W](f: (K, V) => W): Series[K, W] = {
+    val bldr = Column.newBuilder[W]()
     index.foreach { (k, row) =>
       bldr += column(row).map(v => f(k, v))
     }
@@ -465,10 +462,17 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   }
 
   /**
+   * Map the value of this series to a cell. This allows values to be turned
+   * into [[NonValue]]s (ie. [[NA]] and [[NM]]).
+   */
+  def flatMapCell[W](f: V => Cell[W]): Series[K, W] =
+    Series(index, column.flatMap(f))
+
+  /**
    * Transforms the cells in this series using `f`.
    */
-  def cellMap[W: ClassTag](f: Cell[V] => Cell[W]): Series[K, W] = {
-    val bldr = Column.builder[W]
+  def cellMap[W](f: Cell[V] => Cell[W]): Series[K, W] = {
+    val bldr = Column.newBuilder[W]()
     index.foreach { (k, row) =>
       bldr += f(column(row))
     }
@@ -478,8 +482,8 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   /**
    * Transforms the cells, indexed by their key, in this series using `f`.
    */
-  def cellMapWithKeys[W: ClassTag](f: (K, Cell[V]) => Cell[W]): Series[K, W] = {
-    val bldr = Column.builder[W]
+  def cellMapWithKeys[W](f: (K, Cell[V]) => Cell[W]): Series[K, W] = {
+    val bldr = Column.newBuilder[W]()
     index.foreach { (k, row) =>
       bldr += f(k, column(row))
     }
@@ -498,7 +502,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     * @see [[filterByCells]]
     * @see [[filterByValues]]
     */
-  def filterEntries(p: (K, Cell[V]) => Boolean)(implicit ev: ClassTag[V]): Series[K, V] = {
+  def filterEntries(p: (K, Cell[V]) => Boolean): Series[K, V] = {
     val b = Series.newBuilder[K, V](index.isOrdered)
     b.sizeHint(index.size)
     for ((k, ix) <- index) {
@@ -528,7 +532,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     *   s.filterEntries { (k, _) => p(k) } == s.filterByKeys(p)
     * }}}
     */
-  def filterByKeys(p: K => Boolean)(implicit ev: ClassTag[V]): Series[K, V] = {
+  def filterByKeys(p: K => Boolean): Series[K, V] = {
     val b = Series.newBuilder[K, V](index.isOrdered)
     b.sizeHint(this.size)
     cfor(0)(_ < index.size, _ + 1) { i =>
@@ -558,7 +562,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     *   s.filterEntries { (_, c) => p(c) } == s.filterByCells(p)
     * }}}
     */
-  def filterByCells(p: Cell[V] => Boolean)(implicit ev: ClassTag[V]): Series[K, V] = {
+  def filterByCells(p: Cell[V] => Boolean): Series[K, V] = {
     val b = Series.newBuilder[K, V](index.isOrdered)
     b.sizeHint(this.size)
     cfor(0)(_ < index.size, _ + 1) { i =>
@@ -594,17 +598,12 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     *   } == s.filterByValues(p)
     * }}}
     */
-  def filterByValues(p: V => Boolean)(implicit ev: ClassTag[V]): Series[K, V] = {
+  def filterByValues(p: V => Boolean): Series[K, V] = {
     val b = Series.newBuilder[K, V](index.isOrdered)
     b.sizeHint(this.size)
-    cfor(0)(_ < index.size, _ + 1) { i =>
-      val ix = index.indexAt(i)
-      if (column.isValueAt(ix)) {
-        val v = column.valueAt(ix)
-        if (p(v)) {
-          b.appendValue(index.keyAt(i), v)
-        }
-      }
+    column.foreach(0, index.size, index.indexAt(_), false) { (i, v) =>
+      if (p(v))
+        b.appendValue(index.keyAt(i), v)
     }
     b.result()
   }
@@ -659,10 +658,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     */
   def findFirstValue: Option[(K, V)] =
     findAsc((key, col, row) =>
-      if (col.isValueAt(row))
-        Some(key -> col.valueAt(row))
-      else
-        None
+      col.foldRow(row)(None, None, value => Some(key -> value))
     )
 
 
@@ -715,10 +711,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     */
   def findLastValue: Option[(K, V)] =
     findDesc((key, col, row) =>
-      if (col.isValueAt(row))
-        Some(key -> col.valueAt(row))
-      else
-        None
+      col.foldRow(row)(None, None, value => Some(key -> value))
     )
 
 
@@ -729,7 +722,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
    * remove any indirection in the underlying column, such as that caused by
    * reindexing, shifting, mapping values, etc.
    */
-  def compacted[V: ClassTag]: Series[K, V] = ???
+  def compacted: Series[K, V] = Series(index.resetIndices, column.reindex(index.indices))
 
   /**
    * Reduce all the values in this `Series` using the given reducer.
@@ -890,7 +883,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   def reduceByKey[W](reducer: Reducer[V, W]): Series[K, W] = {
     val reduction = new Reduction[K, V, W](column, reducer)
     val (keys, values) = Index.group(index)(reduction).result()
-    Series(Index.ordered(keys), Column.fromCells(values))
+    Series(Index.ordered(keys), Column(values: _*))
   }
 
   /** Returns the [[framian.reduce.Count]] reduction of this series by key.
@@ -1054,7 +1047,7 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     @tailrec
     def loop(i: Int, lastValue: Int): Unit = if (i < index.size) {
       val row = index.indexAt(i)
-      if (!column.isValueAt(row) && column.nonValueAt(row) == NA) {
+      if (column(row) == NA) {
         if (K.distance(index.keyAt(i), index.keyAt(lastValue)) <= delta) {
           indices(i) = index.indexAt(lastValue)
         } else {
@@ -1092,52 +1085,53 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
 }
 
 object Series {
-  import spire.std.int._
-  def empty[K: Order: ClassTag, V] = Series(Index.empty[K], Column.empty[V])
+
+  def empty[K: Order: ClassTag, V]: Series[K, V] = Series(Index.empty[K], Column.empty[V]())
 
   def apply[K, V](index: Index[K], column: Column[V]): Series[K, V] =
     new Series(index, column)
 
-  def apply[K: Order: ClassTag, V: ClassTag](kvs: (K, V)*): Series[K, V] = {
+  def apply[K: Order: ClassTag, V](kvs: (K, V)*): Series[K, V] = {
     val (keys, values) = kvs.unzip
-    Series(Index(keys.toArray), Column.fromArray(values.toArray))
+    Series(Index(keys.toArray), Column.values(values))
   }
 
-  def apply[V: ClassTag](values: V*): Series[Int, V] = {
+  def apply[V](values: V*): Series[Int, V] = {
     val keys = Array(0 to (values.length - 1): _*)
-    Series(Index(keys), Column.fromArray(values.toArray))
+    Series(Index(keys), Column.values(values))
   }
 
-  def fromCells[K: Order: ClassTag, V: ClassTag](col: TraversableOnce[(K, Cell[V])]): Series[K, V] = {
+  def fromCells[K: Order: ClassTag, V](col: TraversableOnce[(K, Cell[V])]): Series[K, V] = {
     val bldr = Series.newUnorderedBuilder[K ,V]
     bldr ++= col
     bldr.result()
   }
 
-  def fromCells[K: Order: ClassTag, V: ClassTag](kvs: (K, Cell[V])*): Series[K, V] =
+  def fromCells[K: Order: ClassTag, V](kvs: (K, Cell[V])*): Series[K, V] =
     fromCells(kvs)
 
-  def fromMap[K: Order: ClassTag, V: ClassTag](kvMap: Map[K, V]): Series[K, V] =
-    Series(Index(kvMap.keys.toArray), Column.fromArray(kvMap.values.toArray))
+  def fromMap[K: Order: ClassTag, V](kvMap: Map[K, V]): Series[K, V] =
+    Series(kvMap.toSeq: _*)
 
-  implicit def cbf[K: Order: ClassTag, V : ClassTag]: CanBuildFrom[Series[_, _], (K, Cell[V]), Series[K, V]] =
+  implicit def cbf[K: Order: ClassTag, V]: CanBuildFrom[Series[_, _], (K, Cell[V]), Series[K, V]] =
     new CanBuildFrom[Series[_, _], (K, Cell[V]), Series[K, V]] {
       def apply(): mutable.Builder[(K, Cell[V]), Series[K, V]] = Series.newUnorderedBuilder[K ,V]
       def apply(from: Series[_, _]): mutable.Builder[(K, Cell[V]), Series[K, V]] = apply()
     }
 
-  private def newBuilder[K : ClassTag : Order, V : ClassTag](isOrdered: Boolean): AbstractSeriesBuilder[K, V] =
+  private def newBuilder[K: ClassTag : Order, V](isOrdered: Boolean): AbstractSeriesBuilder[K, V] =
     if (isOrdered) newOrderedBuilder else newUnorderedBuilder
 
-  private def newUnorderedBuilder[K : ClassTag : Order, V : ClassTag]: AbstractSeriesBuilder[K, V] =
+  private def newUnorderedBuilder[K: ClassTag: Order, V: GenColumnBuilder]: AbstractSeriesBuilder[K, V] =
     new AbstractSeriesBuilder[K, V] {
-      def result(): Series[K, V] =
-        Series(
-          Index(this.keyBldr.result()),
-          this.colBldr.result())
+      def result(): Series[K, V] = {
+        val index = Index(this.keyBldr.result())
+        val column = this.colBldr.result()
+        Series(index, column)
+      }
     }
 
-  private def newOrderedBuilder[K : ClassTag : Order, V : ClassTag]: AbstractSeriesBuilder[K, V] =
+  private def newOrderedBuilder[K: ClassTag: Order, V: GenColumnBuilder]: AbstractSeriesBuilder[K, V] =
     new AbstractSeriesBuilder[K, V] {
       def result(): Series[K, V] =
         Series(
@@ -1147,9 +1141,9 @@ object Series {
 }
 
 
-private abstract class AbstractSeriesBuilder[K : ClassTag : Order, V : ClassTag] extends mutable.Builder[(K, Cell[V]), Series[K, V]] {
+private abstract class AbstractSeriesBuilder[K: ClassTag: Order, V: GenColumnBuilder] extends mutable.Builder[(K, Cell[V]), Series[K, V]] {
   protected val keyBldr = Array.newBuilder[K]
-  protected val colBldr = new ColumnBuilder[V]
+  protected val colBldr = Column.newBuilder[V]()
 
   def +=(elem: (K, Cell[V])): this.type = {
     keyBldr += elem._1
@@ -1171,7 +1165,7 @@ private abstract class AbstractSeriesBuilder[K : ClassTag : Order, V : ClassTag]
 
   def appendNonValue(k: K, nonValue: NonValue): this.type = {
     keyBldr += k
-    colBldr.addNonValue(nonValue)
+    colBldr += nonValue
     this
   }
 

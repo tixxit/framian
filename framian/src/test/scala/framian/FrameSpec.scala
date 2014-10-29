@@ -370,7 +370,7 @@ class FrameSpec extends Specification with ScalaCheck {
       dups.mapRowGroups { (row, f) =>
         val reduced = f.reduceFrame(reduce.Sum[Double]).to[List]
         ColOrientedFrame(Index.fromKeys(row), Series(reduced map { case (key, value) =>
-          key -> TypedColumn(Column.fromCells(Vector(value)))
+          key -> TypedColumn(Column(value))
         }: _*))
       } must_== dups.reduceFrameByKey(reduce.Sum[Double])
     }
@@ -397,7 +397,7 @@ class FrameSpec extends Specification with ScalaCheck {
 
     "convert to series" in {
       f0.get(Cols(0).as[String]) must_== Series(0 -> "a", 1 -> "b", 2 -> "c")
-      f0.get(Cols(0).as[Int]) must_== Series(Index.fromKeys(0, 1, 2), Column.fromCells(Vector(NM, NM, NM)))
+      f0.get(Cols(0).as[Int]) must_== Series(Index.fromKeys(0, 1, 2), Column[Int](NM, NM, NM))
       f0.get(Cols(1).as[Int]) must_== Series(0 -> 1, 1 -> 2, 2 -> 3)
       f0.get(Cols(0, 1).as[String :: Int :: HNil]) must_== Series(
         0 -> ("a" :: 1 :: HNil),
@@ -555,9 +555,9 @@ class FrameSpec extends Specification with ScalaCheck {
         8 :: 5D ::HNil,
         7 :: 6D ::HNil).withColIndex(Index(Array(1, 2)))
 
-      val col0 = Column.fromCells(Vector(Value("a"), Value("b"), Value("c"), NA, NA, NA))
-      val col1 = Column.fromCells(Vector(Value(1), Value(2), Value(3), Value(9), Value(8), Value(7)))
-      val col2 = Column.fromCells(Vector(NA, NA, NA, Value(4D), Value(5D), Value(6D)))
+      val col0 = Column(Value("a"), Value("b"), Value("c"), NA, NA, NA)
+      val col1 = Column(Value(1), Value(2), Value(3), Value(9), Value(8), Value(7))
+      val col2 = Column(NA, NA, NA, Value(4D), Value(5D), Value(6D))
       a.appendRows(b) must_== ColOrientedFrame(Index(Array(0, 1, 2, 0, 1, 2)),
         Series(0 -> TypedColumn(col0), 1 -> TypedColumn(col1), 2 -> TypedColumn(col2)))
     }

@@ -29,30 +29,44 @@ import scala.reflect.runtime.universe.TypeTag
 
 import spire.syntax.monoid._
 
+import framian.column.Mask
+
 private[json] sealed trait JsonColumn {
   import JsonColumn._
 
   def pos: Int
 
   final def toColumn: UntypedColumn = {
+    val text = Column.newBuilder[String]
+    val nums = Column.newBuilder[BigDecimal]
+    val bool = Column.newBuilder[Boolean]
+
     @tailrec
-    def loop(col: JsonColumn, text: Buffer[String], nums: Buffer[BigDecimal], bools: Buffer[Boolean]): UntypedColumn = {
+    def loop(col: JsonColumn): UntypedColumn = {
       col match {
         case Start =>
-          text.toColumn |+| nums.toColumn |+| bools.toColumn
+          TypedColumn(text.result()) orElse
+          TypedColumn(nums.result()) orElse
+          TypedColumn(bool.result())
         case Text(pos, value, prev) =>
-          text.set(pos, value)
-          loop(prev, text, nums, bools)
+          text.addValue(value)
+          nums.addNA()
+          bool.addNA()
+          loop(prev)
         case Number(pos, value, prev) =>
-          nums.set(pos, value)
-          loop(prev, text, nums, bools)
+          text.addNA()
+          nums.addValue(value)
+          bool.addNA()
+          loop(prev)
         case Bool(pos, value, prev) =>
-          bools.set(pos, value)
-          loop(prev, text, nums, bools)
+          text.addNA()
+          nums.addNA()
+          bool.addValue(value)
+          loop(prev)
       }
     }
 
-    loop(this, Buffer.create(), Buffer.create(), Buffer.create())
+    loop(this)
   }
 }
 
@@ -61,20 +75,4 @@ private[json] object JsonColumn {
   case class Text(pos: Int, value: String, prev: JsonColumn) extends JsonColumn
   case class Number(pos: Int, value: BigDecimal, prev: JsonColumn) extends JsonColumn
   case class Bool(pos: Int, value: Boolean, prev: JsonColumn) extends JsonColumn
-
-  private final class Buffer[A: ClassTag: TypeTag](bitset: BitSet, var values: Array[A]) {
-    def set(pos: Int, value: A): Unit = {
-      values = if (null == values) new Array[A](pos + 1) else values
-      values(pos) = value
-      bitset.update(pos, true)
-    }
-
-    def toColumn: UntypedColumn =
-      if (values != null) TypedColumn(Column.fromArray(values).mask(bitset))
-      else UntypedColumn.empty
-  }
-
-  private object Buffer {
-    def create[A: ClassTag: TypeTag]() = new Buffer(new BitSet, null)
-  }
 }

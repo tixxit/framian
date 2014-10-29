@@ -21,7 +21,6 @@
 
 package framian
 
-import scala.reflect.ClassTag
 import scala.collection.generic.CanBuildFrom
 
 import spire.algebra._
@@ -29,6 +28,8 @@ import spire.syntax.additiveMonoid._
 
 import shapeless._
 import shapeless.ops.function._
+
+import framian.column._
 
 trait RowExtractor[A, K, Sz <: Size] {
   type P
