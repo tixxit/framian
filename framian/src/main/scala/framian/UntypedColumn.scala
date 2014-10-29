@@ -38,17 +38,18 @@ import framian.column._
  */
 trait UntypedColumn extends ColumnLike[UntypedColumn] {
   def cast[A: ColumnTyper]: Column[A]
-  def orElse(that: UntypedColumn): UntypedColumn = MergedUntypedColumn(this, that)
+  def orElse(that: UntypedColumn): UntypedColumn = (this, that) match {
+    case (EmptyUntypedColumn, _) => that
+    case (_, EmptyUntypedColumn) => this
+    case _ => MergedUntypedColumn(this, that)
+  }
 }
 
 object UntypedColumn {
   implicit object monoid extends Monoid[UntypedColumn] {
     def id: UntypedColumn = empty
-    def op(lhs: UntypedColumn, rhs: UntypedColumn): UntypedColumn = (lhs, rhs) match {
-      case (EmptyUntypedColumn, _) => rhs
-      case (_, EmptyUntypedColumn) => lhs
-      case _ => MergedUntypedColumn(lhs, rhs)
-    }
+    def op(lhs: UntypedColumn, rhs: UntypedColumn): UntypedColumn =
+      lhs orElse rhs
   }
 
   final def empty: UntypedColumn = EmptyUntypedColumn

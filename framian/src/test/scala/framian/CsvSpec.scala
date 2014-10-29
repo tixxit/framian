@@ -1,5 +1,5 @@
 package framian
-package utilities
+package csv
 
 import org.specs2.mutable._
 
@@ -19,128 +19,145 @@ class CsvSpec extends Specification {
   val airPassengersBadComma = csvRoot +"AirPassengers-badcomma.csv"
   val autoMPG = csvRoot +"auto-mpg-test.tsv"
 
-  val defaultRowIndex = Index.fromKeys("0", "1", "2", "3", "4")
-  val withColumnRowIndex = Index.fromKeys("0", "1", "2", "3")
-  val defaultAPColumnIndex = Index.fromKeys("0", "1", "2")
+  val defaultRowIndex = Index.fromKeys(0, 1, 2, 3, 4)
+  val withColumnRowIndex = Index.fromKeys(0, 1, 2, 3)
+  val defaultAPColumnIndex = Index.fromKeys(0, 1, 2)
 
-  val defaultAirPassengers = Frame.fromRows(
-    "" :: "time" :: "AirPassengers" :: HNil,
-    "1" :: "1949" :: "112" :: HNil,
-    "2" :: "1949.08333333333" :: "118" :: HNil,
-    "3" :: "1949.16666666667" :: "132" :: HNil,
-    "4" :: "1949.25" :: "129" :: HNil)
-    .withColIndex(defaultAPColumnIndex)
-    .withRowIndex(defaultRowIndex)
+  val defaultAirPassengers = ColOrientedFrame(
+    Index.fromKeys(0, 1, 2, 3, 4),
+    Series(
+      0 -> TypedColumn(Column[Int](
+          NA,
+          Value(1),
+          Value(2),
+          Value(3),
+          Value(4))
+        ).orElse(TypedColumn(Column[String](
+          Value("")
+        ))),
+      1 -> TypedColumn(Column[BigDecimal](
+          NA,
+          Value(BigDecimal("1949")),
+          Value(BigDecimal("1949.08333333333")),
+          Value(BigDecimal("1949.16666666667")),
+          Value(BigDecimal("1949.25")))
+        ).orElse(TypedColumn(Column[String](
+          Value("time")
+        ))),
+      2 -> TypedColumn(Column[BigDecimal](
+          NA,
+          Value(BigDecimal("112")),
+          Value(BigDecimal("118")),
+          Value(BigDecimal("132")),
+          Value(BigDecimal("129")))
+        ).orElse(TypedColumn(Column[String](
+          Value("AirPassengers")
+        )))))
   val columnAirPassengers = Frame.fromRows(
-    "1" :: "1949" :: "112" :: HNil,
-    "2" :: "1949.08333333333" :: "118" :: HNil,
-    "3" :: "1949.16666666667" :: "132" :: HNil,
-    "4" :: "1949.25" :: "129" :: HNil)
+    1 :: BigDecimal(1949)             :: 112 :: HNil,
+    2 :: BigDecimal(1949.08333333333) :: 118 :: HNil,
+    3 :: BigDecimal(1949.16666666667) :: 132 :: HNil,
+    4 :: BigDecimal(1949.25)          :: 129 :: HNil)
     .withColIndex(Index.fromKeys("", "time", "AirPassengers"))
     .withRowIndex(withColumnRowIndex)
-  val rowAirPassengers = (Frame.fromRows(
-    "time" :: "AirPassengers" :: HNil,
-    "1949" :: "112" :: HNil,
-    "1949.08333333333" :: "118" :: HNil,
-    "1949.16666666667" :: "132" :: HNil,
-    "1949.25" :: "129" :: HNil)
-    .withColIndex(Index.fromKeys("0", "1"))
-    .withRowIndex(Index.fromKeys("", "1", "2", "3", "4")))
-  val correctAirPassengers = Frame.fromRows(
-    "1949" :: "112" :: HNil,
-    "1949.08333333333" :: "118" :: HNil,
-    "1949.16666666667" :: "132" :: HNil,
-    "1949.25" :: "129" :: HNil)
-    .withColIndex(Index.fromKeys("time", "AirPassengers"))
-    .withRowIndex(Index.fromKeys("1", "2", "3", "4"))
 
   val defaultMPG = Frame.fromRows(
-    "18.0" :: "8" :: "307.0" :: "130.0" :: "3504." :: "12.0" :: "70" :: "1" :: "chevrolet chevelle malibu" :: HNil,
-    "15.0" :: "8" :: "350.0" :: "165.0" :: "3693." :: "11.5" :: "70" :: "1" :: "buick skylark 320" :: HNil,
-    "18.0" :: "8" :: "318.0" :: "150.0" :: "3436." :: "11.0" :: "70" :: "1" :: "plymouth satellite" :: HNil,
-    "16.0" :: "8" :: "304.0" :: "150.0" :: "3433." :: "12.0" :: "70" :: "1" :: "amc rebel sst" :: HNil,
-    "17.0" :: "8" :: "302.0" :: "140.0" :: "3449." :: "10.5" :: "70" :: "1" :: "ford torino" :: HNil)
+    18.0 :: 8 :: 307.0 :: 130.0 :: 3504 :: 12.0 :: 70 :: 1 :: "chevrolet chevelle malibu" :: HNil,
+    15.0 :: 8 :: 350.0 :: 165.0 :: 3693 :: 11.5 :: 70 :: 1 :: "buick skylark 320" :: HNil,
+    18.0 :: 8 :: 318.0 :: 150.0 :: 3436 :: 11.0 :: 70 :: 1 :: "plymouth satellite" :: HNil,
+    16.0 :: 8 :: 304.0 :: 150.0 :: 3433 :: 12.0 :: 70 :: 1 :: "amc rebel sst" :: HNil,
+    17.0 :: 8 :: 302.0 :: 140.0 :: 3449 :: 10.5 :: 70 :: 1 :: "ford torino" :: HNil)
     .withRowIndex(defaultRowIndex)
-    .withColIndex(Index.fromKeys("0", "1", "2", "3", "4", "5", "6", "7", "8"))
-  val withRowIndexMPG = Frame.fromRows(
-    "18.0" :: "8" :: "307.0" :: "130.0" :: "3504." :: "12.0" :: "70" :: "1" :: HNil,
-    "15.0" :: "8" :: "350.0" :: "165.0" :: "3693." :: "11.5" :: "70" :: "1" :: HNil,
-    "18.0" :: "8" :: "318.0" :: "150.0" :: "3436." :: "11.0" :: "70" :: "1" :: HNil,
-    "16.0" :: "8" :: "304.0" :: "150.0" :: "3433." :: "12.0" :: "70" :: "1" :: HNil,
-    "17.0" :: "8" :: "302.0" :: "140.0" :: "3449." :: "10.5" :: "70" :: "1" :: HNil)
-    .withRowIndex(Index.fromKeys(
-                    "chevrolet chevelle malibu", "buick skylark 320",
-                    "plymouth satellite", "amc rebel sst", "ford torino"))
-    .withColIndex(Index.fromKeys("0", "1", "2", "3", "4", "5", "6", "7"))
-  val customColsMPG = Frame.fromRows(
-    "18.0" :: "8" :: "307.0" :: HNil,
-    "15.0" :: "8" :: "350.0" :: HNil,
-    "18.0" :: "8" :: "318.0" :: HNil,
-    "16.0" :: "8" :: "304.0" :: HNil,
-    "17.0" :: "8" :: "302.0" :: HNil)
-    .withRowIndex(defaultRowIndex)
-    .withColIndex(Index.fromKeys("0", "1", "2"))
-  val withRowIndexCustomColsMPG = Frame.fromRows(
-    "18.0" :: "8" :: "307.0" :: HNil,
-    "15.0" :: "8" :: "350.0" :: HNil,
-    "18.0" :: "8" :: "318.0" :: HNil,
-    "16.0" :: "8" :: "304.0" :: HNil,
-    "17.0" :: "8" :: "302.0" :: HNil)
-    .withRowIndex(Index.fromKeys(
-                    "chevrolet chevelle malibu", "buick skylark 320",
-                    "plymouth satellite", "amc rebel sst", "ford torino"))
-    .withColIndex(Index.fromKeys("0", "1", "2"))
+    .withColIndex(Index.fromKeys(0, 1, 2, 3, 4, 5, 6, 7, 8))
 
-  val apBadComma = Frame.fromRows(
-    "" :: "FlightName" :: "AirPassengers" :: HNil,
-    "1" :: "ABCD111" :: "112" :: HNil,
-    "2" :: "Delta20394" :: "118" :: HNil,
-    "3" :: "FLIGHTTOHELL, REALLY" :: "132" :: HNil,
-    "4" :: "United666" :: "129" :: HNil)
-    .withColIndex(defaultAPColumnIndex)
-    .withRowIndex(defaultRowIndex)
+  "CsvParser" should {
+    "parse air passengers as unlabeled CSV" in {
+       Csv.parsePath(airPassengers).unlabeled.toFrame must_== defaultAirPassengers
+     }
 
-  def getFile(loc:String) = new File(loc)
-
-  "Csv parser" should {
-    "parse air passengers with default settings" in {
-        loadFrameFromCSV(getFile(airPassengers)) must_== defaultAirPassengers
-      }
-
-    "parse air passengers with just column headers" in {
-      loadFrameFromCSV(getFile(airPassengers), columnIndex = true) must_== columnAirPassengers
+    "parse air passengers as labeled CSV" in {
+      Csv.parsePath(airPassengers).labeled.toFrame must_== columnAirPassengers
     }
 
-    "parse air passengers with just row headers" in {
-      loadFrameFromCSV(getFile(airPassengers), columnIndex = false, rowIndex = 0) must_== rowAirPassengers
+    "parse autoMPG as unlabeled TSV" in {
+      Csv.parsePath(autoMPG).unlabeled.toFrame must_== defaultMPG
     }
 
-    "parse air passengers with row and column headers" in {
-      loadFrameFromCSV(getFile(airPassengers), columnIndex = true, rowIndex = 0) must_== correctAirPassengers
+    "parse CSV with separator in quote" in {
+      val data = """a,"b","c,d"|"e,f,g""""
+      val csv = Csv.parseString(data, CsvFormat.Guess.withRowDelim("|"))
+      val frame = csv.unlabeled.toFrame
+      frame.getRow(0) must_== Some(Rec(0 -> "a", 1 -> "b", 2 -> "c,d"))
+      frame[String](1, 0) must_== Value("e,f,g")
+      frame[String](1, 1) must_== NA
+      frame[String](1, 2) must_== NA
     }
 
-    "fail to parse autoMPG with default settings" in {
-      loadFrameFromCSV(getFile(autoMPG)) must throwA[AssertionError]
+    import CsvCell._
+
+    val TestFormat = CsvFormat(
+      separator = ",",
+      quote = "'",
+      quoteEscape = "'",
+      empty = "N/A",
+      invalid = "N/M",
+      header = false,
+      rowDelim = CsvRowDelim.Custom("|"),
+      allowRowDelimInQuotes = true
+    )
+
+    "parse escaped quotes" in {
+      Csv.parseString(
+        "a,'''','c'''|'''''d''''', ''''",
+        TestFormat
+      ).rows must_== Vector(
+        Right(CsvRow(Vector(Data("a"), Data("'"), Data("c'")))),
+        Right(CsvRow(Vector(Data("''d''"), Data(" ''''"))))
+      )
     }
 
-    "parse autoMPG with delimiter as tab but otherwise default settings" in {
-      loadFrameFromCSV(getFile(autoMPG), delimiter = "\t") must_== defaultMPG
+    "respect CsvFormat separator" in {
+      Csv.parseString("a,b,c|d,e,f", TestFormat).rows must_==
+        Csv.parseString("a;b;c|d;e;f", TestFormat.withSeparator(";")).rows
     }
 
-    "parse autoMPG with delimiter as tab and row index as column 8" in {
-      loadFrameFromCSV(getFile(autoMPG), delimiter = "\t", rowIndex = 8) must_== withRowIndexMPG
+    "respect CsvFormat quote" in {
+      Csv.parseString("'a,b','b'|d,e", TestFormat).rows must_==
+        Csv.parseString("^a,b^,^b^|d,e", TestFormat.withQuote("^")).rows
     }
 
-    "parse autoMPG with delimiter as tab and just take first three columns" in {
-      loadFrameFromCSV(getFile(autoMPG), delimiter = "\t", columns = List(0, 1, 2)) must_== customColsMPG
+    "respect CsvFormat quote escape" in {
+      Csv.parseString("'a''b',''''|' '", TestFormat).rows must_==
+        Csv.parseString("'a\\'b','\\''|' '", TestFormat.withQuoteEscape("\\")).rows
     }
 
-    "parse autoMPG with delimiter as tab, column 8 as row index and just take first three columns" in {
-      loadFrameFromCSV(getFile(autoMPG), delimiter = "\t", rowIndex = 8, columns = List(0, 1, 2)) must_== withRowIndexCustomColsMPG
+    "respect CsvFormat empty" in {
+      Csv.parseString("a,N/A,b|N/A,N/A", TestFormat).rows must_==
+        Csv.parseString("a,,b|,", TestFormat.withEmpty("")).rows
     }
 
-    "parse a file that has the delimiter within a column within the chosen quote type" in {
-      loadFrameFromCSV(getFile(airPassengersBadComma)) must_== apBadComma
+    "respect CsvFormat invalid" in {
+      Csv.parseString("a,N/M,b|N/M,N/M", TestFormat).rows must_==
+        Csv.parseString("a,nm,b|nm,nm", TestFormat.withInvalid("nm")).rows
+    }
+
+    "respect CsvFormat row delimiter" in {
+      Csv.parseString("a,b|c,d|e,f", TestFormat).rows must_==
+        Csv.parseString("a,b\nc,d\ne,f", TestFormat.withRowDelim(CsvRowDelim.Unix)).rows
+    }
+
+    "parse CSV with row delimiter in quote" in {
+      Csv.parseString("a,'b|c'|'d|e',f", TestFormat).rows must_== Vector(
+        Right(CsvRow(Vector(Data("a"), Data("b|c")))),
+        Right(CsvRow(Vector(Data("d|e"), Data("f")))))
+    }
+
+    "parser respects whitespace" in {
+      val data = " a , , 'a','b'|  b  ,c  ,   "
+      val csv = Csv.parseString(data, CsvFormat.Guess.withRowDelim("|"))
+      csv.rows must_== Vector(
+        Right(CsvRow(Vector(Data(" a "), Data(" "), Data(" 'a'"), Data("b")))),
+        Right(CsvRow(Vector(Data("  b  "), Data("c  "), Data("   ")))))
     }
   }
 }
