@@ -54,10 +54,10 @@ class CsvSpec extends Specification {
           Value("AirPassengers")
         )))))
   val columnAirPassengers = Frame.fromRows(
-    1 :: 1949             :: 112 :: HNil,
-    2 :: 1949.08333333333 :: 118 :: HNil,
-    3 :: 1949.16666666667 :: 132 :: HNil,
-    4 :: 1949.25          :: 129 :: HNil)
+    1 :: BigDecimal(1949)             :: 112 :: HNil,
+    2 :: BigDecimal(1949.08333333333) :: 118 :: HNil,
+    3 :: BigDecimal(1949.16666666667) :: 132 :: HNil,
+    4 :: BigDecimal(1949.25)          :: 129 :: HNil)
     .withColIndex(Index.fromKeys("", "time", "AirPassengers"))
     .withRowIndex(withColumnRowIndex)
 
