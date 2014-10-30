@@ -47,12 +47,12 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.2.0/framian/src/main/scala/framian/csv/CsvRowExtractor.scala" target="_blank">CsvRowExtractor.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.3.0/framian/src/main/scala/framian/csv/CsvCell.scala" target="_blank">CsvCell.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div><div class="toggleContainer block">
             <span class="toggle">Known Subclasses</span>
-            <div class="subClasses hiddenContent"><a href="CsvCell$$Empty$.html" class="extype" name="framian.csv.CsvCell.Empty">Empty</a>, <a href="CsvCell$$Invalid$.html" class="extype" name="framian.csv.CsvCell.Invalid">Invalid</a>, <a href="CsvCell$$Number.html" class="extype" name="framian.csv.CsvCell.Number">Number</a>, <a href="CsvCell$$Text.html" class="extype" name="framian.csv.CsvCell.Text">Text</a></div>
+            <div class="subClasses hiddenContent"><a href="CsvCell$$Data.html" class="extype" name="framian.csv.CsvCell.Data">Data</a>, <a href="CsvCell$$Empty$.html" class="extype" name="framian.csv.CsvCell.Empty">Empty</a>, <a href="CsvCell$$Invalid$.html" class="extype" name="framian.csv.CsvCell.Invalid">Invalid</a></div>
           </div></div>
         
 
@@ -96,7 +96,7 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="framian.csv.CsvCell#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(render:framian.csv.CsvFormat=&gt;String):framian.csv.CsvCell"></a>
+      <a id="&lt;init&gt;():framian.csv.CsvCell"></a>
       <a id="&lt;init&gt;:CsvCell"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -104,10 +104,10 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">CsvCell</span><span class="params">(<span name="render">render: (<a href="CsvFormat.html" class="extype" name="framian.csv.CsvFormat">CsvFormat</a>) ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span>
+        <span class="name">CsvCell</span><span class="params">()</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#framian.csv.CsvCell@&lt;init&gt;(render:framian.csv.CsvFormat=&gt;String):framian.csv.CsvCell" title="Permalink" target="_top">
+      <a href="../../index.html#framian.csv.CsvCell@&lt;init&gt;():framian.csv.CsvCell" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" />
       </a>
     </span>
@@ -117,10 +117,30 @@
 
         
 
-        
+        <div id="values" class="values members">
+              <h3>Abstract Value Members</h3>
+              <ol><li name="framian.csv.CsvCell#render" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="render(format:framian.csv.CsvFormat):String"></a>
+      <a id="render(CsvFormat):String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">render</span><span class="params">(<span name="format">format: <a href="CsvFormat.html" class="extype" name="framian.csv.CsvFormat">CsvFormat</a></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.csv.CsvCell@render(format:framian.csv.CsvFormat):String" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li></ol>
+            </div>
 
         <div id="values" class="values members">
-              <h3>Value Members</h3>
+              <h3>Concrete Value Members</h3>
               <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a>
       <a id="!=(Any):Boolean"></a>
@@ -524,23 +544,6 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="framian.csv.CsvCell#render" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="render:framian.csv.CsvFormat=&gt;String"></a>
-      <a id="render:(CsvFormat)⇒String"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">val</span>
-      </span>
-      <span class="symbol">
-        <span class="name">render</span><span class="result">: (<a href="CsvFormat.html" class="extype" name="framian.csv.CsvFormat">CsvFormat</a>) ⇒ <span class="extype" name="scala.Predef.String">String</span></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../index.html#framian.csv.CsvCell@render:framian.csv.CsvFormat=&gt;String" title="Permalink" target="_top">
-        <img src="../../lib/permalink.png" />
-      </a>
-    </span>
-      
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
       <a id="synchronized[T0](⇒T0):T0"></a>

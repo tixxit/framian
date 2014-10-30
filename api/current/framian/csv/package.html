@@ -66,19 +66,19 @@
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="framian.csv.Csv" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="CsvextendsProductwithSerializable"></a>
+              <ol><li name="framian.csv.Csv" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="CsvextendsAnyRef"></a>
       <a id="Csv:Csv"></a>
       <h4 class="signature">
       <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">case class</span>
+        <span class="modifier">sealed abstract </span>
+        <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <a href="Csv.html"><span class="name">Csv</span></a><span class="params">(<span name="header">header: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Predef.String">String</span>]]</span>, <span name="rows">rows: <span class="extype" name="scala.List">List</span>[<a href="CsvRow.html" class="extype" name="framian.csv.CsvRow">CsvRow</a>]</span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="Csv.html"><span class="name">Csv</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#framian.csv.package@CsvextendsProductwithSerializable" title="Permalink" target="_top">
+      <a href="../../index.html#framian.csv.package@CsvextendsAnyRef" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" />
       </a>
     </span>
@@ -100,8 +100,25 @@
       </a>
     </span>
       
+    </li><li name="framian.csv.CsvError" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CsvErrorextendsProductwithSerializable"></a>
+      <a id="CsvError:CsvError"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="CsvError.html"><span class="name">CsvError</span></a><span class="params">(<span name="message">message: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="rowStart">rowStart: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="pos">pos: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="context">context: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="row">row: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="col">col: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.csv.package@CsvErrorextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
     </li><li name="framian.csv.CsvFormat" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="CsvFormatextendsProductwithSerializable"></a>
+      <a id="CsvFormatextendsCsvFormatStrategywithProductwithSerializable"></a>
       <a id="CsvFormat:CsvFormat"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -109,10 +126,44 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="CsvFormat.html"><span class="name">CsvFormat</span></a><span class="params">(<span name="separator">separator: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="quote">quote: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;\&quot;&quot;</span></span>, <span name="quoteEscape">quoteEscape: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;\&quot;&quot;</span></span>, <span name="empty">empty: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;NA&quot;</span></span>, <span name="invalid">invalid: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;NM&quot;</span></span>, <span name="header">header: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a> = <span class="symbol">true</span></span>, <span name="rowDelim">rowDelim: <a href="CsvRowDelim.html" class="extype" name="framian.csv.CsvRowDelim">CsvRowDelim</a> = <span class="symbol"><span class="name"><a href="CsvRowDelim$.html">CsvRowDelim.Windows</a></span></span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="CsvFormat.html"><span class="name">CsvFormat</span></a><span class="params">(<span name="separator">separator: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="quote">quote: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;\&quot;&quot;</span></span>, <span name="quoteEscape">quoteEscape: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;\&quot;&quot;</span></span>, <span name="empty">empty: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;&quot;</span></span>, <span name="invalid">invalid: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;&quot;</span></span>, <span name="header">header: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a> = <span class="symbol">false</span></span>, <span name="rowDelim">rowDelim: <a href="CsvRowDelim.html" class="extype" name="framian.csv.CsvRowDelim">CsvRowDelim</a> = <span class="symbol"><span class="name"><a href="CsvRowDelim$.html">CsvRowDelim.Both</a></span></span></span>, <span name="allowRowDelimInQuotes">allowRowDelimInQuotes: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a> = <span class="symbol">true</span></span>)</span><span class="result"> extends <a href="CsvFormatStrategy.html" class="extype" name="framian.csv.CsvFormatStrategy">CsvFormatStrategy</a> with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#framian.csv.package@CsvFormatextendsProductwithSerializable" title="Permalink" target="_top">
+      <a href="../../index.html#framian.csv.package@CsvFormatextendsCsvFormatStrategywithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.csv.CsvFormatStrategy" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="CsvFormatStrategyextendsAnyRef"></a>
+      <a id="CsvFormatStrategy:CsvFormatStrategy"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="CsvFormatStrategy.html"><span class="name">CsvFormatStrategy</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.csv.package@CsvFormatStrategyextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.csv.CsvParser" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CsvParserextendsProductwithSerializable"></a>
+      <a id="CsvParser:CsvParser"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="CsvParser.html"><span class="name">CsvParser</span></a><span class="params">(<span name="format">format: <a href="CsvFormat.html" class="extype" name="framian.csv.CsvFormat">CsvFormat</a></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.csv.package@CsvParserextendsProductwithSerializable" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" />
       </a>
     </span>
@@ -151,6 +202,108 @@
       </a>
     </span>
       
+    </li><li name="framian.csv.GuessCsvFormat" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="GuessCsvFormatextendsCsvFormatStrategy"></a>
+      <a id="GuessCsvFormat:GuessCsvFormat"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="GuessCsvFormat.html"><span class="name">GuessCsvFormat</span></a><span class="result"> extends <a href="CsvFormatStrategy.html" class="extype" name="framian.csv.CsvFormatStrategy">CsvFormatStrategy</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.csv.package@GuessCsvFormatextendsCsvFormatStrategy" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.csv.Input" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="InputextendsProductwithSerializable"></a>
+      <a id="Input:Input"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="Input.html"><span class="name">Input</span></a><span class="params">(<span name="offset">offset: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="data">data: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="isLast">isLast: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>, <span name="mark">mark: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.csv.package@InputextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.csv.Instr" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="Instr[+A]extendsAnyRef"></a>
+      <a id="Instr[+A]:Instr[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="Instr.html"><span class="name">Instr</span></a><span class="tparams">[<span name="A">+A</span>]</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.csv.package@Instr[+A]extendsAnyRef" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.csv.LabeledCsv" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="LabeledCsvextendsCsvwithProductwithSerializable"></a>
+      <a id="LabeledCsv:LabeledCsv"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="LabeledCsv.html"><span class="name">LabeledCsv</span></a><span class="params">(<span name="format">format: <a href="CsvFormat.html" class="extype" name="framian.csv.CsvFormat">CsvFormat</a></span>, <span name="header">header: <span class="extype" name="scala.Vector">Vector</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="rows">rows: <span class="extype" name="scala.Vector">Vector</span>[<span class="extype" name="scala.Either">Either</span>[<a href="CsvError.html" class="extype" name="framian.csv.CsvError">CsvError</a>, <a href="CsvRow.html" class="extype" name="framian.csv.CsvRow">CsvRow</a>]]</span>)</span><span class="result"> extends <a href="Csv.html" class="extype" name="framian.csv.Csv">Csv</a> with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.csv.package@LabeledCsvextendsCsvwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.csv.ParserState" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="ParserStateextendsAnyRef"></a>
+      <a id="ParserState:ParserState"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="ParserState.html"><span class="name">ParserState</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.csv.package@ParserStateextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.csv.UnlabeledCsv" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="UnlabeledCsvextendsCsvwithProductwithSerializable"></a>
+      <a id="UnlabeledCsv:UnlabeledCsv"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="UnlabeledCsv.html"><span class="name">UnlabeledCsv</span></a><span class="params">(<span name="format">format: <a href="CsvFormat.html" class="extype" name="framian.csv.CsvFormat">CsvFormat</a></span>, <span name="rows">rows: <span class="extype" name="scala.Vector">Vector</span>[<span class="extype" name="scala.Either">Either</span>[<a href="CsvError.html" class="extype" name="framian.csv.CsvError">CsvError</a>, <a href="CsvRow.html" class="extype" name="framian.csv.CsvRow">CsvRow</a>]]</span>)</span><span class="result"> extends <a href="Csv.html" class="extype" name="framian.csv.Csv">Csv</a> with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.csv.package@UnlabeledCsvextendsCsvwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
     </li></ol>
             </div>
 
@@ -167,7 +320,7 @@
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a href="Csv$.html"><span class="name">Csv</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="Csv$.html"><span class="name">Csv</span></a>
       </span>
       </h4><span class="permalink">
       <a href="../../index.html#framian.csv.package@Csv" title="Permalink" target="_top">
@@ -218,7 +371,7 @@
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a href="CsvRow$.html"><span class="name">CsvRow</span></a>
+        <a href="CsvRow$.html"><span class="name">CsvRow</span></a><span class="result"> extends (<span class="extype" name="scala.Vector">Vector</span>[<a href="CsvCell.html" class="extype" name="framian.csv.CsvCell">CsvCell</a>]) ⇒ <a href="CsvRow.html" class="extype" name="framian.csv.CsvRow">CsvRow</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../index.html#framian.csv.package@CsvRow" title="Permalink" target="_top">
@@ -239,6 +392,57 @@
       </span>
       </h4><span class="permalink">
       <a href="../../index.html#framian.csv.package@CsvRowDelim" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.csv.Input" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Input"></a>
+      <a id="Input:Input"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Input$.html"><span class="name">Input</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.csv.package@Input" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.csv.Instr" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Instr"></a>
+      <a id="Instr:Instr"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Instr$.html"><span class="name">Instr</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.csv.package@Instr" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.csv.ParserState" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ParserState"></a>
+      <a id="ParserState:ParserState"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="ParserState$.html"><span class="name">ParserState</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.csv.package@ParserState" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" />
       </a>
     </span>

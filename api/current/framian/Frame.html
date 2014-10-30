@@ -47,7 +47,7 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.2.0/framian/src/main/scala/framian/Frame.scala" target="_blank">Frame.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.3.0/framian/src/main/scala/framian/Frame.scala" target="_blank">Frame.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div><div class="toggleContainer block">
@@ -133,6 +133,44 @@
       </a>
     </span>
       <p class="shortcomment cmt">A column-oriented view of this frame.</p><div class="fullcomment"><div class="comment cmt"><p>A column-oriented view of this frame. Largely used internally.</p></div></div>
+    </li><li name="framian.Frame#isColOriented" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="isColOriented:Boolean"></a>
+      <a id="isColOriented:Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isColOriented</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Frame@isColOriented:Boolean" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns <code>true</code> if this frame can be treated as column oriented.</p><div class="fullcomment"><div class="comment cmt"><p>Returns <code>true</code> if this frame can be treated as column oriented. This is
+largely for optimization purposes.
+</p></div></div>
+    </li><li name="framian.Frame#isRowOriented" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="isRowOriented:Boolean"></a>
+      <a id="isRowOriented:Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isRowOriented</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Frame@isRowOriented:Boolean" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns <code>true</code> if this frame can be treated as row oriented.</p><div class="fullcomment"><div class="comment cmt"><p>Returns <code>true</code> if this frame can be treated as row oriented. This is
+largely for optimization purposes.
+</p></div></div>
     </li><li name="framian.Frame#rowIndex" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="rowIndex:framian.Index[Row]"></a>
       <a id="rowIndex:Index[Row]"></a>
@@ -321,8 +359,46 @@ becomes the columns of the new frame.
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="framian.Frame#appendCols" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="appendCols(that:framian.Frame[Row,Col]):framian.Frame[Row,Col]"></a>
+      <a id="appendCols(Frame[Row,Col]):Frame[Row,Col]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">appendCols</span><span class="params">(<span name="that">that: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.Col">Col</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.Col">Col</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Frame@appendCols(that:framian.Frame[Row,Col]):framian.Frame[Row,Col]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Appends the columns in <code>that</code> to the end of the columns in <code>this</code>.</p><div class="fullcomment"><div class="comment cmt"><p>Appends the columns in <code>that</code> to the end of the columns in <code>this</code>. This
+will force the rows into sorted order.
+</p></div></div>
+    </li><li name="framian.Frame#appendRows" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="appendRows(that:framian.Frame[Row,Col]):framian.Frame[Row,Col]"></a>
+      <a id="appendRows(Frame[Row,Col]):Frame[Row,Col]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">appendRows</span><span class="params">(<span name="that">that: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.Col">Col</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.Col">Col</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Frame@appendRows(that:framian.Frame[Row,Col]):framian.Frame[Row,Col]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Appends the rows in <code>that</code> to the end of the rows in <code>this</code>.</p><div class="fullcomment"><div class="comment cmt"><p>Appends the rows in <code>that</code> to the end of the rows in <code>this</code>. This will
+force the columns into sorted order.
+</p></div></div>
     </li><li name="framian.Frame#apply" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="apply[A](rowKey:Row,colKey:Col)(implicitevidence$19:framian.ColumnTyper[A]):framian.Cell[A]"></a>
+      <a id="apply[A](rowKey:Row,colKey:Col)(implicitevidence$18:framian.ColumnTyper[A]):framian.Cell[A]"></a>
       <a id="apply[A](Row,Col)(ColumnTyper[A]):Cell[A]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -333,7 +409,7 @@ becomes the columns of the new frame.
         <span class="name">apply</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="rowKey">rowKey: <span class="extype" name="framian.Frame.Row">Row</span></span>, <span name="colKey">colKey: <span class="extype" name="framian.Frame.Col">Col</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="ColumnTyper.html" class="extype" name="framian.ColumnTyper">ColumnTyper</a>[<span class="extype" name="framian.Frame.apply.A">A</span>]</span>)</span><span class="result">: <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.Frame.apply.A">A</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@apply[A](rowKey:Row,colKey:Col)(implicitevidence$19:framian.ColumnTyper[A]):framian.Cell[A]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@apply[A](rowKey:Row,colKey:Col)(implicitevidence$18:framian.ColumnTyper[A]):framian.Cell[A]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -399,6 +475,23 @@ value is not meaningful as an instance of <code>A</code>, then <a href="NM$.html
       </a>
     </span>
       
+    </li><li name="framian.Frame#colKeys" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="colKeys:Set[Col]"></a>
+      <a id="colKeys:Set[Col]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">colKeys</span><span class="result">: <span class="extype" name="scala.Predef.Set">Set</span>[<span class="extype" name="framian.Frame.Col">Col</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Frame@colKeys:Set[Col]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns the set of all unique column keys.</p>
     </li><li name="framian.Frame#colOrder" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="colOrder:spire.algebra.Order[Col]"></a>
       <a id="colOrder:Order[Col]"></a>
@@ -416,8 +509,25 @@ value is not meaningful as an instance of <code>A</code>, then <a href="NM$.html
       </a>
     </span>
       
+    </li><li name="framian.Frame#cols" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="cols:Int"></a>
+      <a id="cols:Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">cols</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Frame@cols:Int" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns the number of cols in this frame.</p>
     </li><li name="framian.Frame#column" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="column[T](col:Col)(implicitevidence$20:framian.ColumnTyper[T]):framian.Series[Row,T]"></a>
+      <a id="column[T](col:Col)(implicitevidence$19:framian.ColumnTyper[T]):framian.Series[Row,T]"></a>
       <a id="column[T](Col)(ColumnTyper[T]):Series[Row,T]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -428,7 +538,7 @@ value is not meaningful as an instance of <code>A</code>, then <a href="NM$.html
         <span class="name">column</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="col">col: <span class="extype" name="framian.Frame.Col">Col</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="ColumnTyper.html" class="extype" name="framian.ColumnTyper">ColumnTyper</a>[<span class="extype" name="framian.Frame.column.T">T</span>]</span>)</span><span class="result">: <a href="Series.html" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.column.T">T</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@column[T](col:Col)(implicitevidence$20:framian.ColumnTyper[T]):framian.Series[Row,T]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@column[T](col:Col)(implicitevidence$19:framian.ColumnTyper[T]):framian.Series[Row,T]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -832,7 +942,7 @@ them in a <a href="Series.html" class="extype" name="framian.Series">Series</a>.
     </span>
       
     </li><li name="framian.Frame#group" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="group[A](rows:framian.Rows[Row,A])(implicitevidence$34:spire.algebra.Order[A],implicitevidence$35:scala.reflect.ClassTag[A]):framian.Frame[Row,A]"></a>
+      <a id="group[A](rows:framian.Rows[Row,A])(implicitevidence$33:spire.algebra.Order[A],implicitevidence$34:scala.reflect.ClassTag[A]):framian.Frame[Row,A]"></a>
       <a id="group[A](Rows[Row,A])(Order[A],ClassTag[A]):Frame[Row,A]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -843,7 +953,7 @@ them in a <a href="Series.html" class="extype" name="framian.Series">Series</a>.
         <span class="name">group</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="rows">rows: <a href="Rows.html" class="extype" name="framian.Rows">Rows</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.group.A">A</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Order">Order</span>[<span class="extype" name="framian.Frame.group.A">A</span>]</span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.group.A">A</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.group.A">A</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@group[A](rows:framian.Rows[Row,A])(implicitevidence$34:spire.algebra.Order[A],implicitevidence$35:scala.reflect.ClassTag[A]):framian.Frame[Row,A]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@group[A](rows:framian.Rows[Row,A])(implicitevidence$33:spire.algebra.Order[A],implicitevidence$34:scala.reflect.ClassTag[A]):framian.Frame[Row,A]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -852,7 +962,7 @@ group for each column.</p><div class="fullcomment"><div class="comment cmt"><p>T
 group for each column. Each column is then re-keyed using its group.</p><p>This is equivalent to, but more efficient than, <code>frame.sortBy(rows).reindex(rows)</code>.
 </p></div></div>
     </li><li name="framian.Frame#group" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="group[A](cols:framian.Cols[Col,A])(implicitevidence$32:spire.algebra.Order[A],implicitevidence$33:scala.reflect.ClassTag[A]):framian.Frame[A,Col]"></a>
+      <a id="group[A](cols:framian.Cols[Col,A])(implicitevidence$31:spire.algebra.Order[A],implicitevidence$32:scala.reflect.ClassTag[A]):framian.Frame[A,Col]"></a>
       <a id="group[A](Cols[Col,A])(Order[A],ClassTag[A]):Frame[A,Col]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -863,7 +973,7 @@ group for each column. Each column is then re-keyed using its group.</p><p>This 
         <span class="name">group</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="cols">cols: <a href="Cols.html" class="extype" name="framian.Cols">Cols</a>[<span class="extype" name="framian.Frame.Col">Col</span>, <span class="extype" name="framian.Frame.group.A">A</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Order">Order</span>[<span class="extype" name="framian.Frame.group.A">A</span>]</span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.group.A">A</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.group.A">A</span>, <span class="extype" name="framian.Frame.Col">Col</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@group[A](cols:framian.Cols[Col,A])(implicitevidence$32:spire.algebra.Order[A],implicitevidence$33:scala.reflect.ClassTag[A]):framian.Frame[A,Col]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@group[A](cols:framian.Cols[Col,A])(implicitevidence$31:spire.algebra.Order[A],implicitevidence$32:scala.reflect.ClassTag[A]):framian.Frame[A,Col]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -943,18 +1053,18 @@ contain <a href="NA$.html" class="extype" name="framian.NA">NA</a>s or <a href="
     </span>
       
     </li><li name="framian.Frame#join" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="join[T](col:Col,that:framian.Series[Row,T])(joinStrategy:framian.Join)(implicitevidence$42:scala.reflect.ClassTag[T],implicitevidence$43:framian.ColumnTyper[T]):framian.Frame[Row,Col]"></a>
-      <a id="join[T](Col,Series[Row,T])(Join)(ClassTag[T],ColumnTyper[T]):Frame[Row,Col]"></a>
+      <a id="join[T](col:Col,that:framian.Series[Row,T])(joinStrategy:framian.Join)(implicitevidence$40:scala.reflect.ClassTag[T]):framian.Frame[Row,Col]"></a>
+      <a id="join[T](Col,Series[Row,T])(Join)(ClassTag[T]):Frame[Row,Col]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">join</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="col">col: <span class="extype" name="framian.Frame.Col">Col</span></span>, <span name="that">that: <a href="Series.html" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.join.T">T</span>]</span>)</span><span class="params">(<span name="joinStrategy">joinStrategy: <a href="Join.html" class="extype" name="framian.Join">Join</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.join.T">T</span>]</span>, <span name="arg1">arg1: <a href="ColumnTyper.html" class="extype" name="framian.ColumnTyper">ColumnTyper</a>[<span class="extype" name="framian.Frame.join.T">T</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.Col">Col</span>]</span>
+        <span class="name">join</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="col">col: <span class="extype" name="framian.Frame.Col">Col</span></span>, <span name="that">that: <a href="Series.html" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.join.T">T</span>]</span>)</span><span class="params">(<span name="joinStrategy">joinStrategy: <a href="Join.html" class="extype" name="framian.Join">Join</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.join.T">T</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.Col">Col</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@join[T](col:Col,that:framian.Series[Row,T])(joinStrategy:framian.Join)(implicitevidence$42:scala.reflect.ClassTag[T],implicitevidence$43:framian.ColumnTyper[T]):framian.Frame[Row,Col]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@join[T](col:Col,that:framian.Series[Row,T])(joinStrategy:framian.Join)(implicitevidence$40:scala.reflect.ClassTag[T]):framian.Frame[Row,Col]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -977,7 +1087,7 @@ contain <a href="NA$.html" class="extype" name="framian.NA">NA</a>s or <a href="
     </span>
       
     </li><li name="framian.Frame#map" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="map[A,B](cols:framian.Cols[Col,A],to:Col)(f:A=&gt;B)(implicitevidence$29:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]"></a>
+      <a id="map[A,B](cols:framian.Cols[Col,A],to:Col)(f:A=&gt;B)(implicitevidence$28:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]"></a>
       <a id="map[A,B](Cols[Col,A],Col)((A)⇒B)(ClassTag[B]):Frame[Row,Col]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -988,7 +1098,7 @@ contain <a href="NA$.html" class="extype" name="framian.NA">NA</a>s or <a href="
         <span class="name">map</span><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="params">(<span name="cols">cols: <a href="Cols.html" class="extype" name="framian.Cols">Cols</a>[<span class="extype" name="framian.Frame.Col">Col</span>, <span class="extype" name="framian.Frame.map.A">A</span>]</span>, <span name="to">to: <span class="extype" name="framian.Frame.Col">Col</span></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="framian.Frame.map.A">A</span>) ⇒ <span class="extype" name="framian.Frame.map.B">B</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.map.B">B</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.Col">Col</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@map[A,B](cols:framian.Cols[Col,A],to:Col)(f:A=&gt;B)(implicitevidence$29:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@map[A,B](cols:framian.Cols[Col,A],to:Col)(f:A=&gt;B)(implicitevidence$28:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -1000,7 +1110,7 @@ will be removed first.</p><p>This is equivalent to, but may be more efficient th
 <code>frame.merge(to, frame.get(cols))(Merge.Outer)</code>.
 </p></div></div>
     </li><li name="framian.Frame#map" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="map[A,B](rows:framian.Rows[Row,A],to:Row)(f:A=&gt;B)(implicitevidence$28:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]"></a>
+      <a id="map[A,B](rows:framian.Rows[Row,A],to:Row)(f:A=&gt;B)(implicitevidence$27:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]"></a>
       <a id="map[A,B](Rows[Row,A],Row)((A)⇒B)(ClassTag[B]):Frame[Row,Col]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1011,7 +1121,7 @@ will be removed first.</p><p>This is equivalent to, but may be more efficient th
         <span class="name">map</span><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="params">(<span name="rows">rows: <a href="Rows.html" class="extype" name="framian.Rows">Rows</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.map.A">A</span>]</span>, <span name="to">to: <span class="extype" name="framian.Frame.Row">Row</span></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="framian.Frame.map.A">A</span>) ⇒ <span class="extype" name="framian.Frame.map.B">B</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.map.B">B</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.Col">Col</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@map[A,B](rows:framian.Rows[Row,A],to:Row)(f:A=&gt;B)(implicitevidence$28:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@map[A,B](rows:framian.Rows[Row,A],to:Row)(f:A=&gt;B)(implicitevidence$27:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -1022,7 +1132,7 @@ appended onto the frame, otherwise the row(s) with key <code>to</code> will be
 removed first.
 </p></div></div>
     </li><li name="framian.Frame#mapColKeys" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="mapColKeys[C](f:Col=&gt;C)(implicitevidence$17:spire.algebra.Order[C],implicitevidence$18:scala.reflect.ClassTag[C]):framian.Frame[Row,C]"></a>
+      <a id="mapColKeys[C](f:Col=&gt;C)(implicitevidence$16:spire.algebra.Order[C],implicitevidence$17:scala.reflect.ClassTag[C]):framian.Frame[Row,C]"></a>
       <a id="mapColKeys[C]((Col)⇒C)(Order[C],ClassTag[C]):Frame[Row,C]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1033,7 +1143,7 @@ removed first.
         <span class="name">mapColKeys</span><span class="tparams">[<span name="C">C</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="framian.Frame.Col">Col</span>) ⇒ <span class="extype" name="framian.Frame.mapColKeys.C">C</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Order">Order</span>[<span class="extype" name="framian.Frame.mapColKeys.C">C</span>]</span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.mapColKeys.C">C</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.mapColKeys.C">C</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@mapColKeys[C](f:Col=&gt;C)(implicitevidence$17:spire.algebra.Order[C],implicitevidence$18:scala.reflect.ClassTag[C]):framian.Frame[Row,C]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@mapColKeys[C](f:Col=&gt;C)(implicitevidence$16:spire.algebra.Order[C],implicitevidence$17:scala.reflect.ClassTag[C]):framian.Frame[Row,C]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -1041,7 +1151,7 @@ removed first.
 columns.
 </p></div></div>
     </li><li name="framian.Frame#mapRowGroups" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="mapRowGroups[R1,C1](f:(Row,framian.Frame[Row,Col])=&gt;framian.Frame[R1,C1])(implicitevidence$11:scala.reflect.ClassTag[R1],implicitevidence$12:spire.algebra.Order[R1],implicitevidence$13:scala.reflect.ClassTag[C1],implicitevidence$14:spire.algebra.Order[C1]):framian.Frame[R1,C1]"></a>
+      <a id="mapRowGroups[R1,C1](f:(Row,framian.Frame[Row,Col])=&gt;framian.Frame[R1,C1])(implicitevidence$10:scala.reflect.ClassTag[R1],implicitevidence$11:spire.algebra.Order[R1],implicitevidence$12:scala.reflect.ClassTag[C1],implicitevidence$13:spire.algebra.Order[C1]):framian.Frame[R1,C1]"></a>
       <a id="mapRowGroups[R1,C1]((Row,Frame[Row,Col])⇒Frame[R1,C1])(ClassTag[R1],Order[R1],ClassTag[C1],Order[C1]):Frame[R1,C1]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1052,13 +1162,13 @@ columns.
         <span class="name">mapRowGroups</span><span class="tparams">[<span name="R1">R1</span>, <span name="C1">C1</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="framian.Frame.Row">Row</span>, <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.Col">Col</span>]) ⇒ <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.mapRowGroups.R1">R1</span>, <span class="extype" name="framian.Frame.mapRowGroups.C1">C1</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.mapRowGroups.R1">R1</span>]</span>, <span name="arg1">arg1: <span class="extype" name="spire.algebra.Order">Order</span>[<span class="extype" name="framian.Frame.mapRowGroups.R1">R1</span>]</span>, <span name="arg2">arg2: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.mapRowGroups.C1">C1</span>]</span>, <span name="arg3">arg3: <span class="extype" name="spire.algebra.Order">Order</span>[<span class="extype" name="framian.Frame.mapRowGroups.C1">C1</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.mapRowGroups.R1">R1</span>, <span class="extype" name="framian.Frame.mapRowGroups.C1">C1</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@mapRowGroups[R1,C1](f:(Row,framian.Frame[Row,Col])=&gt;framian.Frame[R1,C1])(implicitevidence$11:scala.reflect.ClassTag[R1],implicitevidence$12:spire.algebra.Order[R1],implicitevidence$13:scala.reflect.ClassTag[C1],implicitevidence$14:spire.algebra.Order[C1]):framian.Frame[R1,C1]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@mapRowGroups[R1,C1](f:(Row,framian.Frame[Row,Col])=&gt;framian.Frame[R1,C1])(implicitevidence$10:scala.reflect.ClassTag[R1],implicitevidence$11:spire.algebra.Order[R1],implicitevidence$12:scala.reflect.ClassTag[C1],implicitevidence$13:spire.algebra.Order[C1]):framian.Frame[R1,C1]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
       
     </li><li name="framian.Frame#mapRowKeys" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="mapRowKeys[R](f:Row=&gt;R)(implicitevidence$15:spire.algebra.Order[R],implicitevidence$16:scala.reflect.ClassTag[R]):framian.Frame[R,Col]"></a>
+      <a id="mapRowKeys[R](f:Row=&gt;R)(implicitevidence$14:spire.algebra.Order[R],implicitevidence$15:scala.reflect.ClassTag[R]):framian.Frame[R,Col]"></a>
       <a id="mapRowKeys[R]((Row)⇒R)(Order[R],ClassTag[R]):Frame[R,Col]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1069,14 +1179,14 @@ columns.
         <span class="name">mapRowKeys</span><span class="tparams">[<span name="R">R</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="framian.Frame.Row">Row</span>) ⇒ <span class="extype" name="framian.Frame.mapRowKeys.R">R</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Order">Order</span>[<span class="extype" name="framian.Frame.mapRowKeys.R">R</span>]</span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.mapRowKeys.R">R</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.mapRowKeys.R">R</span>, <span class="extype" name="framian.Frame.Col">Col</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@mapRowKeys[R](f:Row=&gt;R)(implicitevidence$15:spire.algebra.Order[R],implicitevidence$16:scala.reflect.ClassTag[R]):framian.Frame[R,Col]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@mapRowKeys[R](f:Row=&gt;R)(implicitevidence$14:spire.algebra.Order[R],implicitevidence$15:scala.reflect.ClassTag[R]):framian.Frame[R,Col]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
       <p class="shortcomment cmt">Map the row index using <code>f</code>.</p><div class="fullcomment"><div class="comment cmt"><p>Map the row index using <code>f</code>. This retains the traversal order of the rows.
 </p></div></div>
     </li><li name="framian.Frame#mapWithIndex" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="mapWithIndex[A,B](cols:framian.Cols[Col,A],to:Col)(f:(Row,A)=&gt;B)(implicitevidence$27:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]"></a>
+      <a id="mapWithIndex[A,B](cols:framian.Cols[Col,A],to:Col)(f:(Row,A)=&gt;B)(implicitevidence$26:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]"></a>
       <a id="mapWithIndex[A,B](Cols[Col,A],Col)((Row,A)⇒B)(ClassTag[B]):Frame[Row,Col]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1087,7 +1197,7 @@ columns.
         <span class="name">mapWithIndex</span><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="params">(<span name="cols">cols: <a href="Cols.html" class="extype" name="framian.Cols">Cols</a>[<span class="extype" name="framian.Frame.Col">Col</span>, <span class="extype" name="framian.Frame.mapWithIndex.A">A</span>]</span>, <span name="to">to: <span class="extype" name="framian.Frame.Col">Col</span></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.mapWithIndex.A">A</span>) ⇒ <span class="extype" name="framian.Frame.mapWithIndex.B">B</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.mapWithIndex.B">B</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.Col">Col</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@mapWithIndex[A,B](cols:framian.Cols[Col,A],to:Col)(f:(Row,A)=&gt;B)(implicitevidence$27:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@mapWithIndex[A,B](cols:framian.Cols[Col,A],to:Col)(f:(Row,A)=&gt;B)(implicitevidence$26:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -1098,7 +1208,7 @@ then a new column will be appended onto the frame, otherwise the
 columns(s) with key <code>to</code> will be removed first.
 </p></div></div>
     </li><li name="framian.Frame#mapWithIndex" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="mapWithIndex[A,B](rows:framian.Rows[Row,A],to:Row)(f:(Col,A)=&gt;B)(implicitevidence$26:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]"></a>
+      <a id="mapWithIndex[A,B](rows:framian.Rows[Row,A],to:Row)(f:(Col,A)=&gt;B)(implicitevidence$25:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]"></a>
       <a id="mapWithIndex[A,B](Rows[Row,A],Row)((Col,A)⇒B)(ClassTag[B]):Frame[Row,Col]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1109,7 +1219,7 @@ columns(s) with key <code>to</code> will be removed first.
         <span class="name">mapWithIndex</span><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="params">(<span name="rows">rows: <a href="Rows.html" class="extype" name="framian.Rows">Rows</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.mapWithIndex.A">A</span>]</span>, <span name="to">to: <span class="extype" name="framian.Frame.Row">Row</span></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="framian.Frame.Col">Col</span>, <span class="extype" name="framian.Frame.mapWithIndex.A">A</span>) ⇒ <span class="extype" name="framian.Frame.mapWithIndex.B">B</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.mapWithIndex.B">B</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.Col">Col</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@mapWithIndex[A,B](rows:framian.Rows[Row,A],to:Row)(f:(Col,A)=&gt;B)(implicitevidence$26:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@mapWithIndex[A,B](rows:framian.Rows[Row,A],to:Row)(f:(Col,A)=&gt;B)(implicitevidence$25:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -1137,18 +1247,18 @@ key <code>to</code> will be removed first.
     </span>
       
     </li><li name="framian.Frame#merge" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="merge[T](col:Col,that:framian.Series[Row,T])(mergeStrategy:framian.Merge)(implicitevidence$40:scala.reflect.ClassTag[T],implicitevidence$41:framian.ColumnTyper[T]):framian.Frame[Row,Col]"></a>
-      <a id="merge[T](Col,Series[Row,T])(Merge)(ClassTag[T],ColumnTyper[T]):Frame[Row,Col]"></a>
+      <a id="merge[T](col:Col,that:framian.Series[Row,T])(mergeStrategy:framian.Merge)(implicitevidence$39:scala.reflect.ClassTag[T]):framian.Frame[Row,Col]"></a>
+      <a id="merge[T](Col,Series[Row,T])(Merge)(ClassTag[T]):Frame[Row,Col]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">merge</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="col">col: <span class="extype" name="framian.Frame.Col">Col</span></span>, <span name="that">that: <a href="Series.html" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.merge.T">T</span>]</span>)</span><span class="params">(<span name="mergeStrategy">mergeStrategy: <a href="Merge.html" class="extype" name="framian.Merge">Merge</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.merge.T">T</span>]</span>, <span name="arg1">arg1: <a href="ColumnTyper.html" class="extype" name="framian.ColumnTyper">ColumnTyper</a>[<span class="extype" name="framian.Frame.merge.T">T</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.Col">Col</span>]</span>
+        <span class="name">merge</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="col">col: <span class="extype" name="framian.Frame.Col">Col</span></span>, <span name="that">that: <a href="Series.html" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.merge.T">T</span>]</span>)</span><span class="params">(<span name="mergeStrategy">mergeStrategy: <a href="Merge.html" class="extype" name="framian.Merge">Merge</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.merge.T">T</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.Col">Col</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@merge[T](col:Col,that:framian.Series[Row,T])(mergeStrategy:framian.Merge)(implicitevidence$40:scala.reflect.ClassTag[T],implicitevidence$41:framian.ColumnTyper[T]):framian.Frame[Row,Col]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@merge[T](col:Col,that:framian.Series[Row,T])(mergeStrategy:framian.Merge)(implicitevidence$39:scala.reflect.ClassTag[T]):framian.Frame[Row,Col]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -1222,7 +1332,7 @@ key <code>to</code> will be removed first.
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="framian.Frame#reduce" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="reduce[A,B](rows:framian.Rows[Row,A],to:Row)(reducer:framian.reduce.Reducer[A,B])(implicitevidence$37:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]"></a>
+      <a id="reduce[A,B](rows:framian.Rows[Row,A],to:Row)(reducer:framian.reduce.Reducer[A,B])(implicitevidence$36:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]"></a>
       <a id="reduce[A,B](Rows[Row,A],Row)(Reducer[A,B])(ClassTag[B]):Frame[Row,Col]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1233,7 +1343,7 @@ key <code>to</code> will be removed first.
         <span class="name">reduce</span><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="params">(<span name="rows">rows: <a href="Rows.html" class="extype" name="framian.Rows">Rows</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.reduce.A">A</span>]</span>, <span name="to">to: <span class="extype" name="framian.Frame.Row">Row</span></span>)</span><span class="params">(<span name="reducer">reducer: <a href="reduce/Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.Frame.reduce.A">A</span>, <span class="extype" name="framian.Frame.reduce.B">B</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.reduce.B">B</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.Col">Col</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@reduce[A,B](rows:framian.Rows[Row,A],to:Row)(reducer:framian.reduce.Reducer[A,B])(implicitevidence$37:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@reduce[A,B](rows:framian.Rows[Row,A],to:Row)(reducer:framian.reduce.Reducer[A,B])(implicitevidence$36:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -1247,7 +1357,7 @@ res0: framian.Frame[<span class="std">Int</span>,<span class="std">Int</span>] =
 <span class="num">0</span> : a | b
 <span class="num">1</span> : <span class="num">5</span> | <span class="num">5</span></pre></div></div>
     </li><li name="framian.Frame#reduce" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="reduce[A,B](cols:framian.Cols[Col,A],to:Col)(reducer:framian.reduce.Reducer[A,B])(implicitevidence$36:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]"></a>
+      <a id="reduce[A,B](cols:framian.Cols[Col,A],to:Col)(reducer:framian.reduce.Reducer[A,B])(implicitevidence$35:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]"></a>
       <a id="reduce[A,B](Cols[Col,A],Col)(Reducer[A,B])(ClassTag[B]):Frame[Row,Col]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1258,7 +1368,7 @@ res0: framian.Frame[<span class="std">Int</span>,<span class="std">Int</span>] =
         <span class="name">reduce</span><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="params">(<span name="cols">cols: <a href="Cols.html" class="extype" name="framian.Cols">Cols</a>[<span class="extype" name="framian.Frame.Col">Col</span>, <span class="extype" name="framian.Frame.reduce.A">A</span>]</span>, <span name="to">to: <span class="extype" name="framian.Frame.Col">Col</span></span>)</span><span class="params">(<span name="reducer">reducer: <a href="reduce/Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.Frame.reduce.A">A</span>, <span class="extype" name="framian.Frame.reduce.B">B</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.reduce.B">B</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.Col">Col</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@reduce[A,B](cols:framian.Cols[Col,A],to:Col)(reducer:framian.reduce.Reducer[A,B])(implicitevidence$36:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@reduce[A,B](cols:framian.Cols[Col,A],to:Col)(reducer:framian.reduce.Reducer[A,B])(implicitevidence$35:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -1272,7 +1382,7 @@ res0: Frame[<span class="std">Int</span>, <span class="std">Int</span>] =
 <span class="num">0</span> : a | <span class="num">5</span>
 <span class="num">1</span> : b | <span class="num">5</span></pre></div></div>
     </li><li name="framian.Frame#reduceByKey" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="reduceByKey[A,B](rows:framian.Rows[Row,A],to:Row)(reducer:framian.reduce.Reducer[A,B])(implicitevidence$39:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]"></a>
+      <a id="reduceByKey[A,B](rows:framian.Rows[Row,A],to:Row)(reducer:framian.reduce.Reducer[A,B])(implicitevidence$38:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]"></a>
       <a id="reduceByKey[A,B](Rows[Row,A],Row)(Reducer[A,B])(ClassTag[B]):Frame[Row,Col]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1283,7 +1393,7 @@ res0: Frame[<span class="std">Int</span>, <span class="std">Int</span>] =
         <span class="name">reduceByKey</span><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="params">(<span name="rows">rows: <a href="Rows.html" class="extype" name="framian.Rows">Rows</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.reduceByKey.A">A</span>]</span>, <span name="to">to: <span class="extype" name="framian.Frame.Row">Row</span></span>)</span><span class="params">(<span name="reducer">reducer: <a href="reduce/Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.Frame.reduceByKey.A">A</span>, <span class="extype" name="framian.Frame.reduceByKey.B">B</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.reduceByKey.B">B</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.Col">Col</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@reduceByKey[A,B](rows:framian.Rows[Row,A],to:Row)(reducer:framian.reduce.Reducer[A,B])(implicitevidence$39:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@reduceByKey[A,B](rows:framian.Rows[Row,A],to:Row)(reducer:framian.reduce.Reducer[A,B])(implicitevidence$38:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -1294,7 +1404,7 @@ result is duplicated for each column. If <code>to</code> exists it will be repla
 otherwise it will be added to the end of the rows.
 </p></div></div>
     </li><li name="framian.Frame#reduceByKey" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="reduceByKey[A,B](cols:framian.Cols[Col,A],to:Col)(reducer:framian.reduce.Reducer[A,B])(implicitevidence$38:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]"></a>
+      <a id="reduceByKey[A,B](cols:framian.Cols[Col,A],to:Col)(reducer:framian.reduce.Reducer[A,B])(implicitevidence$37:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]"></a>
       <a id="reduceByKey[A,B](Cols[Col,A],Col)(Reducer[A,B])(ClassTag[B]):Frame[Row,Col]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1305,7 +1415,7 @@ otherwise it will be added to the end of the rows.
         <span class="name">reduceByKey</span><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="params">(<span name="cols">cols: <a href="Cols.html" class="extype" name="framian.Cols">Cols</a>[<span class="extype" name="framian.Frame.Col">Col</span>, <span class="extype" name="framian.Frame.reduceByKey.A">A</span>]</span>, <span name="to">to: <span class="extype" name="framian.Frame.Col">Col</span></span>)</span><span class="params">(<span name="reducer">reducer: <a href="reduce/Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.Frame.reduceByKey.A">A</span>, <span class="extype" name="framian.Frame.reduceByKey.B">B</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.reduceByKey.B">B</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.Col">Col</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@reduceByKey[A,B](cols:framian.Cols[Col,A],to:Col)(reducer:framian.reduce.Reducer[A,B])(implicitevidence$38:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@reduceByKey[A,B](cols:framian.Cols[Col,A],to:Col)(reducer:framian.reduce.Reducer[A,B])(implicitevidence$37:scala.reflect.ClassTag[B]):framian.Frame[Row,Col]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -1316,7 +1426,7 @@ duplicated for each row. If <code>to</code> exists it will be replaced, otherwis
 will be added to the end of the columns.
 </p></div></div>
     </li><li name="framian.Frame#reduceFrame" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="reduceFrame[V,R](reducer:framian.reduce.Reducer[V,R])(implicitevidence$2:framian.ColumnTyper[V],implicitevidence$3:scala.reflect.ClassTag[R],implicitevidence$4:framian.ColumnTyper[R]):framian.Series[Col,R]"></a>
+      <a id="reduceFrame[V,R](reducer:framian.reduce.Reducer[V,R])(implicitevidence$1:framian.ColumnTyper[V],implicitevidence$2:scala.reflect.ClassTag[R],implicitevidence$3:framian.ColumnTyper[R]):framian.Series[Col,R]"></a>
       <a id="reduceFrame[V,R](Reducer[V,R])(ColumnTyper[V],ClassTag[R],ColumnTyper[R]):Series[Col,R]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1327,7 +1437,7 @@ will be added to the end of the columns.
         <span class="name">reduceFrame</span><span class="tparams">[<span name="V">V</span>, <span name="R">R</span>]</span><span class="params">(<span name="reducer">reducer: <a href="reduce/Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.Frame.reduceFrame.V">V</span>, <span class="extype" name="framian.Frame.reduceFrame.R">R</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="ColumnTyper.html" class="extype" name="framian.ColumnTyper">ColumnTyper</a>[<span class="extype" name="framian.Frame.reduceFrame.V">V</span>]</span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.reduceFrame.R">R</span>]</span>, <span name="arg2">arg2: <a href="ColumnTyper.html" class="extype" name="framian.ColumnTyper">ColumnTyper</a>[<span class="extype" name="framian.Frame.reduceFrame.R">R</span>]</span>)</span><span class="result">: <a href="Series.html" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.Frame.Col">Col</span>, <span class="extype" name="framian.Frame.reduceFrame.R">R</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@reduceFrame[V,R](reducer:framian.reduce.Reducer[V,R])(implicitevidence$2:framian.ColumnTyper[V],implicitevidence$3:scala.reflect.ClassTag[R],implicitevidence$4:framian.ColumnTyper[R]):framian.Series[Col,R]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@reduceFrame[V,R](reducer:framian.reduce.Reducer[V,R])(implicitevidence$1:framian.ColumnTyper[V],implicitevidence$2:scala.reflect.ClassTag[R],implicitevidence$3:framian.ColumnTyper[R]):framian.Series[Col,R]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -1337,7 +1447,7 @@ it will only apply it in the case that there exists a type conversion for a give
 column.
 </p></div></div>
     </li><li name="framian.Frame#reduceFrameByKey" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="reduceFrameByKey[V,R](reducer:framian.reduce.Reducer[V,R])(implicitevidence$5:framian.ColumnTyper[V],implicitevidence$6:scala.reflect.ClassTag[R],implicitevidence$7:framian.ColumnTyper[R]):framian.Frame[Row,Col]"></a>
+      <a id="reduceFrameByKey[V,R](reducer:framian.reduce.Reducer[V,R])(implicitevidence$4:framian.ColumnTyper[V],implicitevidence$5:scala.reflect.ClassTag[R],implicitevidence$6:framian.ColumnTyper[R]):framian.Frame[Row,Col]"></a>
       <a id="reduceFrameByKey[V,R](Reducer[V,R])(ColumnTyper[V],ClassTag[R],ColumnTyper[R]):Frame[Row,Col]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1348,13 +1458,13 @@ column.
         <span class="name">reduceFrameByKey</span><span class="tparams">[<span name="V">V</span>, <span name="R">R</span>]</span><span class="params">(<span name="reducer">reducer: <a href="reduce/Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[<span class="extype" name="framian.Frame.reduceFrameByKey.V">V</span>, <span class="extype" name="framian.Frame.reduceFrameByKey.R">R</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="ColumnTyper.html" class="extype" name="framian.ColumnTyper">ColumnTyper</a>[<span class="extype" name="framian.Frame.reduceFrameByKey.V">V</span>]</span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.reduceFrameByKey.R">R</span>]</span>, <span name="arg2">arg2: <a href="ColumnTyper.html" class="extype" name="framian.ColumnTyper">ColumnTyper</a>[<span class="extype" name="framian.Frame.reduceFrameByKey.R">R</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.Col">Col</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@reduceFrameByKey[V,R](reducer:framian.reduce.Reducer[V,R])(implicitevidence$5:framian.ColumnTyper[V],implicitevidence$6:scala.reflect.ClassTag[R],implicitevidence$7:framian.ColumnTyper[R]):framian.Frame[Row,Col]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@reduceFrameByKey[V,R](reducer:framian.reduce.Reducer[V,R])(implicitevidence$4:framian.ColumnTyper[V],implicitevidence$5:scala.reflect.ClassTag[R],implicitevidence$6:framian.ColumnTyper[R]):framian.Frame[Row,Col]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
       
     </li><li name="framian.Frame#reduceFrameWithCol" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="reduceFrameWithCol[A,B,C](col:Col)(reducer:framian.reduce.Reducer[(A,B),C])(implicitevidence$8:framian.ColumnTyper[A],implicitevidence$9:framian.ColumnTyper[B],implicitevidence$10:scala.reflect.ClassTag[C]):framian.Series[Col,C]"></a>
+      <a id="reduceFrameWithCol[A,B,C](col:Col)(reducer:framian.reduce.Reducer[(A,B),C])(implicitevidence$7:framian.ColumnTyper[A],implicitevidence$8:framian.ColumnTyper[B],implicitevidence$9:scala.reflect.ClassTag[C]):framian.Series[Col,C]"></a>
       <a id="reduceFrameWithCol[A,B,C](Col)(Reducer[(A,B),C])(ColumnTyper[A],ColumnTyper[B],ClassTag[C]):Series[Col,C]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1365,13 +1475,13 @@ column.
         <span class="name">reduceFrameWithCol</span><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>, <span name="C">C</span>]</span><span class="params">(<span name="col">col: <span class="extype" name="framian.Frame.Col">Col</span></span>)</span><span class="params">(<span name="reducer">reducer: <a href="reduce/Reducer.html" class="extype" name="framian.reduce.Reducer">Reducer</a>[(<span class="extype" name="framian.Frame.reduceFrameWithCol.A">A</span>, <span class="extype" name="framian.Frame.reduceFrameWithCol.B">B</span>), <span class="extype" name="framian.Frame.reduceFrameWithCol.C">C</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="ColumnTyper.html" class="extype" name="framian.ColumnTyper">ColumnTyper</a>[<span class="extype" name="framian.Frame.reduceFrameWithCol.A">A</span>]</span>, <span name="arg1">arg1: <a href="ColumnTyper.html" class="extype" name="framian.ColumnTyper">ColumnTyper</a>[<span class="extype" name="framian.Frame.reduceFrameWithCol.B">B</span>]</span>, <span name="arg2">arg2: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.reduceFrameWithCol.C">C</span>]</span>)</span><span class="result">: <a href="Series.html" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.Frame.Col">Col</span>, <span class="extype" name="framian.Frame.reduceFrameWithCol.C">C</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@reduceFrameWithCol[A,B,C](col:Col)(reducer:framian.reduce.Reducer[(A,B),C])(implicitevidence$8:framian.ColumnTyper[A],implicitevidence$9:framian.ColumnTyper[B],implicitevidence$10:scala.reflect.ClassTag[C]):framian.Series[Col,C]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@reduceFrameWithCol[A,B,C](col:Col)(reducer:framian.reduce.Reducer[(A,B),C])(implicitevidence$7:framian.ColumnTyper[A],implicitevidence$8:framian.ColumnTyper[B],implicitevidence$9:scala.reflect.ClassTag[C]):framian.Series[Col,C]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
       
     </li><li name="framian.Frame#reindex" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="reindex[A](rows:framian.Rows[Row,A])(implicitevidence$24:spire.algebra.Order[A],implicitevidence$25:scala.reflect.ClassTag[A]):framian.Frame[Row,A]"></a>
+      <a id="reindex[A](rows:framian.Rows[Row,A])(implicitevidence$23:spire.algebra.Order[A],implicitevidence$24:scala.reflect.ClassTag[A]):framian.Frame[Row,A]"></a>
       <a id="reindex[A](Rows[Row,A])(Order[A],ClassTag[A]):Frame[Row,A]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1382,7 +1492,7 @@ column.
         <span class="name">reindex</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="rows">rows: <a href="Rows.html" class="extype" name="framian.Rows">Rows</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.reindex.A">A</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Order">Order</span>[<span class="extype" name="framian.Frame.reindex.A">A</span>]</span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.reindex.A">A</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.reindex.A">A</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@reindex[A](rows:framian.Rows[Row,A])(implicitevidence$24:spire.algebra.Order[A],implicitevidence$25:scala.reflect.ClassTag[A]):framian.Frame[Row,A]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@reindex[A](rows:framian.Rows[Row,A])(implicitevidence$23:spire.algebra.Order[A],implicitevidence$24:scala.reflect.ClassTag[A]):framian.Frame[Row,A]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -1392,7 +1502,7 @@ keys. This will not re-order the frame cols, just replace the keys. This
 will drop any columns where <code>rows</code> extracts a <a href="NonValue.html" class="extype" name="framian.NonValue">NonValue</a>.</p><p>To retain <code>NA</code>s or <code>NM</code>s in the index, you'll need to recover your
 <a href="Rows.html" class="extype" name="framian.Rows">Rows</a> with some other value. For example,</p><pre>frame.reindex(rows.map(Value(_)).recover { <span class="kw">case</span> nonValue <span class="kw">=&gt;</span> nonValue })</pre></div></div>
     </li><li name="framian.Frame#reindex" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="reindex[A](cols:framian.Cols[Col,A])(implicitevidence$22:spire.algebra.Order[A],implicitevidence$23:scala.reflect.ClassTag[A]):framian.Frame[A,Col]"></a>
+      <a id="reindex[A](cols:framian.Cols[Col,A])(implicitevidence$21:spire.algebra.Order[A],implicitevidence$22:scala.reflect.ClassTag[A]):framian.Frame[A,Col]"></a>
       <a id="reindex[A](Cols[Col,A])(Order[A],ClassTag[A]):Frame[A,Col]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1403,7 +1513,7 @@ will drop any columns where <code>rows</code> extracts a <a href="NonValue.html"
         <span class="name">reindex</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="cols">cols: <a href="Cols.html" class="extype" name="framian.Cols">Cols</a>[<span class="extype" name="framian.Frame.Col">Col</span>, <span class="extype" name="framian.Frame.reindex.A">A</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Order">Order</span>[<span class="extype" name="framian.Frame.reindex.A">A</span>]</span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Frame.reindex.A">A</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.reindex.A">A</span>, <span class="extype" name="framian.Frame.Col">Col</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@reindex[A](cols:framian.Cols[Col,A])(implicitevidence$22:spire.algebra.Order[A],implicitevidence$23:scala.reflect.ClassTag[A]):framian.Frame[A,Col]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@reindex[A](cols:framian.Cols[Col,A])(implicitevidence$21:spire.algebra.Order[A],implicitevidence$22:scala.reflect.ClassTag[A]):framian.Frame[A,Col]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -1481,7 +1591,7 @@ will drop any rows where <code>cols</code> extracts a <a href="NonValue.html" cl
     </span>
       <p class="shortcomment cmt">Reverse the traversal order of the rows in this frame.</p>
     </li><li name="framian.Frame#row" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="row[T](row:Row)(implicitevidence$21:framian.ColumnTyper[T]):framian.Series[Col,T]"></a>
+      <a id="row[T](row:Row)(implicitevidence$20:framian.ColumnTyper[T]):framian.Series[Col,T]"></a>
       <a id="row[T](Row)(ColumnTyper[T]):Series[Col,T]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1492,7 +1602,7 @@ will drop any rows where <code>cols</code> extracts a <a href="NonValue.html" cl
         <span class="name">row</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="row">row: <span class="extype" name="framian.Frame.Row">Row</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="ColumnTyper.html" class="extype" name="framian.ColumnTyper">ColumnTyper</a>[<span class="extype" name="framian.Frame.row.T">T</span>]</span>)</span><span class="result">: <a href="Series.html" class="extype" name="framian.Series">Series</a>[<span class="extype" name="framian.Frame.Col">Col</span>, <span class="extype" name="framian.Frame.row.T">T</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@row[T](row:Row)(implicitevidence$21:framian.ColumnTyper[T]):framian.Series[Col,T]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@row[T](row:Row)(implicitevidence$20:framian.ColumnTyper[T]):framian.Series[Col,T]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -1514,6 +1624,23 @@ will drop any rows where <code>cols</code> extracts a <a href="NonValue.html" cl
       </a>
     </span>
       
+    </li><li name="framian.Frame#rowKeys" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="rowKeys:Set[Row]"></a>
+      <a id="rowKeys:Set[Row]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">rowKeys</span><span class="result">: <span class="extype" name="scala.Predef.Set">Set</span>[<span class="extype" name="framian.Frame.Row">Row</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Frame@rowKeys:Set[Row]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns the set of all unique row keys.</p>
     </li><li name="framian.Frame#rowOrder" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="rowOrder:spire.algebra.Order[Row]"></a>
       <a id="rowOrder:Order[Row]"></a>
@@ -1531,8 +1658,25 @@ will drop any rows where <code>cols</code> extracts a <a href="NonValue.html" cl
       </a>
     </span>
       
+    </li><li name="framian.Frame#rows" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="rows:Int"></a>
+      <a id="rows:Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">rows</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Frame@rows:Int" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns the number of rows in this frame.</p>
     </li><li name="framian.Frame#sortBy" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="sortBy[A](cols:framian.Cols[Col,A])(implicitevidence$31:spire.algebra.Order[A]):framian.Frame[Row,Col]"></a>
+      <a id="sortBy[A](cols:framian.Cols[Col,A])(implicitevidence$30:spire.algebra.Order[A]):framian.Frame[Row,Col]"></a>
       <a id="sortBy[A](Cols[Col,A])(Order[A]):Frame[Row,Col]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1543,7 +1687,7 @@ will drop any rows where <code>cols</code> extracts a <a href="NonValue.html" cl
         <span class="name">sortBy</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="cols">cols: <a href="Cols.html" class="extype" name="framian.Cols">Cols</a>[<span class="extype" name="framian.Frame.Col">Col</span>, <span class="extype" name="framian.Frame.sortBy.A">A</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Order">Order</span>[<span class="extype" name="framian.Frame.sortBy.A">A</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.Col">Col</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@sortBy[A](cols:framian.Cols[Col,A])(implicitevidence$31:spire.algebra.Order[A]):framian.Frame[Row,Col]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@sortBy[A](cols:framian.Cols[Col,A])(implicitevidence$30:spire.algebra.Order[A]):framian.Frame[Row,Col]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -1552,7 +1696,7 @@ ever permute the rows of the frame and will not remove/add anything.
 </p></div><dl class="paramcmts block"><dt class="param">cols</dt><dd class="cmt"><p>The row value extractor to get the sort key
 </p></dd></dl></div>
     </li><li name="framian.Frame#sortBy" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="sortBy[A](rows:framian.Rows[Row,A])(implicitevidence$30:spire.algebra.Order[A]):framian.Frame[Row,Col]"></a>
+      <a id="sortBy[A](rows:framian.Rows[Row,A])(implicitevidence$29:spire.algebra.Order[A]):framian.Frame[Row,Col]"></a>
       <a id="sortBy[A](Rows[Row,A])(Order[A]):Frame[Row,Col]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1563,7 +1707,7 @@ ever permute the rows of the frame and will not remove/add anything.
         <span class="name">sortBy</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="rows">rows: <a href="Rows.html" class="extype" name="framian.Rows">Rows</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.sortBy.A">A</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Order">Order</span>[<span class="extype" name="framian.Frame.sortBy.A">A</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.Frame.Row">Row</span>, <span class="extype" name="framian.Frame.Col">Col</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Frame@sortBy[A](rows:framian.Rows[Row,A])(implicitevidence$30:spire.algebra.Order[A]):framian.Frame[Row,Col]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Frame@sortBy[A](rows:framian.Rows[Row,A])(implicitevidence$29:spire.algebra.Order[A]):framian.Frame[Row,Col]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>

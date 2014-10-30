@@ -47,7 +47,7 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.2.0/framian/src/main/scala/framian/csv/CsvRowExtractor.scala" target="_blank">CsvRowExtractor.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.3.0/framian/src/main/scala/framian/csv/CsvCell.scala" target="_blank">CsvCell.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
@@ -89,36 +89,19 @@
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="framian.csv.CsvCell.Number" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="NumberextendsCsvCellwithProductwithSerializable"></a>
-      <a id="Number:Number"></a>
+              <ol><li name="framian.csv.CsvCell.Data" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="DataextendsCsvCellwithProductwithSerializable"></a>
+      <a id="Data:Data"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="CsvCell$$Number.html"><span class="name">Number</span></a><span class="params">(<span name="num">num: <span class="extype" name="scala.BigDecimal">BigDecimal</span></span>)</span><span class="result"> extends <a href="CsvCell.html" class="extype" name="framian.csv.CsvCell">CsvCell</a> with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="CsvCell$$Data.html"><span class="name">Data</span></a><span class="params">(<span name="value">value: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="CsvCell.html" class="extype" name="framian.csv.CsvCell">CsvCell</a> with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#framian.csv.CsvCell$@NumberextendsCsvCellwithProductwithSerializable" title="Permalink" target="_top">
-        <img src="../../lib/permalink.png" />
-      </a>
-    </span>
-      
-    </li><li name="framian.csv.CsvCell.Text" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="TextextendsCsvCellwithProductwithSerializable"></a>
-      <a id="Text:Text"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">case class</span>
-      </span>
-      <span class="symbol">
-        <a href="CsvCell$$Text.html"><span class="name">Text</span></a><span class="params">(<span name="value">value: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="CsvCell.html" class="extype" name="framian.csv.CsvCell">CsvCell</a> with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../index.html#framian.csv.CsvCell$@TextextendsCsvCellwithProductwithSerializable" title="Permalink" target="_top">
+      <a href="../../index.html#framian.csv.CsvCell$@DataextendsCsvCellwithProductwithSerializable" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" />
       </a>
     </span>
@@ -181,19 +164,19 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="framian.csv.CsvCell.CsvCellColumnTyper" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="CsvCellColumnTyper"></a>
-      <a id="CsvCellColumnTyper:CsvCellColumnTyper"></a>
+    </li><li name="framian.csv.CsvCell#CsvCellColumnTyper" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CsvCellColumnTyper:framian.ColumnTyper[framian.csv.CsvCell]"></a>
+      <a id="CsvCellColumnTyper:ColumnTyper[CsvCell]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">implicit </span>
-        <span class="kind">object</span>
+        <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <a href="CsvCell$$CsvCellColumnTyper$.html"><span class="name">CsvCellColumnTyper</span></a><span class="result"> extends <a href="../ColumnTyper.html" class="extype" name="framian.ColumnTyper">ColumnTyper</a>[<a href="CsvCell.html" class="extype" name="framian.csv.CsvCell">CsvCell</a>]</span>
+        <span class="name">CsvCellColumnTyper</span><span class="result">: <a href="../ColumnTyper.html" class="extype" name="framian.ColumnTyper">ColumnTyper</a>[<a href="CsvCell.html" class="extype" name="framian.csv.CsvCell">CsvCell</a>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#framian.csv.CsvCell$@CsvCellColumnTyper" title="Permalink" target="_top">
+      <a href="../../index.html#framian.csv.CsvCell$@CsvCellColumnTyper:framian.ColumnTyper[framian.csv.CsvCell]" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" />
       </a>
     </span>

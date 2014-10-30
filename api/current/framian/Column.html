@@ -39,24 +39,21 @@
 
       <h4 id="signature" class="signature">
       <span class="modifier_kind">
-        <span class="modifier"></span>
+        <span class="modifier">sealed </span>
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <span class="name">Column</span><span class="tparams">[<span name="A">+A</span>]</span><span class="result"> extends <a href="ColumnLike.html" class="extype" name="framian.ColumnLike">ColumnLike</a>[<a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.A">A</span>]]</span>
+        <span class="name">Column</span><span class="tparams">[<span name="A">+A</span>]</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>A <code>Column</code> represents an <code>Int</code>-indexed set of values. The defining
-characteristic is that a column is always defined for all <code>Int</code> values. In
-order to interact with a column in an optimal and concrete way, we need an
-external notion of valid rows to restrict the input by. A <a href="Series.html" class="extype" name="framian.Series">Series</a>, for
-instance, ties a <code>Column</code> together with an <a href="Index.html" class="extype" name="framian.Index">Index</a> to restrict the set of
-rows being used.
-</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.2.0/framian/src/main/scala/framian/Column.scala" target="_blank">Column.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.3.0/framian/src/main/scala/framian/Column.scala" target="_blank">Column.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="ColumnLike.html" class="extype" name="framian.ColumnLike">ColumnLike</a>[<a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.A">A</span>]], <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></div>
-        </div></div>
+          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+        </div><div class="toggleContainer block">
+            <span class="toggle">Known Subclasses</span>
+            <div class="subClasses hiddenContent"><a href="BoxedColumn.html" class="extype" name="framian.BoxedColumn">BoxedColumn</a>, <a href="UnboxedColumn.html" class="extype" name="framian.UnboxedColumn">UnboxedColumn</a></div>
+          </div></div>
         
 
       <div id="mbrsel">
@@ -73,7 +70,7 @@ rows being used.
                 <span class="filtertype">Inherited<br />
                 </span>
                 <ol id="linearization">
-                  <li class="in" name="framian.Column"><span>Column</span></li><li class="in" name="framian.ColumnLike"><span>ColumnLike</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  <li class="in" name="framian.Column"><span>Column</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                 </ol>
               </div><div id="ancestors">
                 <span class="filtertype">Implicitly<br />
@@ -102,70 +99,245 @@ rows being used.
 
         <div id="values" class="values members">
               <h3>Abstract Value Members</h3>
-              <ol><li name="framian.Column#isValueAt" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="isValueAt(row:Int):Boolean"></a>
-      <a id="isValueAt(Int):Boolean"></a>
+              <ol><li name="framian.Column#apply" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="apply(row:Int):framian.Cell[A]"></a>
+      <a id="apply(Int):Cell[A]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isValueAt</span><span class="params">(<span name="row">row: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">apply</span><span class="params">(<span name="row">row: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.Column.A">A</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Column@isValueAt(row:Int):Boolean" title="Permalink" target="_top">
+      <a href="../index.html#framian.Column@apply(row:Int):framian.Cell[A]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
-      <p class="shortcomment cmt">Returns <code>true</code> if a value is present at index <code>row</code></p><div class="fullcomment"><div class="comment cmt"><p>Returns <code>true</code> if a value is present at index <code>row</code></p><p>The value at index <code>row</code> is both available and meaningful. This
-method must be called before any calls to <code>nonValueAt</code> or
-<code>valueAt</code>, since it is essentially the switch that let's you
-know which one to call.
-</p></div><dl class="paramcmts block"><dt class="param">row</dt><dd class="cmt"><p>the index in the column to lookup</p></dd><dt>returns</dt><dd class="cmt"><p>true if a value is present at the given index
+      <p class="shortcomment cmt">Returns the <a href="Cell.html" class="extype" name="framian.Cell">Cell</a> at row <code>row</code>.</p>
+    </li><li name="framian.Column#filter" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="filter(p:A=&gt;Boolean):framian.Column[A]"></a>
+      <a id="filter((A)⇒Boolean):Column[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">filter</span><span class="params">(<span name="p">p: (<span class="extype" name="framian.Column.A">A</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Column@filter(p:A=&gt;Boolean):framian.Column[A]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Filters the values of this <code>Column</code> so that any value for which <code>p</code> is
+true remains a value and all other values are turned into <a href="NA$.html" class="extype" name="framian.NA">NA</a>s.</p><div class="fullcomment"><div class="comment cmt"><p>Filters the values of this <code>Column</code> so that any value for which <code>p</code> is
+true remains a value and all other values are turned into <a href="NA$.html" class="extype" name="framian.NA">NA</a>s.
+</p></div><dl class="paramcmts block"><dt class="param">p</dt><dd class="cmt"><p>predicate to filter this column's values with
 </p></dd></dl></div>
-    </li><li name="framian.Column#nonValueAt" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="nonValueAt(row:Int):framian.NonValue"></a>
-      <a id="nonValueAt(Int):NonValue"></a>
+    </li><li name="framian.Column#flatMap" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="flatMap[B](f:A=&gt;framian.Cell[B]):framian.Column[B]"></a>
+      <a id="flatMap[B]((A)⇒Cell[B]):Column[B]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">nonValueAt</span><span class="params">(<span name="row">row: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="NonValue.html" class="extype" name="framian.NonValue">NonValue</a></span>
+        <span class="name">flatMap</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="framian.Column.A">A</span>) ⇒ <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.Column.flatMap.B">B</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.flatMap.B">B</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Column@nonValueAt(row:Int):framian.NonValue" title="Permalink" target="_top">
+      <a href="../index.html#framian.Column@flatMap[B](f:A=&gt;framian.Cell[B]):framian.Column[B]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
-      <p class="shortcomment cmt">Return the non value at index <code>row</code></p><div class="fullcomment"><div class="comment cmt"><p>Return the non value at index <code>row</code></p><p>If <code>isValueAt(row) == false</code>, then this will return either <code>NA</code>
-or <code>NM</code> to indicate that no value is available or meaningful
-(resp.). If <code>isValue(row) == true</code>, then the result of calling
-this is undefined.
-</p></div><dl class="paramcmts block"><dt class="param">row</dt><dd class="cmt"><p>the index in the column to lookup</p></dd><dt>returns</dt><dd class="cmt"><p>the non value at the given index, a subtype of <a href="NonValue.html" class="extype" name="framian.NonValue">NonValue</a>
+      <p class="shortcomment cmt">Map the values of this <code>Column</code> to a new <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>.</p><div class="fullcomment"><div class="comment cmt"><p>Map the values of this <code>Column</code> to a new <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>. All <a href="NA$.html" class="extype" name="framian.NA">NA</a> and <a href="NM$.html" class="extype" name="framian.NM">NM</a>
+values remain the same.
+</p></div><dl class="paramcmts block"><dt class="param">f</dt><dd class="cmt"><p>function use to transform this column's values
 </p></dd></dl></div>
-    </li><li name="framian.Column#valueAt" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="valueAt(row:Int):A"></a>
-      <a id="valueAt(Int):A"></a>
+    </li><li name="framian.Column#force" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="force(len:Int):framian.Column[A]"></a>
+      <a id="force(Int):Column[A]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">valueAt</span><span class="params">(<span name="row">row: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <span class="extype" name="framian.Column.A">A</span></span>
+        <span class="name">force</span><span class="params">(<span name="len">len: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.A">A</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Column@valueAt(row:Int):A" title="Permalink" target="_top">
+      <a href="../index.html#framian.Column@force(len:Int):framian.Column[A]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
-      <p class="shortcomment cmt">If <code>exists(row) == true</code>, then this will return the value stored in row
-<code>row</code>.</p><div class="fullcomment"><div class="comment cmt"><p>If <code>exists(row) == true</code>, then this will return the value stored in row
-<code>row</code>. If <code>exists(row) == false</code>, then the result of calling this is
-undefined.
+      <p class="shortcomment cmt">Returns a column which has had all rows between <code>0</code> and <code>len</code> (exclusive)
+forced (evaluated) and stored in memory, while all rows outside of <code>0</code> and
+<code>len</code> are set to <a href="NA$.html" class="extype" name="framian.NA">NA</a>.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a column which has had all rows between <code>0</code> and <code>len</code> (exclusive)
+forced (evaluated) and stored in memory, while all rows outside of <code>0</code> and
+<code>len</code> are set to <a href="NA$.html" class="extype" name="framian.NA">NA</a>. The returned column is *dense* and unboxed.
+</p></div><dl class="paramcmts block"><dt class="param">len</dt><dd class="cmt"><p>the upper bound of the range of values to force
+</p></dd></dl></div>
+    </li><li name="framian.Column#map" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="map[B](f:A=&gt;B):framian.Column[B]"></a>
+      <a id="map[B]((A)⇒B):Column[B]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">map</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="framian.Column.A">A</span>) ⇒ <span class="extype" name="framian.Column.map.B">B</span></span>)</span><span class="result">: <a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.map.B">B</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Column@map[B](f:A=&gt;B):framian.Column[B]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Map all values of this <code>Column</code> using <code>f</code>.</p><div class="fullcomment"><div class="comment cmt"><p>Map all values of this <code>Column</code> using <code>f</code>. All <a href="NA$.html" class="extype" name="framian.NA">NA</a> and <a href="NM$.html" class="extype" name="framian.NM">NM</a> values
+remain as they were.
+</p></div></div>
+    </li><li name="framian.Column#mask" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="mask(na:framian.column.Mask):framian.Column[A]"></a>
+      <a id="mask(Mask):Column[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">mask</span><span class="params">(<span name="na">na: <a href="column/Mask.html" class="extype" name="framian.column.Mask">Mask</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Column@mask(na:framian.column.Mask):framian.Column[A]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns a column with rows contained in <code>na</code> masked to <a href="NA$.html" class="extype" name="framian.NA">NA</a>s.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a column with rows contained in <code>na</code> masked to <a href="NA$.html" class="extype" name="framian.NA">NA</a>s.
+</p></div><dl class="paramcmts block"><dt class="param">na</dt><dd class="cmt"><p>the rows to mask in the column
+</p></dd></dl></div>
+    </li><li name="framian.Column#memoize" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="memoize(optimistic:Boolean):framian.Column[A]"></a>
+      <a id="memoize(Boolean):Column[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">memoize</span><span class="params">(<span name="optimistic">optimistic: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a> = <span class="symbol">false</span></span>)</span><span class="result">: <a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Column@memoize(optimistic:Boolean):framian.Column[A]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns a copy of this column whose values will be memoized if they are
+evaluated.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a copy of this column whose values will be memoized if they are
+evaluated. That is, if <code>this</code> column is an *eval* column, then memoizing
+it will ensure that, for each row, the value is only computed once,
+regardless of the number of times it is accessed.</p><p>By default, the memoization is always pessimistic (guaranteed at-most-once
+evaluation). If <code>optimistic</code> is <code>true</code>, then the memoizing may use an
+optimistic update strategy, which means a value *may* be evaluated more
+than once if it accessed concurrently.</p><p>For dense, empty, and previously-memoized columns, this just returns the
+column itself.
+</p></div><dl class="paramcmts block"><dt class="param">optimistic</dt><dd class="cmt"><p>if true, memoized column may use optimistic updates
+</p></dd></dl></div>
+    </li><li name="framian.Column#orElse" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="orElse[A0&gt;:A](that:framian.Column[A0]):framian.Column[A0]"></a>
+      <a id="orElse[A0&gt;:A](Column[A0]):Column[A0]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">orElse</span><span class="tparams">[<span name="A0">A0 &gt;: <span class="extype" name="framian.Column.A">A</span></span>]</span><span class="params">(<span name="that">that: <a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.orElse.A0">A0</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.orElse.A0">A0</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Column@orElse[A0&gt;:A](that:framian.Column[A0]):framian.Column[A0]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns a column that will fallback to <code>that</code> for any row that is <a href="NA$.html" class="extype" name="framian.NA">NA</a>,
+or if the row is <a href="NM$.html" class="extype" name="framian.NM">NM</a> and the row in <code>that</code> is a <a href="Value.html" class="extype" name="framian.Value">Value</a>, then that
+is returned, otherwise <a href="NM$.html" class="extype" name="framian.NM">NM</a> is returned.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a column that will fallback to <code>that</code> for any row that is <a href="NA$.html" class="extype" name="framian.NA">NA</a>,
+or if the row is <a href="NM$.html" class="extype" name="framian.NM">NM</a> and the row in <code>that</code> is a <a href="Value.html" class="extype" name="framian.Value">Value</a>, then that
+is returned, otherwise <a href="NM$.html" class="extype" name="framian.NM">NM</a> is returned.  That is, row <code>i</code> is defined as
+<code>this(i) orElse that(i)</code>, though may be more efficient.</p><p>To put the definition in more definite terms:</p><pre>Value(a) orElse Value(b) == Value(a)
+Value(a) orElse       NA == Value(a)
+Value(a) orElse       NM == Value(a)
+      NA orElse Value(b) == Value(b)
+      NA orElse       NA ==       NA
+      NA orElse       NM ==       NM
+      NM orElse Value(b) == Value(b)
+      NM orElse       NM ==       NM
+      NM orElse       NA ==       NM</pre></div><dl class="paramcmts block"><dt class="param">that</dt><dd class="cmt"><p>the column to fallback on for NA values
+</p></dd></dl></div>
+    </li><li name="framian.Column#reindex" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="reindex(index:Array[Int]):framian.Column[A]"></a>
+      <a id="reindex(Array[Int]):Column[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">reindex</span><span class="params">(<span name="index">index: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Column@reindex(index:Array[Int]):framian.Column[A]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns a column whose <code>i</code>-th row maps to row <code>index(i)</code> in this column.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a column whose <code>i</code>-th row maps to row <code>index(i)</code> in this column.
+If <code>i &lt; 0</code> or <code>i &gt;= index.length</code> then the returned column returns
+<a href="NA$.html" class="extype" name="framian.NA">NA</a>. This always forces all rows in <code>index</code> and the returned column is
+*dense* and unboxed.
+</p></div></div>
+    </li><li name="framian.Column#setNA" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="setNA(row:Int):framian.Column[A]"></a>
+      <a id="setNA(Int):Column[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">setNA</span><span class="params">(<span name="row">row: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Column@setNA(row:Int):framian.Column[A]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns a column with a single row forced to <a href="NA$.html" class="extype" name="framian.NA">NA</a> and all others
+remaining the same.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a column with a single row forced to <a href="NA$.html" class="extype" name="framian.NA">NA</a> and all others
+remaining the same. This is equivalent to, but possibly more efficient
+than <code>col.mask(Mask(row))</code>.
+</p></div><dl class="paramcmts block"><dt class="param">row</dt><dd class="cmt"><p>the row that will be forced to <a href="NA$.html" class="extype" name="framian.NA">NA</a>
+</p></dd></dl></div>
+    </li><li name="framian.Column#shift" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="shift(rows:Int):framian.Column[A]"></a>
+      <a id="shift(Int):Column[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">shift</span><span class="params">(<span name="rows">rows: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Column@shift(rows:Int):framian.Column[A]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Shifts all values in the column up by <code>rows</code> rows.</p><div class="fullcomment"><div class="comment cmt"><p>Shifts all values in the column up by <code>rows</code> rows. So,
+<code>col.shift(n).apply(row) == col(row - n)</code>. If this is a dense column,
+then it will only remain dense if <code>rows</code> is non-negative.
 </p></div></div>
     </li></ol>
             </div>
@@ -268,23 +440,6 @@ undefined.
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="framian.Column#apply" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="apply(row:Int):framian.Cell[A]"></a>
-      <a id="apply(Int):Cell[A]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">apply</span><span class="params">(<span name="row">row: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.Column.A">A</span>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Column@apply(row:Int):framian.Cell[A]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -302,23 +457,6 @@ undefined.
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="framian.Column#cells" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="cells(rng:Range):Vector[framian.Cell[A]]"></a>
-      <a id="cells(Range):Vector[Cell[A]]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">cells</span><span class="params">(<span name="rng">rng: <span class="extype" name="scala.Range">Range</span></span>)</span><span class="result">: <span class="extype" name="scala.Vector">Vector</span>[<a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.Column.A">A</span>]]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Column@cells(rng:Range):Vector[framian.Cell[A]]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      
     </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a>
       <a id="clone():AnyRef"></a>
@@ -342,23 +480,6 @@ undefined.
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="framian.Column#compact" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="compact[AA&gt;:A](len:Int)(implicitct:scala.reflect.ClassTag[AA]):framian.Column[AA]"></a>
-      <a id="compact[AA&gt;:A](Int)(ClassTag[AA]):Column[AA]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">compact</span><span class="tparams">[<span name="AA">AA &gt;: <span class="extype" name="framian.Column.A">A</span></span>]</span><span class="params">(<span name="len">len: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="ct">ct: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Column.compact.AA">AA</span>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.compact.AA">AA</span>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Column@compact[AA&gt;:A](len:Int)(implicitct:scala.reflect.ClassTag[AA]):framian.Column[AA]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      
     </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ensuring(cond:A=&gt;Boolean,msg:=&gt;Any):A"></a>
       <a id="ensuring((Column[A])⇒Boolean,⇒Any):Column[A]"></a>
@@ -477,25 +598,6 @@ undefined.
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="framian.Column#filter" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="filter(f:A=&gt;Boolean):framian.Column[A]"></a>
-      <a id="filter((A)⇒Boolean):Column[A]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">filter</span><span class="params">(<span name="f">f: (<span class="extype" name="framian.Column.A">A</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.A">A</span>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Column@filter(f:A=&gt;Boolean):framian.Column[A]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Filter a column by a given predicate.</p><div class="fullcomment"><div class="comment cmt"><p>Filter a column by a given predicate. All values that have been filtered
-out are turned into <code>NA</code> (Not Available).
-</p></div></div>
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <a id="finalize():Unit"></a>
@@ -520,22 +622,67 @@ out are turned into <code>NA</code> (Not Available).
               
         </dd></dl></div>
     </li><li name="framian.Column#foldRow" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="foldRow[B](row:Int)(f:A=&gt;B,g:framian.NonValue=&gt;B):B"></a>
-      <a id="foldRow[B](Int)((A)⇒B,(NonValue)⇒B):B"></a>
+      <a id="foldRow[B](row:Int)(na:B,nm:B,f:A=&gt;B):B"></a>
+      <a id="foldRow[B](Int)(B,B,(A)⇒B):B"></a>
       <h4 class="signature">
       <span class="modifier_kind">
-        <span class="modifier"></span>
+        <span class="modifier">macro </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">foldRow</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="row">row: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="framian.Column.A">A</span>) ⇒ <span class="extype" name="framian.Column.foldRow.B">B</span></span>, <span name="g">g: (<a href="NonValue.html" class="extype" name="framian.NonValue">NonValue</a>) ⇒ <span class="extype" name="framian.Column.foldRow.B">B</span></span>)</span><span class="result">: <span class="extype" name="framian.Column.foldRow.B">B</span></span>
+        <span class="name">foldRow</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="row">row: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="params">(<span name="na">na: <span class="extype" name="framian.Column.foldRow.B">B</span></span>, <span name="nm">nm: <span class="extype" name="framian.Column.foldRow.B">B</span></span>, <span name="f">f: (<span class="extype" name="framian.Column.A">A</span>) ⇒ <span class="extype" name="framian.Column.foldRow.B">B</span></span>)</span><span class="result">: <span class="extype" name="framian.Column.foldRow.B">B</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Column@foldRow[B](row:Int)(f:A=&gt;B,g:framian.NonValue=&gt;B):B" title="Permalink" target="_top">
+      <a href="../index.html#framian.Column@foldRow[B](row:Int)(na:B,nm:B,f:A=&gt;B):B" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
       
+    </li><li name="framian.Column#foreach" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="foreach[U](from:Int,until:Int,rows:Int=&gt;Int,abortOnNM:Boolean)(f:(Int,A)=&gt;U):Boolean"></a>
+      <a id="foreach[U](Int,Int,(Int)⇒Int,Boolean)((Int,A)⇒U):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">macro </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">foreach</span><span class="tparams">[<span name="U">U</span>]</span><span class="params">(<span name="from">from: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="until">until: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="rows">rows: (<a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="abortOnNM">abortOnNM: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="params">(<span name="f">f: (<a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a>, <span class="extype" name="framian.Column.A">A</span>) ⇒ <span class="extype" name="framian.Column.foreach.U">U</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Column@foreach[U](from:Int,until:Int,rows:Int=&gt;Int,abortOnNM:Boolean)(f:(Int,A)=&gt;U):Boolean" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Iterates from <code>from</code> until <code>until</code>, and for each value <code>i</code> in this range,
+it retreives a row via <code>rows(i)</code>.</p><div class="fullcomment"><div class="comment cmt"><p>Iterates from <code>from</code> until <code>until</code>, and for each value <code>i</code> in this range,
+it retreives a row via <code>rows(i)</code>. If this row is <code>NM</code> and <code>abortOnNM</code> is
+<code>true</code>, then iteration stops immediately and <code>false</code> is returned.
+Otherwise, if the row is a value, it calls <code>f</code> with <code>i</code> and the value of
+the row. If iteration terminates normally (ie. no <a href="NM$.html" class="extype" name="framian.NM">NM</a>s), then <code>true</code> is
+returned.</p><p>This is implemented as a macro and desugars into a while loop that access
+the column using <code>apply</code> if it is a <a href="BoxedColumn.html" class="extype" name="framian.BoxedColumn">BoxedColumn</a> and
+<code>isValueAt</code>/<code>valueAt</code>/<code>nonValueAt</code> if it is an <a href="UnboxedColumn.html" class="extype" name="framian.UnboxedColumn">UnboxedColumn</a>. It will
+also inline <code>rows</code> and <code>f</code> if they are function literals.
+</p></div><dl class="paramcmts block"><dt class="param">from</dt><dd class="cmt"><p>the value to start iterating at (inclusive)</p></dd><dt class="param">until</dt><dd class="cmt"><p>the value to stop iterating at (exclusive)</p></dd><dt class="param">rows</dt><dd class="cmt"><p>the function used to retrieve the row for an iteration</p></dd><dt class="param">abortOnNM</dt><dd class="cmt"><p>terminate early if an <code>NM</code> is found</p></dd><dt class="param">f</dt><dd class="cmt"><p>the function to call at each value</p></dd><dt>returns</dt><dd class="cmt"><p>true if no NMs were found (or <code>abortOnNM</code> is false) and terminate completed successfully, false otherwise
+</p></dd></dl></div>
+    </li><li name="framian.Column#foreach" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="foreach[U](from:Int,until:Int,rows:Int=&gt;Int)(f:(Int,A)=&gt;U):Boolean"></a>
+      <a id="foreach[U](Int,Int,(Int)⇒Int)((Int,A)⇒U):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">macro </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">foreach</span><span class="tparams">[<span name="U">U</span>]</span><span class="params">(<span name="from">from: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="until">until: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="rows">rows: (<a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="params">(<span name="f">f: (<a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a>, <span class="extype" name="framian.Column.A">A</span>) ⇒ <span class="extype" name="framian.Column.foreach.U">U</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Column@foreach[U](from:Int,until:Int,rows:Int=&gt;Int)(f:(Int,A)=&gt;U):Boolean" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Equivalent to calling <code>foreach(from, until, rows, true)(f)</code>.</p>
     </li><li name="scala.Predef.StringFormat#formatted" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="formatted(fmtstr:String):String"></a>
       <a id="formatted(String):String"></a>
@@ -611,44 +758,6 @@ out are turned into <code>NA</code> (Not Available).
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="framian.Column#map" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="map[B](f:A=&gt;B):framian.Column[B]"></a>
-      <a id="map[B]((A)⇒B):Column[B]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">map</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="framian.Column.A">A</span>) ⇒ <span class="extype" name="framian.Column.map.B">B</span></span>)</span><span class="result">: <a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.map.B">B</span>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Column@map[B](f:A=&gt;B):framian.Column[B]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Map all existing values to a given value.</p>
-    </li><li name="framian.Column#mask" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="mask(bits:Int=&gt;Boolean):framian.Column[A]"></a>
-      <a id="mask((Int)⇒Boolean):Column[A]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">mask</span><span class="params">(<span name="bits">bits: (<a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.A">A</span>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Column@mask(bits:Int=&gt;Boolean):framian.Column[A]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Masks this column with a given <code>BitSet</code>.</p><div class="fullcomment"><div class="comment cmt"><p>Masks this column with a given <code>BitSet</code>. That is, a value only exists at
-a row if it exists in both the source <code>Column</code> and if <code>bitset(row)</code> is
-<code>true</code>. If a value exists in the source <code>Column</code>, but <code>bitset(row)</code> is
-<code>false</code>, then that value is treated as <code>NA</code> (Not Available).
-</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="framian.Column">Column</a> → <a href="ColumnLike.html" class="extype" name="framian.ColumnLike">ColumnLike</a></dd></dl></div>
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
       <a id="ne(AnyRef):Boolean"></a>
@@ -700,81 +809,6 @@ a row if it exists in both the source <code>Column</code> and if <code>bitset(ro
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="framian.Column#reindex" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="reindex(f:Int=&gt;Int):framian.Column[A]"></a>
-      <a id="reindex((Int)⇒Int):Column[A]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">reindex</span><span class="params">(<span name="f">f: (<a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.A">A</span>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Column@reindex(f:Int=&gt;Int):framian.Column[A]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      
-    </li><li name="framian.Column#reindex" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="reindex(index:Array[Int]):framian.Column[A]"></a>
-      <a id="reindex(Array[Int]):Column[A]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">reindex</span><span class="params">(<span name="index">index: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a>]</span>)</span><span class="result">: <a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.A">A</span>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Column@reindex(index:Array[Int]):framian.Column[A]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Returns a Column whose rows are mapped with the given <code>index</code> to rows in
-this column.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a Column whose rows are mapped with the given <code>index</code> to rows in
-this column. If a row doesn't exist in the index (ie. is less than 0 or
-greater than or equal to <code>index.length</code>), then <code>NA</code> is returned.
-</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="framian.Column">Column</a> → <a href="ColumnLike.html" class="extype" name="framian.ColumnLike">ColumnLike</a></dd></dl></div>
-    </li><li name="framian.Column#setNA" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="setNA(row:Int):framian.Column[A]"></a>
-      <a id="setNA(Int):Column[A]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">setNA</span><span class="params">(<span name="row">row: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.A">A</span>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Column@setNA(row:Int):framian.Column[A]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Force a specific row to be not available (<code>NA</code>).</p><div class="fullcomment"><div class="comment cmt"><p>Force a specific row to be not available (<code>NA</code>).
-</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="framian.Column">Column</a> → <a href="ColumnLike.html" class="extype" name="framian.ColumnLike">ColumnLike</a></dd></dl></div>
-    </li><li name="framian.Column#shift" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="shift(rows:Int):framian.Column[A]"></a>
-      <a id="shift(Int):Column[A]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">shift</span><span class="params">(<span name="rows">rows: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.A">A</span>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Column@shift(rows:Int):framian.Column[A]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Shift all rows in this column down by <code>rows</code>.</p><div class="fullcomment"><div class="comment cmt"><p>Shift all rows in this column down by <code>rows</code>. If <code>rows</code> is negative, then
-they will be shifted up by <code>-rows</code>.
-</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="framian.Column">Column</a> → <a href="ColumnLike.html" class="extype" name="framian.ColumnLike">ColumnLike</a></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
       <a id="synchronized[T0](⇒T0):T0"></a>
@@ -878,23 +912,6 @@ they will be shifted up by <code>-rows</code>.
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="framian.Column#zipMap" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="zipMap[B,C](rhs:framian.Column[B])(f:(A,B)=&gt;C):framian.Column[C]"></a>
-      <a id="zipMap[B,C](Column[B])((A,B)⇒C):Column[C]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">zipMap</span><span class="tparams">[<span name="B">B</span>, <span name="C">C</span>]</span><span class="params">(<span name="rhs">rhs: <a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.zipMap.B">B</span>]</span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="framian.Column.A">A</span>, <span class="extype" name="framian.Column.zipMap.B">B</span>) ⇒ <span class="extype" name="framian.Column.zipMap.C">C</span></span>)</span><span class="result">: <a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.zipMap.C">C</span>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Column@zipMap[B,C](rhs:framian.Column[B])(f:(A,B)=&gt;C):framian.Column[C]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      
     </li><li name="scala.Predef.ArrowAssoc#→" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="→[B](y:B):(A,B)"></a>
       <a id="→[B](B):(Column[A],B)"></a>
@@ -925,9 +942,7 @@ they will be shifted up by <code>-rows</code>.
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="framian.ColumnLike">
-              <h3>Inherited from <a href="ColumnLike.html" class="extype" name="framian.ColumnLike">ColumnLike</a>[<a href="" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.A">A</span>]]</h3>
-            </div><div class="parent" name="scala.AnyRef">
+        <div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
               <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></h3>

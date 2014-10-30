@@ -58,7 +58,7 @@ example to the quantification.</p><p>This reducer will only traverse the entire 
 encounters a not meaningful value or a meaningful value that does
 not satisfy the predicate <code>p</code>.
 </p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>the value type of the column to reduce.
-</p></dd></dl><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.2.0/framian/src/main/scala/framian/reduce/predicates.scala" target="_blank">predicates.scala</a></dd><div class="block">Example:
+</p></dd></dl><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.3.0/framian/src/main/scala/framian/reduce/predicates.scala" target="_blank">predicates.scala</a></dd><div class="block">Example:
                <ol><li class="cmt"><p></p><pre>Series.empty[<span class="std">Int</span>, <span class="std">Int</span>].reduce(<span class="kw">new</span> ForAll[<span class="std">Int</span>](i <span class="kw">=&gt;</span> <span class="kw">false</span>)) == Value(<span class="kw">true</span>)
 
 Series(<span class="num">1</span> -&gt; <span class="num">1</span>, <span class="num">2</span> -&gt; <span class="num">2</span>).reduce(<span class="kw">new</span> ForAll[<span class="std">Int</span>](i <span class="kw">=&gt;</span> i &lt; <span class="num">3</span>)) == Value(<span class="kw">true</span>)

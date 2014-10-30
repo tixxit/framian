@@ -43,13 +43,13 @@
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <span class="name">CsvRow</span>
+        <span class="name">CsvRow</span><span class="result"> extends (<span class="extype" name="scala.Vector">Vector</span>[<a href="CsvCell.html" class="extype" name="framian.csv.CsvCell">CsvCell</a>]) ⇒ <a href="CsvRow.html" class="extype" name="framian.csv.CsvRow">CsvRow</a></span>
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.2.0/framian/src/main/scala/framian/csv/CsvRowExtractor.scala" target="_blank">CsvRowExtractor.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.3.0/framian/src/main/scala/framian/csv/CsvRow.scala" target="_blank">CsvRow.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+          <div class="superTypes hiddenContent">(<span class="extype" name="scala.Vector">Vector</span>[<a href="CsvCell.html" class="extype" name="framian.csv.CsvCell">CsvCell</a>]) ⇒ <a href="CsvRow.html" class="extype" name="framian.csv.CsvRow">CsvRow</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
         
 
@@ -67,7 +67,7 @@
                 <span class="filtertype">Inherited<br />
                 </span>
                 <ol id="linearization">
-                  <li class="in" name="framian.csv.CsvRow"><span>CsvRow</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  <li class="in" name="framian.csv.CsvRow"><span>CsvRow</span></li><li class="in" name="scala.Function1"><span>Function1</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                 </ol>
               </div><div id="ancestors">
             <span class="filtertype"></span>
@@ -144,40 +144,43 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="framian.csv.CsvRow.CsvRowExtractor" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="CsvRowExtractor"></a>
-      <a id="CsvRowExtractor:CsvRowExtractor"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">implicit </span>
-        <span class="kind">object</span>
-      </span>
-      <span class="symbol">
-        <a href="CsvRow$$CsvRowExtractor$.html"><span class="name">CsvRowExtractor</span></a><span class="result"> extends <a href="../RowExtractor.html" class="extype" name="framian.RowExtractor">RowExtractor</a>[<a href="CsvRow.html" class="extype" name="framian.csv.CsvRow">CsvRow</a>, <span class="extype" name="scala.Predef.String">String</span>, <a href="../Variable.html" class="extype" name="framian.Variable">Variable</a>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../index.html#framian.csv.CsvRow$@CsvRowExtractor" title="Permalink" target="_top">
-        <img src="../../lib/permalink.png" />
-      </a>
-    </span>
-      
-    </li><li name="framian.csv.CsvRow#apply" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="apply(cells:List[framian.csv.CsvCell]):framian.csv.CsvRow"></a>
-      <a id="apply(List[CsvCell]):CsvRow"></a>
+    </li><li name="scala.Function1#andThen" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="andThen[A](g:R=&gt;A):T1=&gt;A"></a>
+      <a id="andThen[A]((CsvRow)⇒A):(Vector[CsvCell])⇒A"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">apply</span><span class="params">(<span name="cells">cells: <span class="extype" name="scala.List">List</span>[<a href="CsvCell.html" class="extype" name="framian.csv.CsvCell">CsvCell</a>]</span>)</span><span class="result">: <a href="CsvRow.html" class="extype" name="framian.csv.CsvRow">CsvRow</a></span>
+        <span class="name">andThen</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="g">g: (<a href="CsvRow.html" class="extype" name="framian.csv.CsvRow">CsvRow</a>) ⇒ <span class="extype" name="scala.Function1.andThen.A">A</span></span>)</span><span class="result">: (<span class="extype" name="scala.Vector">Vector</span>[<a href="CsvCell.html" class="extype" name="framian.csv.CsvCell">CsvCell</a>]) ⇒ <span class="extype" name="scala.Function1.andThen.A">A</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#framian.csv.CsvRow$@apply(cells:List[framian.csv.CsvCell]):framian.csv.CsvRow" title="Permalink" target="_top">
+      <a href="../../index.html#framian.csv.CsvRow$@andThen[A](g:R=&gt;A):T1=&gt;A" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" />
       </a>
     </span>
-      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Function1</dd><dt>Annotations</dt><dd>
+                <span class="name">@unspecialized</span><span class="args">()</span>
+              
+        </dd></dl></div>
+    </li><li name="framian.csv.CsvRow#apply" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="apply(cells:Vector[framian.csv.CsvCell]):framian.csv.CsvRow"></a>
+      <a id="apply(Vector[CsvCell]):CsvRow"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">apply</span><span class="params">(<span name="cells">cells: <span class="extype" name="scala.Vector">Vector</span>[<a href="CsvCell.html" class="extype" name="framian.csv.CsvCell">CsvCell</a>]</span>)</span><span class="result">: <a href="CsvRow.html" class="extype" name="framian.csv.CsvRow">CsvRow</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.csv.CsvRow$@apply(cells:Vector[framian.csv.CsvCell]):framian.csv.CsvRow" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="framian.csv.CsvRow">CsvRow</a> → Function1</dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -218,6 +221,43 @@
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="scala.Function1#compose" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="compose[A&lt;:&lt;?&gt;](g:&lt;?&gt;):A=&gt;R"></a>
+      <a id="compose[A]((A)⇒Vector[CsvCell]):(A)⇒CsvRow"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">compose</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="g">g: (<span class="extype" name="scala.Function1.compose.A">A</span>) ⇒ <span class="extype" name="scala.Vector">Vector</span>[<a href="CsvCell.html" class="extype" name="framian.csv.CsvCell">CsvCell</a>]</span>)</span><span class="result">: (<span class="extype" name="scala.Function1.compose.A">A</span>) ⇒ <a href="CsvRow.html" class="extype" name="framian.csv.CsvRow">CsvRow</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.csv.CsvRow$@compose[A](g:A=&gt;T1):A=&gt;R" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Function1</dd><dt>Annotations</dt><dd>
+                <span class="name">@unspecialized</span><span class="args">()</span>
+              
+        </dd></dl></div>
+    </li><li name="framian.csv.CsvRow#csvRowExtractor" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="csvRowExtractor[Col]:framian.RowExtractor[framian.csv.CsvRow,Col,framian.Variable]"></a>
+      <a id="csvRowExtractor[Col]:RowExtractor[CsvRow,Col,Variable]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">csvRowExtractor</span><span class="tparams">[<span name="Col">Col</span>]</span><span class="result">: <a href="../RowExtractor.html" class="extype" name="framian.RowExtractor">RowExtractor</a>[<a href="CsvRow.html" class="extype" name="framian.csv.CsvRow">CsvRow</a>, <span class="extype" name="framian.csv.CsvRow.csvRowExtractor.Col">Col</span>, <a href="../Variable.html" class="extype" name="framian.Variable">Variable</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.csv.CsvRow$@csvRowExtractor[Col]:framian.RowExtractor[framian.csv.CsvRow,Col,framian.Variable]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
     </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a>
       <a id="eq(AnyRef):Boolean"></a>
@@ -394,7 +434,7 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+    </li><li name="scala.Function1#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
       <a id="toString():String"></a>
       <h4 class="signature">
@@ -410,7 +450,7 @@
         <img src="../../lib/permalink.png" />
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Function1 → AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <a id="wait():Unit"></a>
@@ -489,7 +529,9 @@
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="scala.AnyRef">
+        <div class="parent" name="scala.Function1">
+              <h3>Inherited from (<span class="extype" name="scala.Vector">Vector</span>[<a href="CsvCell.html" class="extype" name="framian.csv.CsvCell">CsvCell</a>]) ⇒ <a href="CsvRow.html" class="extype" name="framian.csv.CsvRow">CsvRow</a></h3>
+            </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
               <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></h3>

@@ -47,12 +47,12 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.2.0/framian/src/main/scala/framian/csv/CsvRowExtractor.scala" target="_blank">CsvRowExtractor.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.3.0/framian/src/main/scala/framian/csv/CsvFormat.scala" target="_blank">CsvFormat.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div><div class="toggleContainer block">
             <span class="toggle">Known Subclasses</span>
-            <div class="subClasses hiddenContent"><a href="CsvRowDelim$$Unix$.html" class="extype" name="framian.csv.CsvRowDelim.Unix">Unix</a>, <a href="CsvRowDelim$$Windows$.html" class="extype" name="framian.csv.CsvRowDelim.Windows">Windows</a></div>
+            <div class="subClasses hiddenContent"><a href="CsvRowDelim$$Both$.html" class="extype" name="framian.csv.CsvRowDelim.Both">Both</a>, <a href="CsvRowDelim$$Custom.html" class="extype" name="framian.csv.CsvRowDelim.Custom">Custom</a>, <a href="CsvRowDelim$$Unix$.html" class="extype" name="framian.csv.CsvRowDelim.Unix">Unix</a>, <a href="CsvRowDelim$$Windows$.html" class="extype" name="framian.csv.CsvRowDelim.Windows">Windows</a></div>
           </div></div>
         
 
@@ -96,7 +96,7 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="framian.csv.CsvRowDelim#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(value:String):framian.csv.CsvRowDelim"></a>
+      <a id="&lt;init&gt;(value:String,alternate:Option[String]):framian.csv.CsvRowDelim"></a>
       <a id="&lt;init&gt;:CsvRowDelim"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -104,10 +104,10 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">CsvRowDelim</span><span class="params">(<span name="value">value: <span class="extype" name="scala.Predef.String">String</span></span>)</span>
+        <span class="name">CsvRowDelim</span><span class="params">(<span name="value">value: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="alternate">alternate: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#framian.csv.CsvRowDelim@&lt;init&gt;(value:String):framian.csv.CsvRowDelim" title="Permalink" target="_top">
+      <a href="../../index.html#framian.csv.CsvRowDelim@&lt;init&gt;(value:String,alternate:Option[String]):framian.csv.CsvRowDelim" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" />
       </a>
     </span>
@@ -217,6 +217,23 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="framian.csv.CsvRowDelim#alternate" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="alternate:Option[String]"></a>
+      <a id="alternate:Option[String]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">alternate</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.csv.CsvRowDelim@alternate:Option[String]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>

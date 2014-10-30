@@ -43,13 +43,13 @@
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <span class="name">Column</span><span class="result"> extends <a href="ColumnAlgebras.html" class="extype" name="framian.ColumnAlgebras">ColumnAlgebras</a></span>
+        <span class="name">Column</span>
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.2.0/framian/src/main/scala/framian/Column.scala" target="_blank">Column.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.3.0/framian/src/main/scala/framian/Column.scala" target="_blank">Column.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="ColumnAlgebras.html" class="extype" name="framian.ColumnAlgebras">ColumnAlgebras</a>, <a href="ColumnAlgebras$$ColumnAlgebras5.html" class="extype" name="framian.ColumnAlgebras.ColumnAlgebras5">ColumnAlgebras5</a>, <a href="ColumnAlgebras$$ColumnAlgebras4.html" class="extype" name="framian.ColumnAlgebras.ColumnAlgebras4">ColumnAlgebras4</a>, <a href="ColumnAlgebras$$ColumnAlgebras3.html" class="extype" name="framian.ColumnAlgebras.ColumnAlgebras3">ColumnAlgebras3</a>, <a href="ColumnAlgebras$$ColumnAlgebras2.html" class="extype" name="framian.ColumnAlgebras.ColumnAlgebras2">ColumnAlgebras2</a>, <a href="ColumnAlgebras$$ColumnAlgebras1.html" class="extype" name="framian.ColumnAlgebras.ColumnAlgebras1">ColumnAlgebras1</a>, <a href="ColumnAlgebras$$ColumnAlgebras0.html" class="extype" name="framian.ColumnAlgebras.ColumnAlgebras0">ColumnAlgebras0</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
         
 
@@ -67,7 +67,7 @@
                 <span class="filtertype">Inherited<br />
                 </span>
                 <ol id="linearization">
-                  <li class="in" name="framian.Column"><span>Column</span></li><li class="in" name="framian.ColumnAlgebras"><span>ColumnAlgebras</span></li><li class="in" name="framian.ColumnAlgebras.ColumnAlgebras5"><span>ColumnAlgebras5</span></li><li class="in" name="framian.ColumnAlgebras.ColumnAlgebras4"><span>ColumnAlgebras4</span></li><li class="in" name="framian.ColumnAlgebras.ColumnAlgebras3"><span>ColumnAlgebras3</span></li><li class="in" name="framian.ColumnAlgebras.ColumnAlgebras2"><span>ColumnAlgebras2</span></li><li class="in" name="framian.ColumnAlgebras.ColumnAlgebras1"><span>ColumnAlgebras1</span></li><li class="in" name="framian.ColumnAlgebras.ColumnAlgebras0"><span>ColumnAlgebras0</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  <li class="in" name="framian.Column"><span>Column</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                 </ol>
               </div><div id="ancestors">
             <span class="filtertype"></span>
@@ -144,23 +144,25 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="framian.Column#apply" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="apply[A](f:Int=&gt;A):framian.Column[A]"></a>
-      <a id="apply[A]((Int)⇒A):Column[A]"></a>
+    </li><li name="framian.Column#apply" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="apply[A](cells:framian.Cell[A]*)(implicitevidence$2:framian.column.GenColumnBuilder[A]):framian.Column[A]"></a>
+      <a id="apply[A](Cell[A]*)(GenColumnBuilder[A]):Column[A]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">apply</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="f">f: (<a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a>) ⇒ <span class="extype" name="framian.Column.apply.A">A</span></span>)</span><span class="result">: <a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.apply.A">A</span>]</span>
+        <span class="name">apply</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="cells">cells: <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.Column.apply.A">A</span>]*</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="column/GenColumnBuilder.html" class="extype" name="framian.column.GenColumnBuilder">GenColumnBuilder</a>[<span class="extype" name="framian.Column.apply.A">A</span>]</span>)</span><span class="result">: <a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.apply.A">A</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Column$@apply[A](f:Int=&gt;A):framian.Column[A]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Column$@apply[A](cells:framian.Cell[A]*)(implicitevidence$2:framian.column.GenColumnBuilder[A]):framian.Column[A]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Construct a column whose <code>i</code>-th row is the <code>i</code>-th element in <code>cells</code>.</p><div class="fullcomment"><div class="comment cmt"><p>Construct a column whose <code>i</code>-th row is the <code>i</code>-th element in <code>cells</code>. All
+other rows are <a href="NA$.html" class="extype" name="framian.NA">NA</a>.
+</p></div></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -178,23 +180,6 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="framian.Column#builder" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="builder[A](implicitevidence$1:scala.reflect.ClassTag[A]):framian.ColumnBuilder[A]"></a>
-      <a id="builder[A](ClassTag[A]):ColumnBuilder[A]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">builder</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="framian.Column.builder.A">A</span>]</span>)</span><span class="result">: <a href="ColumnBuilder.html" class="extype" name="framian.ColumnBuilder">ColumnBuilder</a>[<span class="extype" name="framian.Column.builder.A">A</span>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Column$@builder[A](implicitevidence$1:scala.reflect.ClassTag[A]):framian.ColumnBuilder[A]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      
     </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a>
       <a id="clone():AnyRef"></a>
@@ -218,40 +203,69 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="framian.Column#const" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="const[A](value:A):framian.Column[A]"></a>
-      <a id="const[A](A):Column[A]"></a>
+    </li><li name="framian.Column#columnMonoid" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="columnMonoid[A]:spire.algebra.Monoid[framian.Column[A]]"></a>
+      <a id="columnMonoid[A]:Monoid[Column[A]]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">columnMonoid</span><span class="tparams">[<span name="A">A</span>]</span><span class="result">: <span class="extype" name="spire.algebra.Monoid">Monoid</span>[<a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.columnMonoid.A">A</span>]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Column$@columnMonoid[A]:spire.algebra.Monoid[framian.Column[A]]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.Column#dense" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="dense[A](values:Array[A],na:framian.column.Mask,nm:framian.column.Mask):framian.Column[A]"></a>
+      <a id="dense[A](Array[A],Mask,Mask):Column[A]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">const</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="value">value: <span class="extype" name="framian.Column.const.A">A</span></span>)</span><span class="result">: <a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.const.A">A</span>]</span>
+        <span class="name">dense</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="values">values: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="framian.Column.dense.A">A</span>]</span>, <span name="na">na: <a href="column/Mask.html" class="extype" name="framian.column.Mask">Mask</a> = <span class="symbol"><span class="name"><a href="package.html">Mask.empty</a></span></span></span>, <span name="nm">nm: <a href="column/Mask.html" class="extype" name="framian.column.Mask">Mask</a> = <span class="symbol"><span class="name"><a href="package.html">Mask.empty</a></span></span></span>)</span><span class="result">: <a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.dense.A">A</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Column$@const[A](value:A):framian.Column[A]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Column$@dense[A](values:Array[A],na:framian.column.Mask,nm:framian.column.Mask):framian.Column[A]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
-      
-    </li><li name="framian.Column#empty" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="empty[A]:framian.Column[A]"></a>
-      <a id="empty[A]:Column[A]"></a>
+      <p class="shortcomment cmt">Create a dense column from an array of values.</p><div class="fullcomment"><div class="comment cmt"><p>Create a dense column from an array of values. A dense column can still
+have empty values, <a href="NA$.html" class="extype" name="framian.NA">NA</a> and <a href="NM$.html" class="extype" name="framian.NM">NM</a>, as specified with the <code>na</code> and <code>nm</code>
+masks respectively. Dense columns are unboxed and only values that aren't
+masked by <code>na</code> and <code>nm</code> will ever be returned (so they can be <code>null</code>,
+<code>NaN</code>, etc.)</p><p>The <a href="NM$.html" class="extype" name="framian.NM">NM</a> mask (<code>nm</code>) always takes precedence over the <a href="NA$.html" class="extype" name="framian.NA">NA</a> mask
+(<code>na</code>).  If a row is outside of the range 0 until <code>values.length</code>, then if
+<code>nm(row)</code> is true, <a href="NM$.html" class="extype" name="framian.NM">NM</a> will be returned, otherwise <a href="NA$.html" class="extype" name="framian.NA">NA</a> is returned.
+</p></div><dl class="paramcmts block"><dt class="param">values</dt><dd class="cmt"><p>the values of the column, rows correspond to indices</p></dd><dt class="param">na</dt><dd class="cmt"><p>masked rows that will return <a href="NA$.html" class="extype" name="framian.NA">NA</a></p></dd><dt class="param">nm</dt><dd class="cmt"><p>masked rows that will return <a href="NM$.html" class="extype" name="framian.NM">NM</a>
+</p></dd></dl></div>
+    </li><li name="framian.Column#empty" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="empty[A](nmValues:framian.column.Mask):framian.Column[A]"></a>
+      <a id="empty[A](Mask):Column[A]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">empty</span><span class="tparams">[<span name="A">A</span>]</span><span class="result">: <a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.empty.A">A</span>]</span>
+        <span class="name">empty</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="nmValues">nmValues: <a href="column/Mask.html" class="extype" name="framian.column.Mask">Mask</a> = <span class="symbol"><span class="name"><a href="package.html">Mask.empty</a></span></span></span>)</span><span class="result">: <a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.empty.A">A</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Column$@empty[A]:framian.Column[A]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Column$@empty[A](nmValues:framian.column.Mask):framian.Column[A]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Returns a column that returns <a href="NM$.html" class="extype" name="framian.NM">NM</a> for any row in <code>nmValues</code> and <a href="NA$.html" class="extype" name="framian.NA">NA</a>
+for all others.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a column that returns <a href="NM$.html" class="extype" name="framian.NM">NM</a> for any row in <code>nmValues</code> and <a href="NA$.html" class="extype" name="framian.NA">NA</a>
+for all others. If all you need is a column that always returns <a href="NA$.html" class="extype" name="framian.NA">NA</a>,
+then use <span class="extype" name="Empty">Empty</span>.
+</p></div></div>
     </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a>
       <a id="eq(AnyRef):Boolean"></a>
@@ -286,40 +300,27 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="framian.ColumnAlgebras.ColumnAlgebras4#euclideanRing" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="euclideanRing[A](implicitevidence$5:spire.algebra.EuclideanRing[A],implicitevidence$6:spire.algebra.Eq[A]):spire.algebra.EuclideanRing[framian.Column[A]]"></a>
-      <a id="euclideanRing[A](EuclideanRing[A],Eq[A]):EuclideanRing[Column[A]]"></a>
+    </li><li name="framian.Column#eval" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="eval[A](get:Int=&gt;framian.Cell[A]):framian.Column[A]"></a>
+      <a id="eval[A]((Int)⇒Cell[A]):Column[A]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
-        <span class="modifier">implicit </span>
+        <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">euclideanRing</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.EuclideanRing">EuclideanRing</span>[<span class="extype" name="framian.ColumnAlgebras.ColumnAlgebras4.euclideanRing.A">A</span>]</span>, <span name="arg1">arg1: <span class="extype" name="spire.algebra.Eq">Eq</span>[<span class="extype" name="framian.ColumnAlgebras.ColumnAlgebras4.euclideanRing.A">A</span>]</span>)</span><span class="result">: <span class="extype" name="spire.algebra.EuclideanRing">EuclideanRing</span>[<a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.ColumnAlgebras.ColumnAlgebras4.euclideanRing.A">A</span>]]</span>
+        <span class="name">eval</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="get">get: (<a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a>) ⇒ <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.Column.eval.A">A</span>]</span>)</span><span class="result">: <a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.eval.A">A</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Column$@euclideanRing[A](implicitevidence$5:spire.algebra.EuclideanRing[A],implicitevidence$6:spire.algebra.Eq[A]):spire.algebra.EuclideanRing[framian.Column[A]]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Column$@eval[A](get:Int=&gt;framian.Cell[A]):framian.Column[A]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="ColumnAlgebras$$ColumnAlgebras4.html" class="extype" name="framian.ColumnAlgebras.ColumnAlgebras4">ColumnAlgebras4</a></dd></dl></div>
-    </li><li name="framian.ColumnAlgebras.ColumnAlgebras5#field" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="field[A](implicitevidence$7:spire.algebra.Field[A],implicitevidence$8:spire.algebra.Eq[A]):spire.algebra.Field[framian.Column[A]]"></a>
-      <a id="field[A](Field[A],Eq[A]):Field[Column[A]]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">implicit </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">field</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Field">Field</span>[<span class="extype" name="framian.ColumnAlgebras.ColumnAlgebras5.field.A">A</span>]</span>, <span name="arg1">arg1: <span class="extype" name="spire.algebra.Eq">Eq</span>[<span class="extype" name="framian.ColumnAlgebras.ColumnAlgebras5.field.A">A</span>]</span>)</span><span class="result">: <span class="extype" name="spire.algebra.Field">Field</span>[<a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.ColumnAlgebras.ColumnAlgebras5.field.A">A</span>]]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Column$@field[A](implicitevidence$7:spire.algebra.Field[A],implicitevidence$8:spire.algebra.Eq[A]):spire.algebra.Field[framian.Column[A]]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="ColumnAlgebras$$ColumnAlgebras5.html" class="extype" name="framian.ColumnAlgebras.ColumnAlgebras5">ColumnAlgebras5</a></dd></dl></div>
+      <p class="shortcomment cmt">Returns a column whose values are obtained using <code>get</code>.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a column whose values are obtained using <code>get</code>. Each time a row is
+accessed, <code>get</code> will be re-evaluated. To ensure values are evaluated
+only once, you can <span class="extype" name="memoize">memoize</span> the column or use on of the *forcing*
+methods, such as <span class="extype" name="reindex">reindex</span> or <span class="extype" name="force">force</span>.
+</p></div></div>
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <a id="finalize():Unit"></a>
@@ -343,57 +344,6 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="framian.Column#fromArray" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="fromArray[A](values:Array[A]):framian.Column[A]"></a>
-      <a id="fromArray[A](Array[A]):Column[A]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">fromArray</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="values">values: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="framian.Column.fromArray.A">A</span>]</span>)</span><span class="result">: <a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.fromArray.A">A</span>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Column$@fromArray[A](values:Array[A]):framian.Column[A]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      
-    </li><li name="framian.Column#fromCells" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="fromCells[A](cells:IndexedSeq[framian.Cell[A]]):framian.Column[A]"></a>
-      <a id="fromCells[A](IndexedSeq[Cell[A]]):Column[A]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">fromCells</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="cells">cells: <span class="extype" name="scala.IndexedSeq">IndexedSeq</span>[<a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.Column.fromCells.A">A</span>]]</span>)</span><span class="result">: <a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.fromCells.A">A</span>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Column$@fromCells[A](cells:IndexedSeq[framian.Cell[A]]):framian.Column[A]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      
-    </li><li name="framian.Column#fromMap" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="fromMap[A](values:Map[Int,A]):framian.Column[A]"></a>
-      <a id="fromMap[A](Map[Int,A]):Column[A]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">fromMap</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="values">values: <span class="extype" name="scala.Predef.Map">Map</span>[<a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a>, <span class="extype" name="framian.Column.fromMap.A">A</span>]</span>)</span><span class="result">: <a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.fromMap.A">A</span>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Column$@fromMap[A](values:Map[Int,A]):framian.Column[A]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      
     </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <a id="getClass():Class[_]"></a>
@@ -445,23 +395,6 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="framian.Column#monoid" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="monoid[A]:spire.algebra.Monoid[framian.Column[A]]"></a>
-      <a id="monoid[A]:Monoid[Column[A]]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">implicit </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">monoid</span><span class="tparams">[<span name="A">A</span>]</span><span class="result">: <span class="extype" name="spire.algebra.Monoid">Monoid</span>[<a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.monoid.A">A</span>]]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Column$@monoid[A]:spire.algebra.Monoid[framian.Column[A]]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
       <a id="ne(AnyRef):Boolean"></a>
@@ -479,19 +412,19 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="framian.Column#nonValue" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="nonValue[A](nonValue:framian.NonValue):framian.Column[A]"></a>
-      <a id="nonValue[A](NonValue):Column[A]"></a>
+    </li><li name="framian.Column#newBuilder" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="newBuilder[A]()(implicitevidence$1:framian.column.GenColumnBuilder[A]):framian.column.ColumnBuilder[A]"></a>
+      <a id="newBuilder[A]()(GenColumnBuilder[A]):ColumnBuilder[A]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
-        <span class="modifier"></span>
+        <span class="modifier">final </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">nonValue</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="nonValue">nonValue: <a href="NonValue.html" class="extype" name="framian.NonValue">NonValue</a></span>)</span><span class="result">: <a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.nonValue.A">A</span>]</span>
+        <span class="name">newBuilder</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">()</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="column/GenColumnBuilder.html" class="extype" name="framian.column.GenColumnBuilder">GenColumnBuilder</a>[<span class="extype" name="framian.Column.newBuilder.A">A</span>]</span>)</span><span class="result">: <a href="column/ColumnBuilder.html" class="extype" name="framian.column.ColumnBuilder">ColumnBuilder</a>[<span class="extype" name="framian.Column.newBuilder.A">A</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.Column$@nonValue[A](nonValue:framian.NonValue):framian.Column[A]" title="Permalink" target="_top">
+      <a href="../index.html#framian.Column$@newBuilder[A]()(implicitevidence$1:framian.column.GenColumnBuilder[A]):framian.column.ColumnBuilder[A]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -530,74 +463,6 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="framian.ColumnAlgebras.ColumnAlgebras1#rig" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="rig[A](implicitevidence$2:spire.algebra.Rig[A]):spire.algebra.Rig[framian.Column[A]]"></a>
-      <a id="rig[A](Rig[A]):Rig[Column[A]]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">implicit </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">rig</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Rig">Rig</span>[<span class="extype" name="framian.ColumnAlgebras.ColumnAlgebras1.rig.A">A</span>]</span>)</span><span class="result">: <span class="extype" name="spire.algebra.Rig">Rig</span>[<a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.ColumnAlgebras.ColumnAlgebras1.rig.A">A</span>]]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Column$@rig[A](implicitevidence$2:spire.algebra.Rig[A]):spire.algebra.Rig[framian.Column[A]]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="ColumnAlgebras$$ColumnAlgebras1.html" class="extype" name="framian.ColumnAlgebras.ColumnAlgebras1">ColumnAlgebras1</a></dd></dl></div>
-    </li><li name="framian.ColumnAlgebras.ColumnAlgebras3#ring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="ring[A](implicitevidence$4:spire.algebra.Ring[A]):spire.algebra.Ring[framian.Column[A]]"></a>
-      <a id="ring[A](Ring[A]):Ring[Column[A]]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">implicit </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">ring</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Ring">Ring</span>[<span class="extype" name="framian.ColumnAlgebras.ColumnAlgebras3.ring.A">A</span>]</span>)</span><span class="result">: <span class="extype" name="spire.algebra.Ring">Ring</span>[<a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.ColumnAlgebras.ColumnAlgebras3.ring.A">A</span>]]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Column$@ring[A](implicitevidence$4:spire.algebra.Ring[A]):spire.algebra.Ring[framian.Column[A]]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="ColumnAlgebras$$ColumnAlgebras3.html" class="extype" name="framian.ColumnAlgebras.ColumnAlgebras3">ColumnAlgebras3</a></dd></dl></div>
-    </li><li name="framian.ColumnAlgebras.ColumnAlgebras2#rng" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="rng[A](implicitevidence$3:spire.algebra.Rng[A]):spire.algebra.Rng[framian.Column[A]]"></a>
-      <a id="rng[A](Rng[A]):Rng[Column[A]]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">implicit </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">rng</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Rng">Rng</span>[<span class="extype" name="framian.ColumnAlgebras.ColumnAlgebras2.rng.A">A</span>]</span>)</span><span class="result">: <span class="extype" name="spire.algebra.Rng">Rng</span>[<a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.ColumnAlgebras.ColumnAlgebras2.rng.A">A</span>]]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Column$@rng[A](implicitevidence$3:spire.algebra.Rng[A]):spire.algebra.Rng[framian.Column[A]]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="ColumnAlgebras$$ColumnAlgebras2.html" class="extype" name="framian.ColumnAlgebras.ColumnAlgebras2">ColumnAlgebras2</a></dd></dl></div>
-    </li><li name="framian.ColumnAlgebras.ColumnAlgebras0#semiring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="semiring[A](implicitevidence$1:spire.algebra.Semiring[A]):spire.algebra.Semiring[framian.Column[A]]"></a>
-      <a id="semiring[A](Semiring[A]):Semiring[Column[A]]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">implicit </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">semiring</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="spire.algebra.Semiring">Semiring</span>[<span class="extype" name="framian.ColumnAlgebras.ColumnAlgebras0.semiring.A">A</span>]</span>)</span><span class="result">: <span class="extype" name="spire.algebra.Semiring">Semiring</span>[<a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.ColumnAlgebras.ColumnAlgebras0.semiring.A">A</span>]]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Column$@semiring[A](implicitevidence$1:spire.algebra.Semiring[A]):spire.algebra.Semiring[framian.Column[A]]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="ColumnAlgebras$$ColumnAlgebras0.html" class="extype" name="framian.ColumnAlgebras.ColumnAlgebras0">ColumnAlgebras0</a></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
       <a id="synchronized[T0](⇒T0):T0"></a>
@@ -632,6 +497,42 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="framian.Column#value" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="value[A](value:A):framian.Column[A]"></a>
+      <a id="value[A](A):Column[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">value</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="value">value: <span class="extype" name="framian.Column.value.A">A</span></span>)</span><span class="result">: <a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.value.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Column$@value[A](value:A):framian.Column[A]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns a column which returns <code>Value(a)</code> for all rows.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a column which returns <code>Value(a)</code> for all rows.
+</p></div><dl class="attributes block"> <dt>Note</dt><dd><span class="cmt"><p>The <code>value</code> argument is strict.
+</p></span></dd></dl></div>
+    </li><li name="framian.Column#values" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="values[A](values:Seq[A]):framian.Column[A]"></a>
+      <a id="values[A](Seq[A]):Column[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">values</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="values">values: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="framian.Column.values.A">A</span>]</span>)</span><span class="result">: <a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.values.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.Column$@values[A](values:Seq[A]):framian.Column[A]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <a id="wait():Unit"></a>
@@ -701,23 +602,6 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="framian.Column#wrap" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="wrap[A](f:Int=&gt;framian.Cell[A]):framian.Column[A]"></a>
-      <a id="wrap[A]((Int)⇒Cell[A]):Column[A]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">wrap</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="f">f: (<a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a>) ⇒ <a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.Column.wrap.A">A</span>]</span>)</span><span class="result">: <a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.wrap.A">A</span>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.Column$@wrap[A](f:Int=&gt;framian.Cell[A]):framian.Column[A]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      
     </li></ol>
             </div>
 
@@ -727,21 +611,7 @@
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="framian.ColumnAlgebras">
-              <h3>Inherited from <a href="ColumnAlgebras.html" class="extype" name="framian.ColumnAlgebras">ColumnAlgebras</a></h3>
-            </div><div class="parent" name="framian.ColumnAlgebras.ColumnAlgebras5">
-              <h3>Inherited from <a href="ColumnAlgebras$$ColumnAlgebras5.html" class="extype" name="framian.ColumnAlgebras.ColumnAlgebras5">ColumnAlgebras5</a></h3>
-            </div><div class="parent" name="framian.ColumnAlgebras.ColumnAlgebras4">
-              <h3>Inherited from <a href="ColumnAlgebras$$ColumnAlgebras4.html" class="extype" name="framian.ColumnAlgebras.ColumnAlgebras4">ColumnAlgebras4</a></h3>
-            </div><div class="parent" name="framian.ColumnAlgebras.ColumnAlgebras3">
-              <h3>Inherited from <a href="ColumnAlgebras$$ColumnAlgebras3.html" class="extype" name="framian.ColumnAlgebras.ColumnAlgebras3">ColumnAlgebras3</a></h3>
-            </div><div class="parent" name="framian.ColumnAlgebras.ColumnAlgebras2">
-              <h3>Inherited from <a href="ColumnAlgebras$$ColumnAlgebras2.html" class="extype" name="framian.ColumnAlgebras.ColumnAlgebras2">ColumnAlgebras2</a></h3>
-            </div><div class="parent" name="framian.ColumnAlgebras.ColumnAlgebras1">
-              <h3>Inherited from <a href="ColumnAlgebras$$ColumnAlgebras1.html" class="extype" name="framian.ColumnAlgebras.ColumnAlgebras1">ColumnAlgebras1</a></h3>
-            </div><div class="parent" name="framian.ColumnAlgebras.ColumnAlgebras0">
-              <h3>Inherited from <a href="ColumnAlgebras$$ColumnAlgebras0.html" class="extype" name="framian.ColumnAlgebras.ColumnAlgebras0">ColumnAlgebras0</a></h3>
-            </div><div class="parent" name="scala.AnyRef">
+        <div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
               <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></h3>

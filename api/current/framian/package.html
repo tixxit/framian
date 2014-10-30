@@ -117,6 +117,23 @@
       </a>
     </span>
       
+    </li><li name="framian.BoxedColumn" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="BoxedColumn[A]extendsColumn[A]"></a>
+      <a id="BoxedColumn[A]:BoxedColumn[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="BoxedColumn.html"><span class="name">BoxedColumn</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.BoxedColumn.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.package@BoxedColumn[A]extendsColumn[A]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      
     </li><li name="framian.Cell" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="Cell[+A]extendsAnyRef"></a>
       <a id="Cell[+A]:Cell[A]"></a>
@@ -166,7 +183,7 @@ data: <a href="NA$.html" class="extype" name="framian.NA">NA</a> (Not Available)
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="ColOrientedFrame.html"><span class="name">ColOrientedFrame</span></a><span class="tparams">[<span name="Row">Row</span>, <span name="Col">Col</span>]</span><span class="params">(<span name="rowIndex">rowIndex: <a href="Index.html" class="extype" name="framian.Index">Index</a>[<span class="extype" name="framian.ColOrientedFrame.Row">Row</span>]</span>, <span name="colIndex">colIndex: <a href="Index.html" class="extype" name="framian.Index">Index</a>[<span class="extype" name="framian.ColOrientedFrame.Col">Col</span>]</span>, <span name="cols">cols: <a href="Column.html" class="extype" name="framian.Column">Column</a>[<a href="UntypedColumn.html" class="extype" name="framian.UntypedColumn">UntypedColumn</a>]</span>)</span><span class="result"> extends <a href="Frame.html" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.ColOrientedFrame.Row">Row</span>, <span class="extype" name="framian.ColOrientedFrame.Col">Col</span>] with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="ColOrientedFrame.html"><span class="name">ColOrientedFrame</span></a><span class="tparams">[<span name="Row">Row</span>, <span name="Col">Col</span>]</span><span class="params">(<span name="rowIndex">rowIndex: <a href="Index.html" class="extype" name="framian.Index">Index</a>[<span class="extype" name="framian.ColOrientedFrame.Row">Row</span>]</span>, <span name="colIndex">colIndex: <a href="Index.html" class="extype" name="framian.Index">Index</a>[<span class="extype" name="framian.ColOrientedFrame.Col">Col</span>]</span>, <span name="valueCols">valueCols: <a href="Column.html" class="extype" name="framian.Column">Column</a>[<a href="UntypedColumn.html" class="extype" name="framian.UntypedColumn">UntypedColumn</a>]</span>)</span><span class="result"> extends <a href="Frame.html" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.ColOrientedFrame.Row">Row</span>, <span class="extype" name="framian.ColOrientedFrame.Col">Col</span>] with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../index.html#framian.package@ColOrientedFrame[Row,Col]extendsFrame[Row,Col]withProductwithSerializable" title="Permalink" target="_top">
@@ -191,59 +208,19 @@ data: <a href="NA$.html" class="extype" name="framian.NA">NA</a> (Not Available)
       </a>
     </span>
       
-    </li><li name="framian.Column" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="Column[+A]extendsColumnLike[framian.Column[A]]"></a>
+    </li><li name="framian.Column" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="Column[+A]extendsAnyRef"></a>
       <a id="Column[+A]:Column[A]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
-        <span class="modifier"></span>
+        <span class="modifier">sealed </span>
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <a href="Column.html"><span class="name">Column</span></a><span class="tparams">[<span name="A">+A</span>]</span><span class="result"> extends <a href="ColumnLike.html" class="extype" name="framian.ColumnLike">ColumnLike</a>[<a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.Column.A">A</span>]]</span>
+        <a href="Column.html"><span class="name">Column</span></a><span class="tparams">[<span name="A">+A</span>]</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.package@Column[+A]extendsColumnLike[framian.Column[A]]" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">A <code>Column</code> represents an <code>Int</code>-indexed set of values.</p><div class="fullcomment"><div class="comment cmt"><p>A <code>Column</code> represents an <code>Int</code>-indexed set of values. The defining
-characteristic is that a column is always defined for all <code>Int</code> values. In
-order to interact with a column in an optimal and concrete way, we need an
-external notion of valid rows to restrict the input by. A <a href="Series.html" class="extype" name="framian.Series">Series</a>, for
-instance, ties a <code>Column</code> together with an <a href="Index.html" class="extype" name="framian.Index">Index</a> to restrict the set of
-rows being used.
-</p></div></div>
-    </li><li name="framian.ColumnAlgebras" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="ColumnAlgebrasextendsColumnAlgebras.ColumnAlgebras5"></a>
-      <a id="ColumnAlgebras:ColumnAlgebras"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">trait</span>
-      </span>
-      <span class="symbol">
-        <a href="ColumnAlgebras.html"><span class="name">ColumnAlgebras</span></a><span class="result"> extends <a href="ColumnAlgebras$$ColumnAlgebras5.html" class="extype" name="framian.ColumnAlgebras.ColumnAlgebras5">ColumnAlgebras5</a></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.package@ColumnAlgebrasextendsColumnAlgebras.ColumnAlgebras5" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      
-    </li><li name="framian.ColumnBuilder" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="ColumnBuilder[V]extendsBuilder[framian.Cell[V],framian.Column[V]]"></a>
-      <a id="ColumnBuilder[V]:ColumnBuilder[V]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">class</span>
-      </span>
-      <span class="symbol">
-        <a href="ColumnBuilder.html"><span class="name">ColumnBuilder</span></a><span class="tparams">[<span name="V">V</span>]</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.collection.mutable.Builder" class="extype" target="_top">Builder</a>[<a href="Cell.html" class="extype" name="framian.Cell">Cell</a>[<span class="extype" name="framian.ColumnBuilder.V">V</span>], <a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.ColumnBuilder.V">V</span>]]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.package@ColumnBuilder[V]extendsBuilder[framian.Cell[V],framian.Column[V]]" title="Permalink" target="_top">
+      <a href="../index.html#framian.package@Column[+A]extendsAnyRef" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -295,6 +272,23 @@ rows being used.
       </span>
       </h4><span class="permalink">
       <a href="../index.html#framian.package@ColumnTyperInstancesextendsColumnTyperInstances.ColumnTyper3" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.ConcatColumn" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ConcatColumnextendsUntypedColumnwithProductwithSerializable"></a>
+      <a id="ConcatColumn:ConcatColumn"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="ConcatColumn.html"><span class="name">ConcatColumn</span></a><span class="params">(<span name="col0">col0: <a href="UntypedColumn.html" class="extype" name="framian.UntypedColumn">UntypedColumn</a></span>, <span name="col1">col1: <a href="UntypedColumn.html" class="extype" name="framian.UntypedColumn">UntypedColumn</a></span>, <span name="offset">offset: <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result"> extends <a href="UntypedColumn.html" class="extype" name="framian.UntypedColumn">UntypedColumn</a> with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.package@ConcatColumnextendsUntypedColumnwithProductwithSerializable" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -588,7 +582,7 @@ column in a Frame.</p>
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="RowOrientedFrame.html"><span class="name">RowOrientedFrame</span></a><span class="tparams">[<span name="Row">Row</span>, <span name="Col">Col</span>]</span><span class="params">(<span name="rowIndex">rowIndex: <a href="Index.html" class="extype" name="framian.Index">Index</a>[<span class="extype" name="framian.RowOrientedFrame.Row">Row</span>]</span>, <span name="colIndex">colIndex: <a href="Index.html" class="extype" name="framian.Index">Index</a>[<span class="extype" name="framian.RowOrientedFrame.Col">Col</span>]</span>, <span name="rows">rows: <a href="Column.html" class="extype" name="framian.Column">Column</a>[<a href="UntypedColumn.html" class="extype" name="framian.UntypedColumn">UntypedColumn</a>]</span>)</span><span class="result"> extends <a href="Frame.html" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.RowOrientedFrame.Row">Row</span>, <span class="extype" name="framian.RowOrientedFrame.Col">Col</span>] with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="RowOrientedFrame.html"><span class="name">RowOrientedFrame</span></a><span class="tparams">[<span name="Row">Row</span>, <span name="Col">Col</span>]</span><span class="params">(<span name="rowIndex">rowIndex: <a href="Index.html" class="extype" name="framian.Index">Index</a>[<span class="extype" name="framian.RowOrientedFrame.Row">Row</span>]</span>, <span name="colIndex">colIndex: <a href="Index.html" class="extype" name="framian.Index">Index</a>[<span class="extype" name="framian.RowOrientedFrame.Col">Col</span>]</span>, <span name="valueRows">valueRows: <a href="Column.html" class="extype" name="framian.Column">Column</a>[<a href="UntypedColumn.html" class="extype" name="framian.UntypedColumn">UntypedColumn</a>]</span>)</span><span class="result"> extends <a href="Frame.html" class="extype" name="framian.Frame">Frame</a>[<span class="extype" name="framian.RowOrientedFrame.Row">Row</span>, <span class="extype" name="framian.RowOrientedFrame.Col">Col</span>] with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../index.html#framian.package@RowOrientedFrame[Row,Col]extendsFrame[Row,Col]withProductwithSerializable" title="Permalink" target="_top">
@@ -732,6 +726,23 @@ column in a Frame.</p>
       </span>
       </h4><span class="permalink">
       <a href="../index.html#framian.package@TypedColumn[A]extendsUntypedColumnwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.UnboxedColumn" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="UnboxedColumn[A]extendsColumn[A]"></a>
+      <a id="UnboxedColumn[A]:UnboxedColumn[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="UnboxedColumn.html"><span class="name">UnboxedColumn</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="Column.html" class="extype" name="framian.Column">Column</a>[<span class="extype" name="framian.UnboxedColumn.A">A</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.package@UnboxedColumn[A]extendsColumn[A]" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -893,27 +904,10 @@ casting to a real, typed column. Values that cannot be cast are treated as
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a href="Column$.html"><span class="name">Column</span></a><span class="result"> extends <a href="ColumnAlgebras.html" class="extype" name="framian.ColumnAlgebras">ColumnAlgebras</a></span>
+        <a href="Column$.html"><span class="name">Column</span></a>
       </span>
       </h4><span class="permalink">
       <a href="../index.html#framian.package@Column" title="Permalink" target="_top">
-        <img src="../lib/permalink.png" />
-      </a>
-    </span>
-      
-    </li><li name="framian.ColumnAlgebras" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="ColumnAlgebras"></a>
-      <a id="ColumnAlgebras:ColumnAlgebras"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">object</span>
-      </span>
-      <span class="symbol">
-        <a href="ColumnAlgebras$.html"><span class="name">ColumnAlgebras</span></a>
-      </span>
-      </h4><span class="permalink">
-      <a href="../index.html#framian.package@ColumnAlgebras" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -1278,6 +1272,23 @@ unavailable.
       </span>
       </h4><span class="permalink">
       <a href="../index.html#framian.package@Variable" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.column" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="column"></a>
+      <a id="column:column"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="column/package.html"><span class="name">column</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.package@column" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>

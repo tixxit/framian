@@ -50,12 +50,12 @@
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>An abstraction for heterogeneously typed columns. We work with them by
 casting to a real, typed column. Values that cannot be cast are treated as
 <code>NM</code> (not meaningful) values.
-</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.2.0/framian/src/main/scala/framian/UntypedColumn.scala" target="_blank">UntypedColumn.scala</a></dd></dl><div class="toggleContainer block">
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.3.0/framian/src/main/scala/framian/UntypedColumn.scala" target="_blank">UntypedColumn.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><a href="ColumnLike.html" class="extype" name="framian.ColumnLike">ColumnLike</a>[<a href="" class="extype" name="framian.UntypedColumn">UntypedColumn</a>], <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div><div class="toggleContainer block">
             <span class="toggle">Known Subclasses</span>
-            <div class="subClasses hiddenContent"><a href="EmptyUntypedColumn$.html" class="extype" name="framian.EmptyUntypedColumn">EmptyUntypedColumn</a>, <a href="MergedUntypedColumn.html" class="extype" name="framian.MergedUntypedColumn">MergedUntypedColumn</a>, <a href="TypedColumn.html" class="extype" name="framian.TypedColumn">TypedColumn</a></div>
+            <div class="subClasses hiddenContent"><a href="ConcatColumn.html" class="extype" name="framian.ConcatColumn">ConcatColumn</a>, <a href="EmptyUntypedColumn$.html" class="extype" name="framian.EmptyUntypedColumn">EmptyUntypedColumn</a>, <a href="MergedUntypedColumn.html" class="extype" name="framian.MergedUntypedColumn">MergedUntypedColumn</a>, <a href="TypedColumn.html" class="extype" name="framian.TypedColumn">TypedColumn</a></div>
           </div></div>
         
 
@@ -120,18 +120,18 @@ casting to a real, typed column. Values that cannot be cast are treated as
     </span>
       
     </li><li name="framian.ColumnLike#mask" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="mask(bits:Int=&gt;Boolean):This"></a>
-      <a id="mask((Int)⇒Boolean):UntypedColumn"></a>
+      <a id="mask(na:framian.column.Mask):This"></a>
+      <a id="mask(Mask):UntypedColumn"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">mask</span><span class="params">(<span name="bits">bits: (<a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Int" class="extype" target="_top">Int</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.UntypedColumn">UntypedColumn</a></span>
+        <span class="name">mask</span><span class="params">(<span name="na">na: <a href="column/Mask.html" class="extype" name="framian.column.Mask">Mask</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.UntypedColumn">UntypedColumn</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../index.html#framian.UntypedColumn@mask(bits:Int=&gt;Boolean):This" title="Permalink" target="_top">
+      <a href="../index.html#framian.UntypedColumn@mask(na:framian.column.Mask):This" title="Permalink" target="_top">
         <img src="../lib/permalink.png" />
       </a>
     </span>
@@ -595,6 +595,23 @@ casting to a real, typed column. Values that cannot be cast are treated as
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="framian.UntypedColumn#orElse" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="orElse(that:framian.UntypedColumn):framian.UntypedColumn"></a>
+      <a id="orElse(UntypedColumn):UntypedColumn"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">orElse</span><span class="params">(<span name="that">that: <a href="" class="extype" name="framian.UntypedColumn">UntypedColumn</a></span>)</span><span class="result">: <a href="" class="extype" name="framian.UntypedColumn">UntypedColumn</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#framian.UntypedColumn@orElse(that:framian.UntypedColumn):framian.UntypedColumn" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" />
+      </a>
+    </span>
+      
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
       <a id="synchronized[T0](⇒T0):T0"></a>

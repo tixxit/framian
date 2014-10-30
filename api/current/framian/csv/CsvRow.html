@@ -48,7 +48,7 @@
       </h4>
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>A single row in a CSV file.
-</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.2.0/framian/src/main/scala/framian/csv/CsvRowExtractor.scala" target="_blank">CsvRowExtractor.scala</a></dd></dl><div class="toggleContainer block">
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/pellucidanalytics/framian/tree/v0.3.0/framian/src/main/scala/framian/csv/CsvRow.scala" target="_blank">CsvRow.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.AnyVal" class="extype" target="_top">AnyVal</a>, <a href="http://www.scala-lang.org/api/2.11.2/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
@@ -94,7 +94,7 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="framian.csv.CsvRow#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(cells:List[framian.csv.CsvCell]):framian.csv.CsvRow"></a>
+      <a id="&lt;init&gt;(cells:Vector[framian.csv.CsvCell]):framian.csv.CsvRow"></a>
       <a id="&lt;init&gt;:CsvRow"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -102,10 +102,10 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">CsvRow</span><span class="params">(<span name="cells">cells: <span class="extype" name="scala.List">List</span>[<a href="CsvCell.html" class="extype" name="framian.csv.CsvCell">CsvCell</a>]</span>)</span>
+        <span class="name">CsvRow</span><span class="params">(<span name="cells">cells: <span class="extype" name="scala.Vector">Vector</span>[<a href="CsvCell.html" class="extype" name="framian.csv.CsvCell">CsvCell</a>]</span>)</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#framian.csv.CsvRow@&lt;init&gt;(cells:List[framian.csv.CsvCell]):framian.csv.CsvRow" title="Permalink" target="_top">
+      <a href="../../index.html#framian.csv.CsvRow@&lt;init&gt;(cells:Vector[framian.csv.CsvCell]):framian.csv.CsvRow" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" />
       </a>
     </span>
@@ -233,18 +233,18 @@
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="framian.csv.CsvRow#cells" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="cells:List[framian.csv.CsvCell]"></a>
-      <a id="cells:List[CsvCell]"></a>
+      <a id="cells:Vector[framian.csv.CsvCell]"></a>
+      <a id="cells:Vector[CsvCell]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">cells</span><span class="result">: <span class="extype" name="scala.List">List</span>[<a href="CsvCell.html" class="extype" name="framian.csv.CsvCell">CsvCell</a>]</span>
+        <span class="name">cells</span><span class="result">: <span class="extype" name="scala.Vector">Vector</span>[<a href="CsvCell.html" class="extype" name="framian.csv.CsvCell">CsvCell</a>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../index.html#framian.csv.CsvRow@cells:List[framian.csv.CsvCell]" title="Permalink" target="_top">
+      <a href="../../index.html#framian.csv.CsvRow@cells:Vector[framian.csv.CsvCell]" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" />
       </a>
     </span>
@@ -408,7 +408,24 @@
       </a>
     </span>
       
-    </li><li name="scala.Any#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+    </li><li name="framian.csv.CsvRow#text" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="text(format:framian.csv.CsvFormat):Vector[String]"></a>
+      <a id="text(CsvFormat):Vector[String]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">text</span><span class="params">(<span name="format">format: <a href="CsvFormat.html" class="extype" name="framian.csv.CsvFormat">CsvFormat</a></span>)</span><span class="result">: <span class="extype" name="scala.Vector">Vector</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#framian.csv.CsvRow@text(format:framian.csv.CsvFormat):Vector[String]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="framian.csv.CsvRow#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
       <a id="toString():String"></a>
       <h4 class="signature">
@@ -417,14 +434,14 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
       </h4><span class="permalink">
       <a href="../../index.html#framian.csv.CsvRow@toString():String" title="Permalink" target="_top">
         <img src="../../lib/permalink.png" />
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="framian.csv.CsvRow">CsvRow</a> → Any</dd></dl></div>
     </li><li name="scala.Predef.ArrowAssoc#→" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="→[B](y:B):(A,B)"></a>
       <a id="→[B](B):(CsvRow,B)"></a>
