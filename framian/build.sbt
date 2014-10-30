@@ -1,6 +1,8 @@
 
 name := "framian"
 
+(sourceGenerators in Compile) <+= (sourceManaged in Compile) map Boilerplate.gen
+
 libraryDependencies ++= {
   import Dependencies._
   Seq(
@@ -24,7 +26,7 @@ initialCommands := """
 | import shapeless._
 | import spire.implicits._""".stripMargin('|')
 
-testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html", "junitxml", "console")
+testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "junitxml", "console")
 
 TestCoverage.settings
 

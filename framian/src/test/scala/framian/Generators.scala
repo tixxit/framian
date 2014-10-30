@@ -48,7 +48,7 @@ trait ColumnGenerators {
     */
   def genColumn[A: ClassTag](gen: Gen[A], weight: (Int, Int, Int) = CellGenerators.dDefault): Gen[Column[A]] = for {
     cellValues <- Gen.listOf(CellGenerators.genCell(gen, weight))
-  } yield Column.fromCells(cellValues.toVector)
+  } yield Column(cellValues: _*)
 }
 object ColumnGenerators extends ColumnGenerators
 
@@ -110,3 +110,65 @@ trait IndexGenerators {
     Arbitrary(genIndex(arbitrary[K]))
 }
 object IndexGenerators extends IndexGenerators
+
+trait FrameGenerators {
+  import shapeless.{Generic, HList, HNil, Poly2}
+  import shapeless.ops.hlist.LeftFolder
+  import shapeless.syntax._
+
+  def genFrameWithCol[R: Order: ClassTag, C, A: ClassTag](genFrame: Gen[Frame[R, C]], col: C, genCell: Gen[Cell[A]]): Gen[Frame[R, C]] = {
+    genFrame.flatMap { frame =>
+      val seriesGen: Gen[Series[R, A]] = Gen.sequence[Vector, (R, Cell[A])](frame.rowIndex.map { case (key, _) =>
+        genCell.map(key -> _)
+      }).map(Series.fromCells(_))
+
+      seriesGen.map { series =>
+        frame.merge(col, series)(Merge.Outer)
+      }
+    }
+  }
+
+  object coFrameGen extends Poly2 {
+    implicit def valuesCase[Row: Order: ClassTag, Col, A: ClassTag] =
+      at[Gen[Frame[Row, Col]], (Col, Gen[A])] { case (genFrame, (col, genValue)) =>
+        genFrameWithCol(genFrame, col, genValue.map(Value(_)))
+      }
+
+    implicit def cellCase[Row: Order: ClassTag, Col, A: ClassTag] =
+      at[Gen[Frame[Row, Col]], (Col, Gen[Cell[A]])] { case (genFrame, (col, genCell)) =>
+        genFrameWithCol(genFrame, col, genCell)
+      }
+  }
+
+  type COFrameGenFolder[L <: HList, Row, Col] = LeftFolder.Aux[L, Gen[Frame[Row, Col]], coFrameGen.type, Gen[Frame[Row, Col]]]
+
+  final class COFrameGenBuilder[Row, Col](rowKeyGen: Gen[Row]) {
+    def apply[S, L <: HList](s: S)(implicit
+        gen: Generic.Aux[S, L],
+        folder: COFrameGenFolder[L, Row, Col],
+        ctCol: ClassTag[Col], orderCol: Order[Col],
+        ctRow: ClassTag[Row], orderRow: Order[Row]): Gen[Frame[Row, Col]] = {
+      val frame0Gen = Gen.listOf(rowKeyGen).map { keys =>
+        Frame.empty[Row, Col].withRowIndex(Index(keys.toArray))
+      }
+      gen.to(s).foldLeft(frame0Gen)(coFrameGen)
+    }
+  }
+
+  final class ROFrameGenBuilder[Row, Col](colKeyGen: Gen[Col]) {
+    def apply[S, L <: HList](s: S)(implicit
+        gen: Generic.Aux[S, L],
+        folder: COFrameGenFolder[L, Col, Row],
+        ctCol: ClassTag[Col], orderCol: Order[Col],
+        ctRow: ClassTag[Row], orderRow: Order[Row]): Gen[Frame[Row, Col]] =
+      new COFrameGenBuilder[Col, Row](colKeyGen)(s).map(_.transpose)
+  }
+
+  def genColOrientedFrame[Row, Col](rowKeyGen: Gen[Row]) =
+    new COFrameGenBuilder[Row, Col](rowKeyGen)
+
+  def genRowOrientedFrame[Row, Col](colKeyGen: Gen[Col]) =
+    new ROFrameGenBuilder[Row, Col](colKeyGen)
+}
+
+object FrameGenerators extends FrameGenerators

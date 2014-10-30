@@ -8,29 +8,38 @@ scalaVersion in ThisBuild := "2.11.2"
 
 crossScalaVersions in ThisBuild := Seq("2.10.4", "2.11.2")
 
-scalacOptions in ThisBuild ++= Seq("-deprecation", "-feature", "-unchecked", "-language:higherKinds")
+scalacOptions in ThisBuild ++= Seq("-deprecation", "-feature", "-unchecked", "-language:higherKinds", "-optimize")
 
 
 maxErrors in ThisBuild := 5
 
 
 resolvers in ThisBuild ++= Seq(
-  "Typesafe Repo"             at "http://repo.typesafe.com/typesafe/releases/",
-  Resolver.url("Side Typesafe Repo", url("http://repo.typesafe.com/typesafe/maven-ivy-releases"))(Resolver.ivyStylePatterns),
-  "Sonatype Snapshots"        at "http://oss.sonatype.org/content/repositories/snapshots",
-  "Sonatype Releases"         at "http://oss.sonatype.org/content/repositories/releases"
+  Resolver.sonatypeRepo("releases"),
+  Resolver.typesafeRepo("releases")
 )
 
 lazy val root = project.
   in(file(".")).
-  aggregate(framian, framianJsonBase, framianJsonPlay, framianStats).
+  aggregate(framianMacros, framian, framianJsonBase, framianJsonPlay, framianStats).
   settings(
     publish := (),
     publishLocal := ()
   )
 
+lazy val framianMacros = project.
+  in(file("framian-macros"))
+
 lazy val framian = project.
-  in(file("framian"))
+  in(file("framian")).
+  enablePlugins(BenchmarkPlugin).
+  dependsOn(framianMacros).
+  settings(
+    // map framian-macros project classes and sources into framian
+    mappings in (Compile, packageBin) <++= mappings in (framianMacros, Compile, packageBin),
+    mappings in (Compile, packageSrc) <++= mappings in (framianMacros, Compile, packageSrc)
+  )
+
 
 lazy val framianJsonBase = project.
   in(file("framian-json-base")).

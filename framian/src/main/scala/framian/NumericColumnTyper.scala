@@ -30,6 +30,8 @@ import spire.math.{ Rational, Number }
 
 import shapeless._
 
+import framian.column._
+
 // Currently support the following number types:
 //   - Int
 //   - Long
@@ -48,10 +50,8 @@ trait NumericColumnTyper[@spec(Int,Long,Float,Double) A] extends ColumnTyper[A] 
 
   def cast(col: TypedColumn[_]): Column[A] = {
     val column: Column[Any] = col.column
-    castColumn(col) getOrElse Column.wrap { row =>
-      column(row) flatMap { x =>
-        Cell.fromOption(castValue(x), NM)
-      }
+    castColumn(col) getOrElse column.flatMap { x =>
+      Cell.fromOption(castValue(x), NM)
     }
   }
 }
@@ -79,13 +79,6 @@ object NumericColumnTyper {
 
   def isScalaNumber(runtimeClass: Class[_]): Boolean =
     scalaNumberClass isAssignableFrom runtimeClass
-
-  def convert[A, B](source: Column[A])(isValid: A => Boolean, to: A => B): Column[B] =
-    new Column[B] {
-      def isValueAt(row: Int): Boolean = source.isValueAt(row) && isValid(source.valueAt(row))
-      def nonValueAt(row: Int): NonValue = if (source.isValueAt(row)) NM else source.nonValueAt(row)
-      def valueAt(row: Int): B = to(source.valueAt(row))
-    }
 
   def foldValue[A](x: Any)(
       primInt: Long => A,
@@ -115,7 +108,6 @@ object NumericColumnTyper {
           if (x.isExact) rational(x.toRational)
           else bigFloat(x.toBigDecimal)
         }
-      case (x: String) => string(x)
       case _ => z
     }
   }
@@ -142,7 +134,6 @@ object NumericColumnTyper {
       case Classes.BigDecimal => bigFloat(column.asInstanceOf[Column[BigDecimal]])
       case Classes.JavaBigDecimal => bigFloat(column.asInstanceOf[Column[java.math.BigDecimal]] map (BigDecimal(_)))
       case cls if Classes.Rational isAssignableFrom cls => rational(column.asInstanceOf[Column[Rational]])
-      case Classes.String => string(column.asInstanceOf[Column[String]])
       case _ => z
     }
   }
@@ -173,7 +164,7 @@ private[framian] final class IntColumnTyper extends ColumnTyper[Int] {
       case Classes.Byte => column.asInstanceOf[Column[Byte]] map (_.toInt)
       case Classes.Short => column.asInstanceOf[Column[Short]] map (_.toInt)
       case Classes.Int => column.asInstanceOf[Column[Int]]
-      case _ => Column.wrap(column(_) flatMap castValue)
+      case _ => column flatMap castValue
     }
   }
 }

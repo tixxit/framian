@@ -18,11 +18,17 @@ class NumericColumnTyperSpec extends Specification {
   val MinLong = Long.MinValue
   val MaxLong = Long.MaxValue
 
-  def untyped[A: ClassTag](xs: A*): UntypedColumn = TypedColumn(Column.fromArray(xs.toArray))
+  implicit class ColumnOps[A](col: Column[A]) {
+    def cells(rows: Seq[Int]): Vector[Cell[A]] =
+      rows.map(col(_))(collection.breakOut)
+  }
+
+  def untyped[A: ClassTag](xs: A*): UntypedColumn = TypedColumn(Column.dense(xs.toArray))
 
   def checkCast[A: ClassTag, B: ColumnTyper: ClassTag](casts: (A, Cell[B])*) = {
     val (input, output) = casts.unzip
-    untyped(input: _*).cast[B].cells(0 until input.size) must_== output
+    val col = untyped(input: _*).cast[B]
+    (0 until input.size).map(col(_)) must_== output
   }
 
   "NumericColumnTyper" should {

@@ -25,6 +25,7 @@ import scala.collection.mutable.ArrayBuilder
 import scala.reflect.ClassTag
 
 import framian.reduce.Reducer
+import framian.column._
 
 final class Reduction[K: ClassTag, A, B](column: Column[A], reducer: Reducer[A, B]) extends Index.Grouper[K] {
   final class State {

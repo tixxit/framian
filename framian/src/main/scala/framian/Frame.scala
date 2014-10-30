@@ -33,6 +33,7 @@ import shapeless.syntax.typeable._
 import shapeless.syntax._
 
 import framian.reduce.Reducer
+import framian.column._
 
 import Index.GenericJoin.Skip
 
@@ -55,10 +56,42 @@ trait Frame[Row, Col] {
   def rowsAsSeries: Series[Row, UntypedColumn]
 
   /**
+   * Returns `true` if this frame can be treated as column oriented. This is
+   * largely for optimization purposes.
+   */
+  def isColOriented: Boolean
+
+  /**
+   * Returns `true` if this frame can be treated as row oriented. This is
+   * largely for optimization purposes.
+   */
+  def isRowOriented: Boolean
+
+  /**
    * Transposes the rows and columns of this frame. All rows in this frame
    * becomes the columns of the new frame.
    */
   def transpose: Frame[Col, Row]
+
+  /**
+   * Returns the set of all unique column keys.
+   */
+  def colKeys: Set[Col] = colIndex.map(_._1)(collection.breakOut)
+
+  /**
+   * Returns the set of all unique row keys.
+   */
+  def rowKeys: Set[Row] = rowIndex.map(_._1)(collection.breakOut)
+
+  /**
+   * Returns the number of rows in this frame.
+   */
+  def rows: Int = rowIndex.size
+
+  /**
+   * Returns the number of cols in this frame.
+   */
+  def cols: Int = colIndex.size
 
   /**
    * Returns `true` if this frame is logically empty. A frame is logically
@@ -72,22 +105,23 @@ trait Frame[Row, Col] {
       case (id, Value(column)) if Series(rowIndex, column.cast[Any]).hasValues => id
     }.isEmpty
 
-  private def columnsAs[V: ColumnTyper]: Vector[(Col, Series[Row, V])] =
-    columnsAsSeries.denseIterator.map { case (key, col) =>
-      key -> Series(rowIndex, col.cast[V])
-    }.toVector
-
   /** The following methods allow a user to apply reducers directly across a frame. In
     * particular, this API demands that we specify the type that the reducer accepts and
     * it will only apply it in the case that there exists a type conversion for a given
     * column.
     */
   def reduceFrame[V: ColumnTyper, R: ClassTag: ColumnTyper](reducer: Reducer[V, R]): Series[Col, R] =
-    Series.fromCells(columnsAs[V].map { case (col, series) => col -> series.reduce(reducer) })
+    columnsAsSeries.flatMapCell { col =>
+      Series(rowIndex, col.cast[V]).reduce(reducer)
+    }
 
   def reduceFrameByKey[V: ColumnTyper, R: ClassTag: ColumnTyper](reducer: Reducer[V, R]): Frame[Row, Col] =
-    columnsAs[V].foldLeft(Frame.empty[Row, Col]) { case (acc, (key, col)) =>
-      acc.join(key, col.reduceByKey(reducer))(Join.Outer)
+    columnsAsSeries.cellMap {
+      case NA => Value(Series(rowIndex, Column.empty[V]()))
+      case Value(col) => Value(Series(rowIndex, col.cast[V]))
+      case NM => NM
+    }.denseIterator.foldLeft(Frame.empty[Row, Col]) { case (acc, (key, series)) =>
+      acc.join(key, series.reduceByKey(reducer))(Join.Outer)
     }
 
   def reduceFrameWithCol[A: ColumnTyper, B: ColumnTyper, C: ClassTag](col: Col)(reducer: Reducer[(A, B), C]): Series[Col, C] = {
@@ -387,7 +421,7 @@ trait Frame[Row, Col] {
    */
   def reduce[A, B: ClassTag](cols: Cols[Col, A], to: Col)(reducer: Reducer[A, B]): Frame[Row, Col] = {
     val cell = get(cols).reduce(reducer)
-    val result = Series(rowIndex, Column.wrap(_ => cell))
+    val result = Series(rowIndex, Column.eval(_ => cell))
     dropColumns(to).merge(to, result)(Merge.Outer)
   }
 
@@ -426,6 +460,36 @@ trait Frame[Row, Col] {
    */
   def reduceByKey[A, B: ClassTag](rows: Rows[Row, A], to: Row)(reducer: Reducer[A, B]): Frame[Row, Col] =
     transpose.reduceByKey(rows.toCols, to)(reducer).transpose
+
+  /**
+   * Appends the rows in `that` to the end of the rows in `this`. This will
+   * force the columns into sorted order.
+   */
+  def appendRows(that: Frame[Row, Col]): Frame[Row, Col] =
+    if (this.isColOriented) {
+      val (keys0, indices0) = this.rowIndex.unzip
+      val (keys1, indices1) = that.rowIndex.unzip
+      val cols0 = this.columnsAsSeries.mapValues(_.reindex(indices0))
+      val cols1 = that.columnsAsSeries.mapValues(_.reindex(indices1))
+      val offset = keys0.size
+      val cols = cols0.combine(cols1)(col => col, _.shift(offset), { (col0, col1) =>
+        ConcatColumn(col0, col1, offset)
+      })
+      ColOrientedFrame(Index(keys0 ++ keys1), cols)
+    } else {
+      val merger = Merger[Col](Merge.Outer)
+      val (keys, lIndices, rIndices) = Index.cogroup(this.colIndex, that.colIndex)(merger).result()
+      val rows0 = this.rowsAsSeries.mapValues(_.reindex(lIndices))
+      val rows1 = that.rowsAsSeries.mapValues(_.reindex(rIndices))
+      RowOrientedFrame(Index(keys), rows0 ++ rows1)
+    }
+
+  /**
+   * Appends the columns in `that` to the end of the columns in `this`. This
+   * will force the rows into sorted order.
+   */
+  def appendCols(that: Frame[Row, Col]): Frame[Row, Col] =
+    transpose.appendRows(that.transpose).transpose
 
   override def hashCode: Int = {
     val values = columnsAsSeries.iterator flatMap { case (colKey, cell) =>
@@ -510,7 +574,7 @@ trait Frame[Row, Col] {
   def merge(that: Frame[Row, Col])(mergeStrategy: Merge): Frame[Row, Col] =
     genericJoin(that)(Merger(mergeStrategy))
 
-  def merge[T: ClassTag: ColumnTyper](col: Col, that: Series[Row, T])(mergeStrategy: Merge): Frame[Row, Col] =
+  def merge[T: ClassTag](col: Col, that: Series[Row, T])(mergeStrategy: Merge): Frame[Row, Col] =
     merge(that.toFrame(col))(mergeStrategy)
 
   def merge[L <: HList](them: L)(merge: Merge)(implicit folder: Frame.SeriesMergeFolder[L, Row, Col]): Frame[Row, Col] =
@@ -519,7 +583,7 @@ trait Frame[Row, Col] {
   def join(that: Frame[Row, Col])(joinStrategy: Join): Frame[Row, Col] =
     genericJoin(that)(Joiner(joinStrategy))
 
-  def join[T: ClassTag: ColumnTyper](col: Col, that: Series[Row, T])(joinStrategy: Join): Frame[Row, Col] =
+  def join[T: ClassTag](col: Col, that: Series[Row, T])(joinStrategy: Join): Frame[Row, Col] =
     join(that.toFrame(col))(joinStrategy)
 
   def join[L <: HList](them: L)(join: Join)(implicit folder: Frame.SeriesJoinFolder[L, Row, Col]): Frame[Row, Col] =
@@ -532,7 +596,7 @@ object Frame {
    * Create an empty `Frame` with no values.
    */
   def empty[Row: ClassTag: Order, Col: ClassTag: Order]: Frame[Row, Col] =
-    ColOrientedFrame[Row, Col](Index.empty[Row], Index.empty[Col], Column.empty)
+    ColOrientedFrame[Row, Col](Index.empty[Row], Index.empty[Col], Column.empty())
 
   /**
    * Populates a homogeneous `Frame` given the rows/columns of the table. The
@@ -548,8 +612,8 @@ object Frame {
   def fill[A: Order: ClassTag, B: Order: ClassTag, C: ClassTag](rows: Iterable[A], cols: Iterable[B])(f: (A, B) => Cell[C]): Frame[A, B] = {
     val rows0 = rows.toVector
     val cols0 = cols.toVector
-    val columns = Column.fromArray(cols0.map { b =>
-      TypedColumn(Column.fromCells(rows0.map { a => f(a, b) })): UntypedColumn
+    val columns = Column.dense(cols0.map { b =>
+      TypedColumn(Column(rows0.map { a => f(a, b) }: _*)): UntypedColumn
     }.toArray)
     ColOrientedFrame(Index.fromKeys(rows0: _*), Index.fromKeys(cols0: _*), columns)
   }
@@ -705,11 +769,11 @@ object Frame {
   }
 
   private def extract[I, K, A](index: Index[I], cols: Series[K, UntypedColumn], sel: AxisSelection[K, A]): Series[I, A] = {
-    val bldr = Vector.newBuilder[Cell[A]]
+    val bldr = Column.newBuilder[A]()
     sel.foreach(index, cols) { (_, _, cell) =>
       bldr += cell
     }
-    Series(index.resetIndices, Column.fromCells(bldr.result()))
+    Series(index.resetIndices, bldr.result())
   }
 
   private def filter[I: Order: ClassTag, K](index: Index[I], cols: Series[K, UntypedColumn], sel: AxisSelection[K, Boolean]): Index[I] = {
@@ -725,21 +789,24 @@ object Frame {
 case class ColOrientedFrame[Row, Col](
       rowIndex: Index[Row],
       colIndex: Index[Col],
-      cols: Column[UntypedColumn])
+      valueCols: Column[UntypedColumn])
     extends Frame[Row, Col] {
 
-  def columnsAsSeries: Series[Col, UntypedColumn] = Series(colIndex, cols)
-  def rowsAsSeries: Series[Row, UntypedColumn] = Series(rowIndex, Column[UntypedColumn]({ row =>
-    RowView(colIndex, cols, row)
-  }))
+  def columnsAsSeries: Series[Col, UntypedColumn] = Series(colIndex, valueCols)
+  def rowsAsSeries: Series[Row, UntypedColumn] = Series(rowIndex, Column.eval { row =>
+    Value(RowView(colIndex, valueCols, row))
+  }.memoize())
 
   def withColIndex[C1](ci: Index[C1]): Frame[Row, C1] =
-    ColOrientedFrame(rowIndex, ci, cols)
+    ColOrientedFrame(rowIndex, ci, valueCols)
 
   def withRowIndex[R1](ri: Index[R1]): Frame[R1, Col] =
-    ColOrientedFrame(ri, colIndex, cols)
+    ColOrientedFrame(ri, colIndex, valueCols)
 
-  def transpose: Frame[Col, Row] = RowOrientedFrame(colIndex, rowIndex, cols)
+  def transpose: Frame[Col, Row] = RowOrientedFrame(colIndex, rowIndex, valueCols)
+
+  def isColOriented: Boolean = true
+  def isRowOriented: Boolean = false
 }
 
 object ColOrientedFrame {
@@ -750,22 +817,25 @@ object ColOrientedFrame {
 case class RowOrientedFrame[Row, Col](
       rowIndex: Index[Row],
       colIndex: Index[Col],
-      rows: Column[UntypedColumn])
+      valueRows: Column[UntypedColumn])
     extends Frame[Row, Col] {
 
-  def rowsAsSeries: Series[Row, UntypedColumn] = Series(rowIndex, rows)
-  def columnsAsSeries: Series[Col, UntypedColumn] = Series(colIndex, Column[UntypedColumn]({ row =>
-    RowView(colIndex, rows, row)
-  }))
+  def rowsAsSeries: Series[Row, UntypedColumn] = Series(rowIndex, valueRows)
+  def columnsAsSeries: Series[Col, UntypedColumn] = Series(colIndex, Column.eval { row =>
+    Value(RowView(colIndex, valueRows, row))
+  }.memoize())
   
 
   def withColIndex[C1](ci: Index[C1]): Frame[Row, C1] =
-    RowOrientedFrame(rowIndex, ci, rows)
+    RowOrientedFrame(rowIndex, ci, valueRows)
 
   def withRowIndex[R1](ri: Index[R1]): Frame[R1, Col] =
-    RowOrientedFrame(ri, colIndex, rows)
+    RowOrientedFrame(ri, colIndex, valueRows)
 
-  def transpose: Frame[Col, Row] = ColOrientedFrame(colIndex, rowIndex, rows)
+  def transpose: Frame[Col, Row] = ColOrientedFrame(colIndex, rowIndex, valueRows)
+
+  def isColOriented: Boolean = false
+  def isRowOriented: Boolean = true
 }
 
 object RowOrientedFrame {
@@ -780,14 +850,15 @@ private final case class RowView[K](
       trans: UntypedColumn => UntypedColumn = RowView.DefaultTransform
     ) extends UntypedColumn {
 
-  def cast[B: ColumnTyper]: Column[B] = Column.wrap[B] { colIdx =>
+  def cast[B: ColumnTyper]: Column[B] = Column.eval[B] { colIdx =>
     for {
-      col <- cols(index.indexAt(colIdx))
+      col <- if (colIdx >= 0 && colIdx < index.size) cols(index.indexAt(colIdx))
+             else NA
       value <- trans(col).cast[B].apply(row)
     } yield value
   }
   private def transform(f: UntypedColumn => UntypedColumn) = new RowView(index, cols, row, trans andThen f)
-  def mask(bits: Int => Boolean): UntypedColumn = transform(_.mask(bits))
+  def mask(na: Mask): UntypedColumn = transform(_.mask(na))
   def shift(rows: Int): UntypedColumn = transform(_.shift(rows))
   def reindex(index: Array[Int]): UntypedColumn = transform(_.reindex(index))
   def setNA(na: Int): UntypedColumn = transform(_.setNA(na))

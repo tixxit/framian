@@ -28,6 +28,8 @@ import spire.std.int._
 
 import shapeless._
 
+import framian.column._
+
 /**
  * A trait used to generate frames from sets of rows.
  *
@@ -79,7 +81,7 @@ object RowPopulator extends RowPopulatorLowPriorityImplicits {
       val cols = pop.columns(state.tail).toArray
       val rowIndex = Index(state.head.reverse.toArray)
       val colIndex = Index(Array.range(0, cols.size))
-      ColOrientedFrame(rowIndex, colIndex, Column.fromArray(cols))
+      ColOrientedFrame(rowIndex, colIndex, Column.dense(cols))
     }
   }
 
@@ -114,7 +116,7 @@ object RowPopulator extends RowPopulatorLowPriorityImplicits {
         (data.head :: state.head) :: tail.populate(state.tail, data.tail)
 
       def columns(state: State): List[UntypedColumn] = {
-        val col = TypedColumn(Column.fromArray(state.head.reverse.toArray))
+        val col = TypedColumn(Column.dense(state.head.reverse.toArray))
         col :: tail.columns(state.tail)
       }
     }

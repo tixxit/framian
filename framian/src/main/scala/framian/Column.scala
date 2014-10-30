@@ -21,191 +21,263 @@
 
 package framian
 
-import language.experimental.macros
+import scala.language.experimental.macros
 
-import scala.reflect.ClassTag
-import scala.reflect.macros.Context
+import scala.{specialized => sp }
+import scala.annotation.unspecialized
 
-import scala.collection.immutable.BitSet
-import scala.{ specialized => spec }
-import scala.annotation.{ unspecialized => unspec }
+import spire.algebra.{ Semigroup, Monoid }
 
-import spire.algebra._
-import spire.syntax.cfor._
+import framian.column._
 
-import framian.columns._
+sealed trait Column[+A] { // TODO: Can't specialize in 2.10, but can in 2.11.
 
-/**
- * A `Column` represents an `Int`-indexed set of values. The defining
- * characteristic is that a column is always defined for all `Int` values. In
- * order to interact with a column in an optimal and concrete way, we need an
- * external notion of valid rows to restrict the input by. A [[Series]], for
- * instance, ties a `Column` together with an [[Index]] to restrict the set of
- * rows being used.
- */
-trait Column[@spec(Int,Long,Float,Double) +A] extends ColumnLike[Column[A]] { self =>
-
-  /** Returns `true` if a value is present at index `row`
-    *
-    * The value at index `row` is both available and meaningful. This
-    * method must be called before any calls to `nonValueAt` or
-    * `valueAt`, since it is essentially the switch that let's you
-    * know which one to call.
-    *
-    * @param row the index in the column to lookup
-    * @return true if a value is present at the given index
-    */
-  def isValueAt(row: Int): Boolean
-
-  /** Return the non value at index `row`
-    *
-    * If `isValueAt(row) == false`, then this will return either `NA`
-    * or `NM` to indicate that no value is available or meaningful
-    * (resp.). If `isValue(row) == true`, then the result of calling
-    * this is undefined.
-    *
-    * @param row the index in the column to lookup
-    * @return the non value at the given index, a subtype of [[NonValue]]
-    */
-  def nonValueAt(row: Int): NonValue
+  // @unspecialized -- See TODO above.
+  def foldRow[B](row: Int)(na: B, nm: B, f: A => B): B = macro ColumnMacros.foldRowImpl[A, B]
 
   /**
-   * If `exists(row) == true`, then this will return the value stored in row
-   * `row`. If `exists(row) == false`, then the result of calling this is
-   * undefined.
+   * Equivalent to calling `foreach(from, until, rows, true)(f)`.
    */
-  def valueAt(row: Int): A
-
-  def foldRow[B](row: Int)(f: A => B, g: NonValue => B): B =
-    if (isValueAt(row)) f(valueAt(row)) else g(nonValueAt(row))
-
-  def apply(row: Int): Cell[A] =
-    foldRow(row)(Value(_), m => m)
+  def foreach[U](from: Int, until: Int, rows: Int => Int)(f: (Int, A) => U): Boolean = macro ColumnMacros.foreachImpl[A, U]
 
   /**
-   * Map all existing values to a given value.
+   * Iterates from `from` until `until`, and for each value `i` in this range,
+   * it retreives a row via `rows(i)`. If this row is `NM` and `abortOnNM` is
+   * `true`, then iteration stops immediately and `false` is returned.
+   * Otherwise, if the row is a value, it calls `f` with `i` and the value of
+   * the row. If iteration terminates normally (ie. no [[NM]]s), then `true` is
+   * returned.
+   *
+   * This is implemented as a macro and desugars into a while loop that access
+   * the column using `apply` if it is a [[BoxedColumn]] and
+   * `isValueAt`/`valueAt`/`nonValueAt` if it is an [[UnboxedColumn]]. It will
+   * also inline `rows` and `f` if they are function literals.
+   *
+   * @param from  the value to start iterating at (inclusive)
+   * @param until the value to stop iterating at (exclusive)
+   * @param rows  the function used to retrieve the row for an iteration
+   * @param f     the function to call at each value
+   * @param abortOnNM terminate early if an `NM` is found
+   * @return true if no NMs were found (or `abortOnNM` is false) and terminate completed successfully, false otherwise
    */
-  def map[B](f: A => B): Column[B] = new MappedColumn(f, this)
+  def foreach[U](from: Int, until: Int, rows: Int => Int, abortOnNM: Boolean)(f: (Int, A) => U): Boolean = macro ColumnMacros.foreachExtraImpl[A, U]
 
   /**
-   * Filter a column by a given predicate. All values that have been filtered
-   * out are turned into `NA` (Not Available).
+   * Returns the [[Cell]] at row `row`.
    */
-  def filter(f: A => Boolean): Column[A] = new FilteredColumn(f, this)
-
-  def zipMap[B, C](rhs: Column[B])(f: (A, B) => C): Column[C] =
-    new ZipMapColumn[A, B, C](f, this, rhs)
+  def apply(row: Int): Cell[A]
 
   /**
-   * Masks this column with a given `BitSet`. That is, a value only exists at
-   * a row if it exists in both the source `Column` and if `bitset(row)` is
-   * `true`. If a value exists in the source `Column`, but `bitset(row)` is
-   * `false`, then that value is treated as `NA` (Not Available).
+   * Map all values of this `Column` using `f`. All [[NA]] and [[NM]] values
+   * remain as they were.
    */
-  def mask(bits: Int => Boolean): Column[A] = new MaskedColumn(bits, this)
+  def map[@sp(Int,Long,Double) B](f: A => B): Column[B]
 
   /**
-   * Shift all rows in this column down by `rows`. If `rows` is negative, then
-   * they will be shifted up by `-rows`.
+   * Map the values of this `Column` to a new [[Cell]]. All [[NA]] and [[NM]]
+   * values remain the same.
+   *
+   * @param f function use to transform this column's values
    */
-  def shift(rows: Int): Column[A] = new ShiftColumn(rows, this)
+  def flatMap[B](f: A => Cell[B]): Column[B]
 
   /**
-   * Returns a Column whose rows are mapped with the given `index` to rows in
-   * this column. If a row doesn't exist in the index (ie. is less than 0 or
-   * greater than or equal to `index.length`), then `NA` is returned.
+   * Filters the values of this `Column` so that any value for which `p` is
+   * true remains a value and all other values are turned into [[NA]]s.
+   *
+   * @param p predicate to filter this column's values with
    */
-  def reindex(index: Array[Int]): Column[A] = new ReindexColumn(index, this)
-
-  def reindex(f: Int => Int): Column[A] = new ContramappedColumn(f, this)
+  def filter(p: A => Boolean): Column[A]
 
   /**
-   * Returns a [[Column]] whose cells have been transformed with `f`.
+   * Returns a column that will fallback to `that` for any row that is [[NA]],
+   * or if the row is [[NM]] and the row in `that` is a [[Value]], then that
+   * is returned, otherwise [[NM]] is returned.  That is, row `i` is defined as
+   * `this(i) orElse that(i)`, though may be more efficient.
+   *
+   * To put the definition in more definite terms:
+   *
+   * {{{
+   * Value(a) orElse Value(b) == Value(a)
+   * Value(a) orElse       NA == Value(a)
+   * Value(a) orElse       NM == Value(a)
+   *       NA orElse Value(b) == Value(b)
+   *       NA orElse       NA ==       NA
+   *       NA orElse       NM ==       NM
+   *       NM orElse Value(b) == Value(b)
+   *       NM orElse       NM ==       NM
+   *       NM orElse       NA ==       NM
+   * }}}
+   *
+   * @param that the column to fallback on for NA values
    */
-  def cellMap[B](f: Cell[A] => Cell[B]): Column[B] = Column.wrap { row =>
-    f(self.apply(row))
+  def orElse[A0 >: A](that: Column[A0]): Column[A0]
+
+  /**
+   * Returns a column whose `i`-th row maps to row `index(i)` in this column.
+   * If `i &lt; 0` or `i &gt;= index.length` then the returned column returns
+   * [[NA]]. This always forces all rows in `index` and the returned column is
+   * *dense* and unboxed.
+   */
+  def reindex(index: Array[Int]): Column[A]
+
+  /**
+   * Returns a column which has had all rows between `0` and `len` (exclusive)
+   * forced (evaluated) and stored in memory, while all rows outside of `0` and
+   * `len` are set to [[NA]]. The returned column is *dense* and unboxed.
+   *
+   * @param len the upper bound of the range of values to force
+   */
+  def force(len: Int): Column[A]
+
+  /**
+   * Returns a column with rows contained in `na` masked to [[NA]]s.
+   *
+   * @param na the rows to mask in the column
+   */
+  def mask(na: Mask): Column[A]
+
+  /**
+   * Returns a column with a single row forced to [[NA]] and all others
+   * remaining the same. This is equivalent to, but possibly more efficient
+   * than `col.mask(Mask(row))`.
+   *
+   * @param row the row that will be forced to [[NA]]
+   */
+  def setNA(row: Int): Column[A]
+
+  /**
+   * Returns a copy of this column whose values will be memoized if they are
+   * evaluated. That is, if `this` column is an *eval* column, then memoizing
+   * it will ensure that, for each row, the value is only computed once,
+   * regardless of the number of times it is accessed.
+   *
+   * By default, the memoization is always pessimistic (guaranteed at-most-once
+   * evaluation). If `optimistic` is `true`, then the memoizing may use an
+   * optimistic update strategy, which means a value *may* be evaluated more
+   * than once if it accessed concurrently.
+   *
+   * For dense, empty, and previously-memoized columns, this just returns the
+   * column itself.
+   *
+   * @param optimistic if true, memoized column may use optimistic updates
+   */
+  def memoize(optimistic: Boolean = false): Column[A]
+
+  /**
+   * Shifts all values in the column up by `rows` rows. So,
+   * `col.shift(n).apply(row) == col(row - n)`. If this is a dense column,
+   * then it will only remain dense if `rows` is non-negative.
+   */
+  def shift(rows: Int): Column[A]
+
+  override def toString: String =
+    (0 to 5).map(apply(_).toString).mkString("Column(", ", ", ", ...)")
+}
+
+trait BoxedColumn[A] extends Column[A] {
+
+  /**
+   * Maps the cells of this [[Column]] using `f`. This method will always force
+   * the column into an eval column and should be used with caution.
+   */
+  def cellMap[B](f: Cell[A] => Cell[B]): Column[B]
+
+  def map[@sp(Int,Long,Double) B](f: A => B): Column[B] = cellMap {
+    case Value(a) => Value(f(a))
+    case (nonValue: NonValue) => nonValue
   }
 
-  /**
-   * Force a specific row to be not available (`NA`).
-   */
-  def setNA(row: Int): Column[A] = new SetNAColumn(row, this)
+  def flatMap[B](f: A => Cell[B]): Column[B] = cellMap {
+    case Value(a) => f(a)
+    case (nonValue: NonValue) => nonValue
+  }
 
-  // TODO: This should really just take an Index[_] and compact it for
-  //       fast access.
-  def compact[AA >: A](len: Int)(implicit ct: ClassTag[AA]): Column[AA] = {
-    val bldr = new ColumnBuilder[AA]
-    cfor(0)(_ < len, _ + 1) { row =>
-      if (isValueAt(row)) {
-        bldr.addValue(valueAt(row))
-      } else {
-        bldr.addNonValue(nonValueAt(row))
-      }
-    }
+  def filter(p: A => Boolean): Column[A] = cellMap {
+    case Value(a) if p(a) => Value(a)
+    case Value(_) => NA
+    case nonValue => nonValue
+  }
+}
+
+trait UnboxedColumn[@sp(Int,Long,Double) A] extends Column[A] {
+  def isValueAt(row: Int): Boolean
+  def nonValueAt(row: Int): NonValue
+  def valueAt(row: Int): A
+
+  def apply(row: Int): Cell[A] =
+    if (isValueAt(row)) Value(valueAt(row))
+    else nonValueAt(row)
+}
+
+object Column {
+  final def newBuilder[A: GenColumnBuilder](): ColumnBuilder[A] = ColumnBuilder[A]()
+
+  /**
+   * Construct a column whose `i`-th row is the `i`-th element in `cells`. All
+   * other rows are [[NA]].
+   */
+  def apply[A: GenColumnBuilder](cells: Cell[A]*): Column[A] = {
+    val bldr = newBuilder[A]()
+    cells.foreach(bldr += _)
     bldr.result()
   }
 
-  final def cells(rng: Range): Vector[Cell[A]] = rng.map(this(_))(collection.breakOut)
-
-  override def toString: String =
-    ((0 until Column.ToStringLength).map(apply(_)).map(_.toString) :+ "...").mkString("Column(", ", ", ")")
-}
-
-object Column extends ColumnAlgebras {
-  private val ToStringLength = 5
-
-  def empty[A]: Column[A] = new EmptyColumn[A](NA)
-
-  def nonValue[A](nonValue: NonValue): Column[A] = new EmptyColumn[A](nonValue)
-
-  def const[@spec(Int,Long,Float,Double) A](value: A): Column[A] = new ConstColumn(value)
-
-  def apply[A](f: Int => A): Column[A] = new InfiniteColumn(f)
-
-  def fromCells[A](cells: IndexedSeq[Cell[A]]): Column[A] = new CellColumn(cells)
-
-  def fromArray[A](values: Array[A]): Column[A] = new DenseColumn(BitSet.empty, BitSet.empty, values)
-
-  def fromMap[A](values: Map[Int, A]): Column[A] = new MapColumn(values)
-
-  def wrap[A](f: Int => Cell[A]): Column[A] = new WrappedColumn(f)
-
-  implicit def monoid[A] = new Monoid[Column[A]] {
-    def id: Column[A] = empty[A]
-    def op(lhs: Column[A], rhs: Column[A]): Column[A] = new MergedColumn(lhs, rhs)
+  /**
+   * Returns a column which returns `Value(a)` for all rows.
+   *
+   * @note The `value` argument is strict.
+   */
+  def value[A](value: A): Column[A] = {
+    val cell = Value(value)
+    EvalColumn(_ => cell)
   }
 
-  def builder[A: ClassTag]: ColumnBuilder[A] = new ColumnBuilder[A]
+  /**
+   * Returns a column whose values are obtained using `get`. Each time a row is
+   * accessed, `get` will be re-evaluated. To ensure values are evaluated
+   * only once, you can [[memoize]] the column or use on of the *forcing*
+   * methods, such as [[reindex]] or [[force]].
+   */
+  def eval[A](get: Int => Cell[A]): Column[A] = EvalColumn(get)
 
-  // implicit def columnOps[A](lhs: Column[A]) = new ColumnOps[A](lhs)
+  /**
+   * Create a dense column from an array of values. A dense column can still
+   * have empty values, [[NA]] and [[NM]], as specified with the `na` and `nm`
+   * masks respectively. Dense columns are unboxed and only values that aren't
+   * masked by `na` and `nm` will ever be returned (so they can be `null`,
+   * `NaN`, etc.)
+   *
+   * The [[NM]] mask (`nm`) always takes precedence over the [[NA]] mask
+   * (`na`).  If a row is outside of the range 0 until `values.length`, then if
+   * `nm(row)` is true, [[NM]] will be returned, otherwise [[NA]] is returned.
+   *
+   * @param values the values of the column, rows correspond to indices
+   * @param na     masked rows that will return [[NA]]
+   * @param nm     masked rows that will return [[NM]]
+   */
+  def dense[A](values: Array[A], na: Mask = Mask.empty, nm: Mask = Mask.empty): Column[A] = values match {
+    case (values: Array[Double]) => DoubleColumn(values, na, nm)
+    case (values: Array[Int]) => IntColumn(values, na, nm)
+    case (values: Array[Long]) => LongColumn(values, na, nm)
+    case _ => GenericColumn[A](values, na, nm)
+  }
+
+  def values[A](values: Seq[A]): Column[A] =
+    AnyColumn[A]((values: Seq[Any]).toArray, Mask.empty, Mask.empty)
+
+  /**
+   * Returns a column that returns [[NM]] for any row in `nmValues` and [[NA]]
+   * for all others. If all you need is a column that always returns [[NA]],
+   * then use [[Empty]].
+   */
+  def empty[A](nmValues: Mask = Mask.empty): Column[A] =
+    AnyColumn[A](new Array[Any](0), Mask.empty, nmValues)
+
+  implicit def columnMonoid[A]: Monoid[Column[A]] =
+    new Monoid[Column[A]] {
+      def id: Column[A] = empty[A]()
+      def op(lhs: Column[A], rhs: Column[A]): Column[A] =
+        lhs orElse rhs
+    }
 }
-
-// // This class is required to get around some spec/macro bugs.
-// final class ColumnOps[A](lhs: Column[A]) {
-//   def map0[B](f: A => B): Column[B] = macro ColumnOps.mapImpl[A, B]
-// 
-//   def zipMap
-// }
-// 
-// object ColumnOps {
-//   def zipMapImpl[A, B, C](c: Context)(rhs: c.Expr[B])(f: c.Expr[(A, B) => C]): c.Expr[Column[C]] = {
-//   }
-// 
-//   def mapImpl[A, B: c.WeakTypeTag](c: Context)(f: c.Expr[A => B]): c.Expr[Column[B]] = {
-//     import c.universe._
-//     val lhs = c.prefix.tree match {
-//       case Apply(TypeApply(_, _), List(lhs)) => lhs
-//       case t => c.abort(c.enclosingPosition,
-//         "Cannot extract subject of op (tree = %s)" format t)
-//     }
-// 
-//     c.Expr[Column[B]](c.resetLocalAttrs(q"""{
-//       new Column[${weakTypeTag[B]}] {
-//         val col = ${lhs}
-//         def exists(row: Int): Boolean = col.exists(row)
-//         def missing(row: Int): Missing = col.missing(row)
-//         def value(row: Int): ${weakTypeTag[B]} = $f.apply(col.value(row))
-//       }
-//     }"""))
-//   }
-// }

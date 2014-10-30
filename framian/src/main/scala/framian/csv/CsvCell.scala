@@ -26,7 +26,7 @@ object CsvCell {
     case NM => Invalid
   }
 
-  implicit object CsvCellColumnTyper extends ColumnTyper[CsvCell] {
+  implicit val CsvCellColumnTyper: ColumnTyper[CsvCell] = new ColumnTyper[CsvCell] {
     def cast(col: TypedColumn[_]): Column[CsvCell] = {
       val num = col.cast[BigDecimal] map (n => Data(n.toString): CsvCell)
       val text = col.cast[String] map (Data(_): CsvCell)

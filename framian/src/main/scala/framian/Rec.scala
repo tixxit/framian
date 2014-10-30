@@ -27,6 +27,8 @@ import scala.reflect.ClassTag
 
 import spire.algebra.Order
 
+import framian.column._
+
 final class TypeWitness[A](val value: A)(implicit val classTag: ClassTag[A])
 object TypeWitness {
   implicit def lift[A: ClassTag](a: A) = new TypeWitness[A](a)
@@ -64,7 +66,7 @@ final class Rec[K](cols: Series[K, UntypedColumn], row: Int) {
 object Rec {
   def apply[K: Order: ClassTag](kvs: (K, TypeWitness[_])*): Rec[K] = {
     val cols: Series[K, UntypedColumn] = Series(kvs.map { case (k, w: TypeWitness[a]) =>
-      k -> TypedColumn[a](Column.const(w.value))(w.classTag)
+      k -> TypedColumn[a](Column.value(w.value))(w.classTag)
     }: _*)
     new Rec(cols, 0)
   }

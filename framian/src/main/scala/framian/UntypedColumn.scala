@@ -29,6 +29,8 @@ import spire.syntax.monoid._
 import shapeless._
 import shapeless.syntax.typeable._
 
+import framian.column._
+
 /**
  * An abstraction for heterogeneously typed columns. We work with them by
  * casting to a real, typed column. Values that cannot be cast are treated as
@@ -54,8 +56,8 @@ object UntypedColumn {
 }
 
 final case object EmptyUntypedColumn extends UntypedColumn {
-  def cast[A: ColumnTyper]: Column[A] = Column.empty
-  def mask(bits: Int => Boolean): UntypedColumn = EmptyUntypedColumn
+  def cast[A: ColumnTyper]: Column[A] = Column.empty[A]()
+  def mask(na: Mask): UntypedColumn = EmptyUntypedColumn
   def shift(rows: Int): UntypedColumn = EmptyUntypedColumn
   def reindex(index: Array[Int]): UntypedColumn = EmptyUntypedColumn
   def setNA(row: Int): UntypedColumn = EmptyUntypedColumn
@@ -63,16 +65,37 @@ final case object EmptyUntypedColumn extends UntypedColumn {
 
 case class TypedColumn[A](column: Column[A])(implicit val classTagA: ClassTag[A]) extends UntypedColumn {
   def cast[B](implicit typer: ColumnTyper[B]): Column[B] = typer.cast(this)
-  def mask(bits: Int => Boolean): UntypedColumn = TypedColumn(column.mask(bits))
+  def mask(na: Mask): UntypedColumn = TypedColumn(column.mask(na))
   def shift(rows: Int): UntypedColumn = TypedColumn(column.shift(rows))
   def reindex(index: Array[Int]): UntypedColumn = TypedColumn(column.reindex(index))
   def setNA(row: Int): UntypedColumn = TypedColumn(column.setNA(row))
 }
 
 case class MergedUntypedColumn(left: UntypedColumn, right: UntypedColumn) extends UntypedColumn {
-  def cast[A: ColumnTyper]: Column[A] = left.cast[A] |+| right.cast[A]
-  def mask(bits: Int => Boolean): UntypedColumn = MergedUntypedColumn(left.mask(bits), right.mask(bits))
+  def cast[A: ColumnTyper]: Column[A] = left.cast[A] orElse right.cast[A]
+  def mask(na: Mask): UntypedColumn = MergedUntypedColumn(left.mask(na), right.mask(na))
   def shift(rows: Int): UntypedColumn = MergedUntypedColumn(left.shift(rows), right.shift(rows))
   def reindex(index: Array[Int]): UntypedColumn = MergedUntypedColumn(left.reindex(index), right.reindex(index))
   def setNA(row: Int): UntypedColumn = MergedUntypedColumn(left.setNA(row), right.setNA(row))
+}
+
+case class ConcatColumn(col0: UntypedColumn, col1: UntypedColumn, offset: Int) extends UntypedColumn {
+  def cast[A: ColumnTyper]: Column[A] =
+    col0.cast[A].force(offset) orElse col1.cast[A].shift(offset).mask(Mask.range(0, offset))
+  def mask(na: Mask): UntypedColumn =
+    ConcatColumn(col0.mask(na), col1.mask(na.filter(_ >= offset).map(_ - offset)), offset)
+  def shift(rows: Int): UntypedColumn =
+    ConcatColumn(col0.shift(rows), col1.shift(rows), offset + rows)
+  def reindex(index: Array[Int]): UntypedColumn = {
+    val index0 = index.map { row =>
+      if (row < offset) row else offset
+    }
+    val index1 = index.map { row =>
+      if (row < offset) -1 else row - offset
+    }
+    MergedUntypedColumn(col0.setNA(offset).reindex(index0), col1.setNA(-1).reindex(index1))
+  }
+  def setNA(row: Int): UntypedColumn =
+    if (row < offset) ConcatColumn(col0.setNA(row), col1, offset)
+    else ConcatColumn(col0, col1.setNA(row - offset), offset)
 }

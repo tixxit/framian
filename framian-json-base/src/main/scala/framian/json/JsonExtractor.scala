@@ -45,10 +45,7 @@ trait JsonExtractor extends JsonModule {
     def extract(row: Int, cols: P): Cell[JsonValue] =
       Cell.fromOption(inflate(for {
         (path, col) <- cols
-        value <- col.foldRow(row)(Some(_), {
-            case NA => None
-            case NM => Some(JsonValue.jsonNull)
-          })
+        value <- col.foldRow(row)(None, Some(JsonValue.jsonNull), Some(_))
       } yield (path -> value)))
   }
 

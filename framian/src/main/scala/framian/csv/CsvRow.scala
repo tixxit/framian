@@ -17,8 +17,10 @@ final class CsvRow(val cells: Vector[CsvCell]) extends AnyVal {
 object CsvRow extends (Vector[CsvCell] => CsvRow) {
   def apply(cells: Vector[CsvCell]): CsvRow = new CsvRow(cells)
 
-  implicit def csvRowExtractor[Col]: RowExtractor[CsvRow, Col, Variable] =
+  implicit def csvRowExtractor[Col]: RowExtractor[CsvRow, Col, Variable] = {
+    import CsvCell.CsvCellColumnTyper // TODO: WHY IS THIS NEEDED! ARGH!
     RowExtractor.collectionOf[Vector, CsvCell, Col].map { cells =>
       CsvRow(cells.map(_.fold[CsvCell](CsvCell.Empty, CsvCell.Invalid)(cell => cell)))
     }
+  }
 }
