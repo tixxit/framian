@@ -30,7 +30,7 @@ object ops {
 
     def summary: Frame[Col, Statistic] = {
       val s = self.reduceFrame(Summary.reducer[Number])
-      Frame.fromSeries[Col, Statistic, Number](
+      Frame.mergeColumns(
         Statistic.mean -> s.mapValues(_.mean),
         Statistic.median -> s.mapValues(_.median),
         Statistic.min -> s.mapValues(_.min),
@@ -40,7 +40,7 @@ object ops {
 
     def stdDev: Frame[Col, Statistic] = {
       val s = self.reduceFrame(StdDev.reducer[Double])
-      Frame.fromSeries[Col, Statistic, Double](
+      Frame.mergeColumns(
         Statistic.count -> s.mapValues(_.count.toDouble),
         Statistic.mean -> s.mapValues(_.mean),
         Statistic.standardDeviation -> s.mapValues(_.stdDev),

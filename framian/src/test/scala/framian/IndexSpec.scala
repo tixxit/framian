@@ -1,6 +1,7 @@
 package framian
 
 import org.specs2.mutable._
+import org.specs2.ScalaCheck
 
 import scala.reflect.ClassTag
 import scala.collection.mutable.ArrayBuilder
@@ -10,7 +11,9 @@ import spire.std.string._
 import spire.std.int._
 import spire.syntax.monoid._
 
-class IndexSpec extends Specification {
+class IndexSpec extends Specification with ScalaCheck {
+  import IndexGenerators._
+
   "Index construction" should {
     def checkIndex(idx: Index[String])(pairs: (String, Int)*) = {
       idx.toList must_== pairs.toList
@@ -74,6 +77,35 @@ class IndexSpec extends Specification {
     "sorted puts things in order" in {
       val idx = Index.fromKeys("c", "a", "b").sorted
       idx.toList must_== List("a" -> 1, "b" -> 2, "c" -> 0)
+    }
+
+    "sorted is a stable sort" in {
+      val idx0 = Index.unordered(Array("c", "b", "a", "c", "b", "a")).sorted
+      val idx1 = Index.unordered(Array("a", "a", "b", "b", "c", "c")).sorted
+      val idx2 = Index.unordered(Array("c", "c", "b", "b", "a", "a")).sorted
+
+      idx0.toList must_== List("a" -> 2, "a" -> 5, "b" -> 1, "b" -> 4, "c" -> 0, "c" -> 3)
+      idx1.toList must_== List("a" -> 0, "a" -> 1, "b" -> 2, "b" -> 3, "c" -> 4, "c" -> 5)
+      idx2.toList must_== List("a" -> 4, "a" -> 5, "b" -> 2, "b" -> 3, "c" -> 0, "c" -> 1)
+    }
+
+    "get all rows for single key as Index" in {
+      val idx = Index("b" -> 0, "c" -> 2, "a" -> 0, "b" -> 1)
+      idx.getAll("b") must_== Index("b" -> 0, "b" -> 1)
+    }
+
+    "be equal to any empty Index if it is empty" in {
+      Index[String]() must_== Index[String]()
+    }
+
+    "be equal when they have same key/row pairs" in {
+      def idx = Index("a" -> 0, "b" -> 3, "c" -> 2, "c" -> 0)
+      idx must_== idx
+    }
+
+    "be equal only if key/row pairs are equal" ! check {
+      (idx0: Index[String], idx1: Index[String]) => 
+        (idx0 == idx1) must_== (idx0.to[Vector] == idx1.to[Vector])
     }
   }
 

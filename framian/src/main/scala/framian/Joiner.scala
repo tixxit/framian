@@ -36,7 +36,7 @@ object Join {
 }
 
 /**
- * This implements a [[Cogrouper]] that is suitable for generating the indices
+ * This implements a [[Index.Cogrouper]] that is suitable for generating the indices
  * necessary for joins on [[Series]] and [[Frame]].
  */
 final case class Joiner[K: ClassTag](join: Join) extends Index.GenericJoin[K] {

@@ -165,11 +165,11 @@ package object utilities {
          else colIndexArray.slice(0, parsedColumns.length - 1))
       }
 
-    Frame(
+    ColOrientedFrame(
       Index(rowIndexValues.toArray),
-      valueColumnIndex.zip(
+      Series(valueColumnIndex.zip(
         valueColumns map {
           colArr => TypedColumn(Column.fromArray(colArr.toArray))
-        }): _*)
+        }): _*))
   }
 }

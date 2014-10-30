@@ -36,9 +36,8 @@ import shapeless._
 import spire.syntax.order._
 import spire.syntax.cfor._
 
-sealed trait Index[K] extends Iterable[(K, Int)] with IterableLike[(K, Int), Index[K]] {
-  implicit def classTag: ClassTag[K]
-  implicit def order: Order[K]
+sealed abstract class Index[K](implicit val order: Order[K], val classTag: ClassTag[K])
+    extends Iterable[(K, Int)] with IterableLike[(K, Int), Index[K]] {
 
   def empty: Index[K] = Index.empty[K]
 
@@ -87,7 +86,7 @@ sealed trait Index[K] extends Iterable[(K, Int)] with IterableLike[(K, Int), Ind
       if (j < keys.length && keys(j) === k) findUpper(j + 1)
       else j
 
-    val i = search(k)
+    val i = Searching.search(keys, k)
     if (i >= 0) {
       val lb = findLower(i)
       val ub = findUpper(i + 1)
@@ -109,20 +108,35 @@ sealed trait Index[K] extends Iterable[(K, Int)] with IterableLike[(K, Int), Ind
   }
 
   def sorted: OrderedIndex[K] = Index.ordered(keys, indices)
-  /*def sortWith(f: ((K, Int), (K, Int)) => Boolean) = {
-    val ind = keys.zip(indices)
-    val sorted = ind.sortWith(f)
-    val (ks, ids) = sorted.unzip
-
-    Index.unordered(keys, indices)
-  }*/
 
   def resetIndices: Index[K]
 
+  protected[framian] def isOrdered: Boolean
   // These must contain both the keys and the indices, in sorted order.
   private[framian] def keys: Array[K]
   private[framian] def indices: Array[Int]
   private[framian] def withIndices(is: Array[Int]): Index[K]
+
+  override def equals(that: Any): Boolean = that match {
+    case (that: Index[_]) =>
+      if (this eq that) true
+      else if (this.size != that.size) false
+      else {
+        var isEq = true
+        var i = 0
+        val len = size
+        while (i < len && isEq) {
+          isEq = this.keyAt(i) == that.keyAt(i) && this.indexAt(i) == that.indexAt(i)
+          i += 1
+        }
+        isEq
+      }
+
+    case _ => false
+  }
+
+  override def hashCode: Int =
+    to[Vector].hashCode * 677
 }
 
 object Index {
@@ -131,6 +145,8 @@ object Index {
       def apply(): Builder[(K, Int), Index[K]] = new IndexBuilder[K]
       def apply(from: Index[_]): Builder[(K, Int), Index[K]] = apply()
     }
+
+  def newBuilder[K: Order: ClassTag]: IndexBuilder[K] = new IndexBuilder
 
   def empty[K: Order: ClassTag]: Index[K] = new OrderedIndex[K](new Array[K](0), new Array[Int](0))
 
@@ -164,16 +180,16 @@ object Index {
     }
   }
 
-  def ordered[K: Order: ClassTag](keys: Array[K]): OrderedIndex[K] =
+  private[framian] def ordered[K: Order: ClassTag](keys: Array[K]): OrderedIndex[K] =
     ordered(keys, Array.range(0, keys.length))
 
-  def ordered[K: Order: ClassTag](keys: Array[K], indices: Array[Int]): OrderedIndex[K] =
+  private[framian] def ordered[K: Order: ClassTag](keys: Array[K], indices: Array[Int]): OrderedIndex[K] =
     new OrderedIndex(keys, indices)
 
-  def unordered[K: Order: ClassTag](keys: Array[K]): Index[K] =
+  private[framian] def unordered[K: Order: ClassTag](keys: Array[K]): Index[K] =
     unordered(keys, Array.range(0, keys.length))
 
-  def unordered[K: Order: ClassTag](keys: Array[K], indices: Array[Int]): Index[K] = {
+  private[framian] def unordered[K: Order: ClassTag](keys: Array[K], indices: Array[Int]): Index[K] = {
     import spire.syntax.std.array._
 
     require(keys.length == indices.length)
@@ -200,22 +216,44 @@ object Index {
     new UnorderedIndex(keys0, indices0, flip(order0))
   }
 
-  private final class IndexBuilder[K: Order: ClassTag] extends Builder[(K, Int), Index[K]] {
+  final class IndexBuilder[K: Order: ClassTag] extends Builder[(K, Int), Index[K]] {
     val keys = ArrayBuilder.make[K]()
     val indices = ArrayBuilder.make[Int]()
 
-    def +=(elem: (K, Int)) = {
-      keys += elem._1
-      indices += elem._2
+    var isOrdered = true
+    var isNonEmpty = false
+    var prev: K = _
+
+    def add(k: K, i: Int): this.type = {
+      if (isOrdered && isNonEmpty && prev > k) {
+        isOrdered = false
+      }
+
+      keys += k
+      indices += i
+
+      prev = k
+      isNonEmpty = true
+
       this
     }
 
+    def +=(elem: (K, Int)) =
+      add(elem._1, elem._2)
+
     def clear(): Unit = {
+      isOrdered = true
+      isNonEmpty = false
       keys.clear()
       indices.clear()
     }
 
-    def result(): Index[K] = Index.unordered(keys.result(), indices.result())
+    def result(): Index[K] =
+      if (isOrdered) {
+        Index.ordered(keys.result(), indices.result())
+      } else {
+        Index.unordered(keys.result(), indices.result())
+      }
   }
 
   @tailrec
@@ -319,12 +357,11 @@ object Index {
   }
 }
 
-sealed abstract class BaseIndex[K](implicit
-    val order: Order[K], val classTag: ClassTag[K]) extends Index[K]
-
-final case class UnorderedIndex[K: Order: ClassTag](
-      keys: Array[K], indices: Array[Int], ord: Array[Int])
-    extends BaseIndex[K] {
+final class UnorderedIndex[K: Order: ClassTag] private[framian] (
+      private[framian] val keys: Array[K],
+      private[framian] val indices: Array[Int],
+      ord: Array[Int])
+    extends Index[K] {
 
   override def size: Int = keys.size
 
@@ -342,11 +379,20 @@ final case class UnorderedIndex[K: Order: ClassTag](
     }
   }
 
-  def resetIndices: Index[K] = UnorderedIndex(keys, Array.range(0, keys.size), ord)
-  private[framian] def withIndices(is: Array[Int]): Index[K] = UnorderedIndex(keys, is, ord)
+  def resetIndices: Index[K] =
+    new UnorderedIndex(keys, Array.range(0, keys.size), ord)
+
+  protected[framian] def isOrdered = false
+
+  private[framian] def withIndices(is: Array[Int]): Index[K] =
+    new UnorderedIndex(keys, is, ord)
 }
 
-final case class OrderedIndex[K: Order: ClassTag](keys: Array[K], indices: Array[Int]) extends BaseIndex[K] {
+final class OrderedIndex[K: Order: ClassTag] private[framian] (
+      private[framian] val keys: Array[K],
+      private[framian] val indices: Array[Int])
+    extends Index[K] {
+
   override def size: Int = keys.size
   def keyAt(i: Int): K = keys(i)
   def indexAt(i: Int): Int = indices(i)
@@ -358,8 +404,14 @@ final case class OrderedIndex[K: Order: ClassTag](keys: Array[K], indices: Array
       f(keys(i), indices(i))
     }
   }
-  def resetIndices: Index[K] = OrderedIndex(keys, Array.range(0, keys.size))
-  private[framian] def withIndices(is: Array[Int]): Index[K] = OrderedIndex(keys, is)
+  def resetIndices: Index[K] =
+    new OrderedIndex(keys, Array.range(0, keys.size))
+
+  protected[framian] def isOrdered = true
+
+  private[framian] def withIndices(is: Array[Int]): Index[K] =
+    new OrderedIndex(keys, is)
+
   lazy val isSequential: Boolean = {
     var isSeq = true
     var i = 0

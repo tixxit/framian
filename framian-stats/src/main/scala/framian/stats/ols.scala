@@ -6,7 +6,6 @@ import org.apache.commons.math3.linear.{ CholeskyDecomposition, NonPositiveDefin
 
 import scala.reflect.ClassTag
 
-import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable.ArrayBuilder
 
 import spire.algebra._
