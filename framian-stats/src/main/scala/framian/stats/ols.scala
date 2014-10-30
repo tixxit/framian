@@ -6,7 +6,6 @@ import org.apache.commons.math3.linear.{ CholeskyDecomposition, NonPositiveDefin
 
 import scala.reflect.ClassTag
 
-import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable.ArrayBuilder
 
 import spire.algebra._
@@ -17,7 +16,7 @@ case class OLS[Col](
     regression: LinearRegression[Double]) {
 
   def apply[Row](frame: Frame[Row, Col]): Series[Row, Double] = {
-    val data = frame.columns(variables).as(RowExtractor.denseArrayOf[Double, Col])
+    val data = frame.get(Cols.unsized(variables).as(RowExtractor.denseCollectionOf[Array, Double, Col]))
     data.mapValues(regression(_))
   }
 
@@ -28,7 +27,7 @@ case class OLS[Col](
 object OLS {
   def apply[Row, Col](frame: Frame[Row, Col], dependent: Col, independents: Col*): OLS[Col] = {
     val dep = frame.column[Double](dependent)
-    val ind = frame.columns(independents).as(RowExtractor.denseArrayOf[Double, Col])
+    val ind = frame.get(Cols.unsized(independents).as(RowExtractor.denseCollectionOf[Array, Double, Col]))
 
     val indBldr = ArrayBuilder.make[Array[Double]]
     val depBldr = ArrayBuilder.make[Double]

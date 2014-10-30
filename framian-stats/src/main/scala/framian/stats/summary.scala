@@ -18,6 +18,11 @@ case class Summary[A](
   max: A)
 
 object Summary {
+  val Mean = "Mean"
+  val Median = "Median"
+  val Max = "Max"
+  val Min = "Min"
+
   def apply[A: Field: Order: ClassTag](data: Array[A]): Option[Summary[A]] =
     if (data.size > 0) {
       val mid = data.size / 2
