@@ -21,7 +21,7 @@ resolvers in ThisBuild ++= Seq(
 
 lazy val root = project.
   in(file(".")).
-  aggregate(framianMacros, framian, framianJsonBase, framianJsonPlay).
+  aggregate(framianMacros, framian, framianJsonBase, framianJsonPlay, framianStats).
   settings(
     publish := (),
     publishLocal := ()
@@ -55,3 +55,7 @@ lazy val framianJsonPlay22 = project.
   settings(
     sourceDirectory <<= sourceDirectory in framianJsonPlay
   )
+
+lazy val framianStats = project.
+  in(file("framian-stats")).
+  dependsOn(framian)

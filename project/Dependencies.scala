@@ -10,6 +10,8 @@ object Dependencies {
     val Shapeless          = "2.0.0"
     val Discipline         = "0.2.1"
 
+    val CommonsMath3       = "3.3"
+
     // Test libraries
     val Specs2             = "2.4.2"
     val ScalaCheck         = "1.11.6"
@@ -25,6 +27,8 @@ object Dependencies {
     val spire             = "org.spire-math"           %% "spire"                   % V.Spire
     val shapeless_10      = "com.chuusai"               % "shapeless_2.10.4"        % V.Shapeless
     val shapeless_11      = "com.chuusai"               % "shapeless_2.11"          % V.Shapeless
+
+    val commonsMath3      = "org.apache.commons"        % "commons-math3"           % V.CommonsMath3
   }
 
   // Test

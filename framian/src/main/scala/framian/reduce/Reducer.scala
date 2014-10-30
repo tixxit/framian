@@ -22,6 +22,8 @@
 package framian
 package reduce
 
+import scala.reflect.ClassTag
+
 /**
  * A low level trait for implementing reductions.
  *
@@ -30,7 +32,7 @@ package reduce
  * @tparam A the input type of the reducer, which is the value type of the input [[Column]]
  * @tparam B the ouput type of the reducer, which is the value type of the output [[Cell]]
  */
-trait Reducer[-A, +B] {
+trait Reducer[-A, +B] { self =>
 
   /** Reduce the given column of values to a cell using only the
     * indexes in given array slice.
@@ -67,4 +69,21 @@ trait Reducer[-A, +B] {
     * @return the result of the reduction as a [[Cell]]
     */
   def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Cell[B]
+
+  def map[C](f: B => C): Reducer[A, C] = new Reducer[A, C] {
+    def reduce(column: Column[A], indices: Array[Int], start: Int, end: Int): Cell[C] =
+      self.reduce(column, indices, start, end).map(f)
+  }
+
+  def contramap[C](f: C => A): Reducer[C, B] = new Reducer[C, B] {
+    def reduce(column: Column[C], indices: Array[Int], start: Int, end: Int): Cell[B] =
+      self.reduce(column.map(f), indices, start, end)
+  }
+}
+
+object Reducer {
+  def apply[A: ClassTag, B](f: Array[A] => Cell[B]): Reducer[A, B] =
+    new SimpleReducer[A, B] {
+      def reduce(data: Array[A]): Cell[B] = f(data)
+    }
 }
