@@ -11,7 +11,6 @@ object Publish {
       pomDependencyExclusions <<= pomDependencyExclusions ?? Seq(),
       pomPostProcess := { (node: Node) =>
         val exclusions = pomDependencyExclusions.value.toSet
-        println(s"exclusions = $exclusions")
         val rule = new RewriteRule {
           override def transform(n: Node): NodeSeq = {
             if (n.label == "dependency") {
