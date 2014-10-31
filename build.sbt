@@ -21,7 +21,7 @@ resolvers in ThisBuild ++= Seq(
 
 lazy val root = project.
   in(file(".")).
-  aggregate(framianMacros, framian, framianJsonBase, framianJsonPlay).
+  aggregate(framianMacros, framian, framianJsonBase, framianJsonPlay, framianBenchmarks).
   settings(
     publish := (),
     publishLocal := ()
@@ -32,14 +32,13 @@ lazy val framianMacros = project.
 
 lazy val framian = project.
   in(file("framian")).
-  enablePlugins(BenchmarkPlugin).
-  dependsOn(framianMacros).
+  dependsOn(framianMacros % "compile,provided").
   settings(
     // map framian-macros project classes and sources into framian
     mappings in (Compile, packageBin) <++= mappings in (framianMacros, Compile, packageBin),
-    mappings in (Compile, packageSrc) <++= mappings in (framianMacros, Compile, packageSrc)
+    mappings in (Compile, packageSrc) <++= mappings in (framianMacros, Compile, packageSrc),
+    Publish.pomDependencyExclusions := Seq("com.pellucid" -> s"framian-macros_${scalaBinaryVersion.value}")
   )
-
 
 lazy val framianJsonBase = project.
   in(file("framian-json-base")).
@@ -55,3 +54,8 @@ lazy val framianJsonPlay22 = project.
   settings(
     sourceDirectory <<= sourceDirectory in framianJsonPlay
   )
+
+lazy val framianBenchmarks = project.
+  in(file("framian-benchmarks")).
+  enablePlugins(BenchmarkPlugin).
+  dependsOn(framian)
