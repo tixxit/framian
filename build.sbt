@@ -32,7 +32,7 @@ lazy val framianMacros = project.
 
 lazy val framian = project.
   in(file("framian")).
-  dependsOn(framianMacros % "compile,provided").
+  dependsOn(framianMacros).
   settings(
     // map framian-macros project classes and sources into framian
     mappings in (Compile, packageBin) <++= mappings in (framianMacros, Compile, packageBin),
