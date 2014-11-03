@@ -82,6 +82,9 @@ class CellSpec extends Specification {
 
       Value(2).zipMap(NA: Cell[Int])(_ + _) must_== NA
       (NA: Cell[Int]).zipMap(Value(2))(_ + _) must_== NA
+
+      (NA: Cell[Int]).zipMap(NM: Cell[Int])(_ + _) must_== NA
+      (NM: Cell[Int]).zipMap(NA: Cell[Int])(_ + _) must_== NA
     }
 
     "zipMap NMs" in {
@@ -89,9 +92,6 @@ class CellSpec extends Specification {
 
       Value(2).zipMap(NM: Cell[Int])(_ + _) must_== NM
       (NM: Cell[Int]).zipMap(Value(2))(_ + _) must_== NM
-
-      (NA: Cell[Int]).zipMap(NM: Cell[Int])(_ + _) must_== NM
-      (NM: Cell[Int]).zipMap(NA: Cell[Int])(_ + _) must_== NM
     }
   }
 }
