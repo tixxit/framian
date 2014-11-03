@@ -171,6 +171,17 @@ sealed trait Column[+A] { // TODO: Can't specialize in 2.10, but can in 2.11.
    */
   def shift(rows: Int): Column[A]
 
+  /**
+   * For each `row` in the resulting column, this will return
+   * `this(row).zipMap(that(row))`. Specifically, if `this(row)` or `that(row)`
+   * is [[NA]], then the row is [[NA]], if both sides are values, then the row
+   * is the result of applying `f`, otherwise the row is [[NM]].
+   *
+   * @param that the column to zip this column with
+   * @param f    the function to use to combine 2 values to a single value
+   */
+  def zipMap[B, C](that: Column[B])(f: (A, B) => C): Column[C]
+
   override def toString: String =
     (0 to 5).map(apply(_).toString).mkString("Column(", ", ", ", ...)")
 }

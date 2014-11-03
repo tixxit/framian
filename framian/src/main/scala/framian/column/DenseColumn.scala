@@ -85,6 +85,11 @@ private[framian] sealed trait DenseColumn[@sp(Int,Long,Double) A] extends Unboxe
     }
   }
 
+  def zipMap[B, C](that: Column[B])(f: (A, B) => C): Column[C] = that match {
+    case (that: DenseColumn[_]) => DenseColumn.zipMap[A, B, C](this, that.asInstanceOf[DenseColumn[B]], f)
+    case _ => DenseColumn.zipMap[A, B, C](this, that.force(this.values.length).asInstanceOf[DenseColumn[B]], f)
+  }
+
   override def toString: String = {
     val len = nmValues.max.map(_ + 1).getOrElse(values.length)
     (0 until len).map(apply(_).toString).mkString("Column(", ", ", ")")

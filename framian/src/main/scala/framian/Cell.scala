@@ -255,12 +255,12 @@ sealed trait Cell[+A] {
 
   /** If both `this` and `that` are values, then this returns a value derived
     * by applying `f` to the values of them. Otherwise, if either `this` or
-    * `that` is `NM`, then `NM` is returned, otherwise `NA` is returned.
+    * `that` is `NA`, then `NA` is returned, otherwise `NM` is returned.
     */
   @inline def zipMap[B, C](that: Cell[B])(f: (A, B) => C): Cell[C] = (this, that) match {
     case (Value(a), Value(b)) => Value(f(a, b))
-    case (NM, _) | (_, NM) => NM
-    case _ => NA
+    case (NA, _) | (_, NA) => NA
+    case _ => NM
   }
 }
 

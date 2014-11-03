@@ -49,13 +49,15 @@ object Boilerplate {
 
     def specs = List("Int", "Long", "Double")
 
-    val GenericConfig = Config("Generic", "A", "A", false)
-    val AnyConfig = Config("Any", "Any", "A", false, ".asInstanceOf[A]")
-    val SpecConfigs = specs.map(s => Config(s, s, s, true))
+    type MakeConfig = String => Config
 
-    def configs = GenericConfig :: AnyConfig :: SpecConfigs
+    val GenericConfig: MakeConfig = { T => Config("Generic", T, T, false) }
+    val AnyConfig: MakeConfig = { T => Config("Any", "Any", T, false, s".asInstanceOf[$T]") }
+    val SpecConfigs: List[MakeConfig] = specs.map(s => { (T: String) => Config(s, s, s, true) })
 
-    def body: String = {
+    def configs: List[MakeConfig] = GenericConfig :: AnyConfig :: SpecConfigs
+
+    def processBlocks(blocks: Seq[String]): String = {
       def loop(lines: List[String], chunks: Vector[String]): String = lines match {
         case head :: rest =>
           val tpe = head.charAt(0)
@@ -70,10 +72,27 @@ object Boilerplate {
           chunks.mkString("\n")
       }
 
-      loop(configs.map(gen).mkString.split("\n").toList.filterNot(_.isEmpty), Vector.empty)
+      loop(blocks.mkString.split("\n").toList.filterNot(_.isEmpty), Vector.empty)
     }
+  }
 
+  abstract class GenSpecFunction1(specFunction: Boolean) extends GenSpecFunction(specFunction) {
+    def body: String = before + processBlocks(configs.map(_("A")).map(gen)) + after
+
+    def before: String = ""
     def gen(config: Config): String
+    def after: String = ""
+  }
+
+  abstract class GenSpecFunction2(specFunction: Boolean) extends GenSpecFunction(specFunction) {
+    def body: String = before + processBlocks(for {
+        c0 <- configs.map(_("A"))
+        c1 <- configs.map(_("B"))
+      } yield gen(c0, c1)) + after
+
+    def before: String = ""
+    def gen(c0: Config, c1: Config): String
+    def after: String = ""
   }
 
   object GenDenseColumnFunctions {
@@ -113,11 +132,15 @@ object Boilerplate {
       |${GenForce.body}
       |
       |${GenOrElse.body}
+      |
+      |${GenZipMap.body}
+      |
+      |${GenZipMap2.body}
       |}
     """.stripMargin
   }
 
-  object GenReindex extends GenSpecFunction(false) {
+  object GenReindex extends GenSpecFunction1(false) {
     def gen(config: Config): String = {
       import config._
 
@@ -142,7 +165,106 @@ object Boilerplate {
     }
   }
 
-  object GenMap extends GenSpecFunction(true) {
+  object GenZipMap extends GenSpecFunction2(false) {
+    override def before =
+      block"""
+        |  def zipMap[A, B, C](lhs: DenseColumn[A], rhs: DenseColumn[B], f: (A, B) => C): Column[C] = {
+        |    val na = lhs.naValues | rhs.naValues
+        |    val nm = (lhs.nmValues | rhs.nmValues) -- na
+        |    (lhs, rhs) match {
+      """.stripMargin('|')
+
+    def gen(c0: Config, c1: Config) = {
+      val typeParams: String = {
+        val a = if (c0.isSpec) Nil else List(s"${c0.inputType}")
+        val b = if (c1.isSpec) Nil else List(s"${c1.inputType}")
+        (a ++ b ++ List("C")).mkString(", ")
+      }
+
+      block"""
+        |      case (${c0.name}Column(lhs, _, _), ${c1.name}Column(rhs, _, _)) =>
+        |        zipMap${c0.name}${c1.name}[$typeParams](lhs, rhs, na, nm, f.asInstanceOf[(${c0.inputType}, ${c1.inputType}) => C])
+      """
+    }
+
+    override def after =
+      block"""
+        |    }
+        |  }
+      """.stripMargin
+  }
+
+  object GenZipMap2 extends GenSpecFunction2(false) {
+    def gen(c0: Config, c1: Config) = {
+      val typeParams: String = {
+        val a = if (c0.isSpec) Nil else List(s"${c0.inputType}")
+        val b = if (c1.isSpec) Nil else List(s"${c1.inputType}")
+        (a ++ b ++ List("C")).mkString(", ")
+      }
+
+      block"""
+        |  def zipMap${c0.name}${c1.name}[$typeParams](
+        |    lhs: Array[${c0.inputArrayType}],
+        |    rhs: Array[${c1.inputArrayType}],
+        |    na: Mask, nm: Mask,
+        |    f: (${c0.inputType}, ${c1.inputType}) => C): Column[C] = {
+        |
+        |    val len = spire.math.min(lhs.length, rhs.length)
+        |    def loop(i: Int): Column[C] =
+        |      if (i < lhs.length && i < rhs.length) {
+        |        if (na(i) || nm(i)) {
+        |          loop(i + 1)
+        |        } else {
+        |          f(lhs(i)${c0.cast}, rhs(i)${c1.cast}) match {
+        -            case (x: {specType}) =>
+        -              val xs = new Array[{specType}](len)
+        -              xs(i) = x
+        -              loop{specType}(xs, i + 1)
+        |            case x =>
+        |              val xs = new Array[Any](len)
+        |              xs(i) = x
+        |              loopAny(xs, i + 1)
+        |          }
+        |        }
+        |      } else {
+        |        Column.empty[C](nm)
+        |      }
+        |
+        -    def loop{specType}(xs: Array[{specType}], i0: Int): Column[C] = {
+        -      var i = i0
+        -      while (i < xs.length) {
+        -        if (!(na(i) || nm(i))) {
+        -          try {
+        -            xs(i) = f(lhs(i)${c0.cast}, rhs(i)${c1.cast}).asInstanceOf[{specType}]
+        -          } catch { case (_: ClassCastException) =>
+        -            return loopAny(copyToAnyArray(xs, i), i)
+        -          }
+        -        }
+        -        i += 1
+        -      }
+        -
+        -      {specType}Column(xs, na, nm).asInstanceOf[Column[C]]
+        -    }
+        |
+        |    def loopAny(xs: Array[Any], i: Int): Column[C] =
+        |      if (i < xs.length) {
+        |        if (na(i) || nm(i)) {
+        |          loopAny(xs, i + 1)
+        |        } else {
+        |          xs(i) = f(lhs(i)${c0.cast}, rhs(i)${c1.cast})
+        |          loopAny(xs, i + 1)
+        |        }
+        |      } else {
+        |        AnyColumn(xs, na, nm)
+        |      }
+        |  
+        |    loop(0)
+        |  }
+      """
+    }
+  }
+
+  object GenMap extends GenSpecFunction1(true) {
     def gen(config: Config): String = {
       import config._
 
@@ -206,19 +328,14 @@ object Boilerplate {
     }
   }
 
-  object GenForce extends GenSpecFunction(true) {
-    override def configs = Config("Any", "Any", "A", false) :: Nil
+  object GenForce extends GenSpecFunction1(true) {
+    override def configs = { (T: String) => Config("Any", "Any", T, false) } :: Nil
 
     def gen(config: Config): String = {
       import config._
 
-      def typeParams: String = {
-        val sp = "@specialized(Int,Long,Double)"
-        if (isSpec) s"$sp B" else s"$inputType, $sp B"
-      }
-
       block"""
-        |  def force[$inputType](col: Int => Cell[$inputType], len: Int): Column[A] = {
+        |  def force[A](col: Column[A], len: Int): Column[A] = {
         |    val na = Mask.newBuilder
         |    val nm = Mask.newBuilder
         |
@@ -240,7 +357,7 @@ object Boilerplate {
         |            }
         |        }
         |      } else {
-        |        Column.empty(nm.result())
+        |        AnyColumn[A](new Array[Any](0), Mask.empty, nm.result())
         |      }
         |  
         -    def loop{specType}(xs: Array[{specType}], i0: Int): Column[A] = {
@@ -280,7 +397,7 @@ object Boilerplate {
     }
   }
 
-  object GenOrElse extends GenSpecFunction(false) {
+  object GenOrElse extends GenSpecFunction1(false) {
     def gen(config: Config): String = {
       import config._
 
@@ -363,7 +480,7 @@ object Boilerplate {
     """.stripMargin
   }
 
-  object GenSpecColumnBuilders extends GenSpecFunction(true) {
+  object GenSpecColumnBuilders extends GenSpecFunction1(true) {
     override def configs = GenericConfig :: SpecConfigs
 
     def gen(config: Config): String = {
@@ -399,7 +516,7 @@ object Boilerplate {
     }
   }
 
-  object GenAnyColumnBuilder extends GenSpecFunction(false) {
+  object GenAnyColumnBuilder extends GenSpecFunction1(false) {
     override def configs = AnyConfig :: Nil
 
     def gen(config: Config): String = {

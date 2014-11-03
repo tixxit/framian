@@ -30,10 +30,10 @@ private[framian] case class EvalColumn[A](f: Int => Cell[A]) extends BoxedColumn
   def cellMap[B](g: Cell[A] => Cell[B]): Column[B] = EvalColumn(f andThen g)
 
   def reindex(index: Array[Int]): Column[A] =
-    DenseColumn.force(index andThen f, index.length)
+    DenseColumn.force(EvalColumn(index andThen f), index.length)
 
   def force(len: Int): Column[A] =
-    DenseColumn.force(f, len)
+    DenseColumn.force(this, len)
 
   def mask(mask: Mask): Column[A] = EvalColumn { row =>
     if (mask(row)) NA else f(row)
@@ -71,5 +71,17 @@ private[framian] case class EvalColumn[A](f: Int => Cell[A]) extends BoxedColumn
       NA
     }
   }
-}
 
+  def zipMap[B, C](that: Column[B])(f: (A, B) => C): Column[C] = that match {
+    case (that: DenseColumn[_]) =>
+      DenseColumn.zipMap[A, B, C](this.force(that.values.length).asInstanceOf[DenseColumn[A]], that.asInstanceOf[DenseColumn[B]], f)
+    case _ =>
+      EvalColumn { row =>
+        (this(row), that(row)) match {
+          case (Value(a), Value(b)) => Value(f(a, b))
+          case (NA, _) | (_, NA) => NA
+          case _ => NM
+        }
+      }
+  }
+}

@@ -34,6 +34,7 @@ private[framian] sealed trait MemoizingColumn[A] extends BoxedColumn[A] {
   def memoize(optimistic: Boolean): Column[A] = this
   def orElse[A0 >: A](that: Column[A0]): Column[A0] = eval.orElse(that)
   def shift(n: Int): Column[A] = eval.shift(n)
+  def zipMap[B, C](that: Column[B])(f: (A, B) => C): Column[C] = eval.zipMap(that)(f)
 }
 
 private[framian] class OptimisticMemoizingColumn[A](get: Int => Cell[A]) extends MemoizingColumn[A] {
