@@ -390,22 +390,10 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     val (keys, lIndices, rIndices) = Index.cogroup(this.index, that.index)(joiner).result()
 
     // TODO: Add zipMap method to Column, then reindex/zipMap instead!
-    val bldr = Column.newBuilder[X]()
-    val lCol = this.column
-    val rCol = that.column
-    cfor(0)(_ < lIndices.length, _ + 1) { i =>
-      val l = lIndices(i)
-      val r = rIndices(i)
-      lCol.foldRow(l)(
-        if (rCol(r) == NM) bldr.addNM() else bldr.addNA(),
-        bldr.addNM(),
-        { v =>
-          rCol.foldRow(r)(bldr.addNA(), bldr.addNM(), { w =>
-            bldr.addValue(f(v, w))
-          })
-        })
-    }
-    Series(Index.ordered(keys), bldr.result())
+    val lCol = this.column.reindex(lIndices)
+    val rCol = that.column.reindex(rIndices)
+    val col = lCol.zipMap(rCol)(f)
+    Series(Index.ordered(keys), col)
   }
 
   /**
