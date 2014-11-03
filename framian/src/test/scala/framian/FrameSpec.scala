@@ -9,6 +9,7 @@ import spire.algebra._
 import spire.std.string._
 import spire.std.double._
 import spire.std.int._
+
 import spire.std.iterable._
 
 import shapeless._
@@ -348,6 +349,29 @@ class FrameSpec extends Specification with ScalaCheck {
       val e = Frame.empty[String, Int]
       a.join(e)(Join.Outer) must_== a
       e.join(a)(Join.Outer) must_== a
+    }
+
+    "joinBy should" in {
+      val a = Frame.fromRows(
+        "a" :: "aa" :: HNil,
+        "b" :: "bb" :: HNil,
+        "c" :: "J" :: HNil
+      ).withRowIndex(Index.fromKeys("ai", "bi", "ci"))
+      val b = Frame.fromRows(
+        "x" :: "xx" :: HNil,
+        "y" :: "yy" :: HNil,
+        "z" :: "J" :: HNil
+      ).withRowIndex(Index.fromKeys("xi", "yi", "zi"))
+      a.joinBy(Cols(1).as[String])(b)(Join.Left) must_== Frame.fromRows(
+        "c" :: "J" :: "z" :: "J" :: HNil,
+        "a" :: "aa" :: NA :: NA :: HNil,
+        "b" :: "bb" :: NA :: NA :: HNil
+      ).withRowIndex(Index.fromKeys("ci", "ai", "bi"))
+       .mapColKeys(_ % 2)
+      a.joinBy(Cols(1).as[String])(b)(Join.Inner) must_== Frame.fromRows(
+        "c" :: "J" :: "z" :: "J" :: HNil
+      ).withRowIndex(Index.fromKeys("ci"))
+       .mapColKeys(_ % 2)
     }
   }
 
