@@ -169,8 +169,9 @@ object Boilerplate {
     override def before =
       block"""
         |  def zipMap[A, B, C](lhs: DenseColumn[A], rhs: DenseColumn[B], f: (A, B) => C): Column[C] = {
+        |    val len = spire.math.min(lhs.values.length, rhs.values.length)
         |    val na = lhs.naValues | rhs.naValues
-        |    val nm = (lhs.nmValues | rhs.nmValues) -- na
+        |    val nm = (lhs.nmValues | rhs.nmValues).filter(i => i < len && !na(i))
         |    (lhs, rhs) match {
       """.stripMargin('|')
 

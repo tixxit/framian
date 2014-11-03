@@ -279,6 +279,61 @@ abstract class BaseColumnSpec extends Specification with ScalaCheck {
     }
   }
 
+  "zipMap" should {
+    "promote all NAs with spec type" in {
+      val na = mkCol[Int](NA)
+      val nm = mkCol[Int](NM)
+      val value = mkCol[Int](Value(1))
+
+      na.zipMap(na)(_ + _)(0) must_== NA
+      na.zipMap(nm)(_ + _)(0) must_== NA
+      nm.zipMap(na)(_ + _)(0) must_== NA
+      nm.zipMap(value)(_ + _)(0) must_== NM
+      value.zipMap(na)(_ + _)(0) must_== NA
+    }
+
+    "promote all NAs with unspec type" in {
+      val na = mkCol[String](NA)
+      val nm = mkCol[String](NM)
+      val value = mkCol[String](Value("x"))
+
+      na.zipMap(na)(_ + _)(0) must_== NA
+      na.zipMap(nm)(_ + _)(0) must_== NA
+      nm.zipMap(na)(_ + _)(0) must_== NA
+      nm.zipMap(value)(_ + _)(0) must_== NM
+      value.zipMap(na)(_ + _)(0) must_== NA
+    }
+
+    "NM if both are NM" in {
+      val nm0 = mkCol[String](NM)
+      val nm1 = mkCol[Int](NM)
+
+      nm0.zipMap(nm1)(_ + _)(0) must_== NM
+      nm1.zipMap(nm0)(_ + _)(0) must_== NM
+    }
+
+    "apply function if both are values" in {
+      val col0 = mkCol(Value(1), NA, NM)
+      val col1 = mkCol(Value(3D), Value(2D), NA)
+      val col2 = mkCol(NA, Value("x"), NM)
+
+      col0.zipMap(col0)(_ + _).slice(0 to 3) must_== Vector(Value(2), NA, NM, NA)
+      col0.zipMap(col1)(_ + _).slice(0 to 3) must_== Vector(Value(4D), NA, NA, NA)
+      col0.zipMap(col2)(_ + _).slice(0 to 3) must_== Vector(NA, NA, NM, NA)
+      col1.zipMap(col0)(_ + _).slice(0 to 3) must_== Vector(Value(4D), NA, NA, NA)
+      col1.zipMap(col1)(_ + _).slice(0 to 3) must_== Vector(Value(6D), Value(4D), NA, NA)
+      col1.zipMap(col2)(_ + _).slice(0 to 3) must_== Vector(NA, Value("2.0x"), NA, NA)
+      col2.zipMap(col0)(_ + _).slice(0 to 3) must_== Vector(NA, NA, NM, NA)
+      col2.zipMap(col1)(_ + _).slice(0 to 3) must_== Vector(NA, Value("x2.0"), NA, NA)
+      col2.zipMap(col2)(_ + _).slice(0 to 3) must_== Vector(NA, Value("xx"), NM, NA)
+    }
+
+    "conform to same semantics as Cell#zipMap" in check { (a: Column[Int], b: Column[Double], indices: List[Int]) =>
+      val col = a.zipMap(b)(_ + _)
+      indices.map(col(_)) must_== indices.map { row => a(row).zipMap(b(row))(_ + _) }
+    }
+  }
+
   "memoize" should {
     "calculate values at most once (pessimistic)" in check { (col: Column[Int], indices: List[Int]) =>
       var hit = false
