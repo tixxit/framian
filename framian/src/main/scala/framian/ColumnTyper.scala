@@ -71,7 +71,7 @@ final class DefaultColumnTyper[A: ClassTag] extends ColumnTyper[A] {
     if (classTag[A].runtimeClass isAssignableFrom col.classTagA.runtimeClass) {
       col.column.asInstanceOf[Column[A]]
     } else {
-      Column.empty[A]()
+      col.column.flatMap { _ => NM }
     }
 }
 
@@ -82,6 +82,6 @@ final class TypeableColumnTyper[A: ClassTag: Typeable] extends ColumnTyper[A] {
     if (classTag[A].runtimeClass isAssignableFrom col.classTagA.runtimeClass) {
       col.column.asInstanceOf[Column[A]]
     } else {
-      col.column.flatMap { a => Cell.fromOption(a.cast[A]) }
+      col.column.flatMap { a => Cell.fromOption(a.cast[A], NM) }
     }
 }
