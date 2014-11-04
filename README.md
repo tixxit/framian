@@ -19,7 +19,7 @@ If you are using SBT, simply add the following to your `build.sbt`:
 
     resolvers += "Pellucid Bintray" at "http://dl.bintray.com/pellucid/maven"
     
-    libraryDependencies += "com.pellucid" %% "framian" % "0.3.2"
+    libraryDependencies += "com.pellucid" %% "framian" % "0.3.3"
     
 ### [Scaladoc](https://pellucidanalytics.github.io/framian/api/current/index.html#framian.package)
 
