@@ -8,7 +8,9 @@ import scala.util.Random
 import org.openjdk.jmh.annotations.{ Benchmark, Scope, State }
 import org.openjdk.jmh.annotations.{ BenchmarkMode, Mode, OutputTimeUnit }
 
-import framian.Column
+import spire.implicits._
+
+import framian._
 import framian.column.Mask
 
 class DenseColumnZipMapBenchmark {
@@ -45,8 +47,12 @@ class DenseColumnZipMapBenchmark {
   }
 
   @Benchmark
-  def squareColumn(data: DenseZipMapData) =
+  def zipMapColumn(data: DenseZipMapData) =
     data.col0.zipMap(data.col1)(_ * _)
+
+  @Benchmark
+  def zipMapSeries(data: DenseZipMapData) =
+    data.series0.zipMap(data.series1)(_ * _)
 }
 
 @State(Scope.Benchmark)
@@ -58,9 +64,11 @@ class DenseZipMapData {
   val na0: Mask = Data.mask(rng, size, 0.1)
   val nm0: Mask = Data.mask(rng, size, 0.01)
   val col0: Column[Double] = Column.dense(data0, na0, nm0)
+  val series0: Series[Int, Double] = Series(Index.fromKeys(1 to size: _*), col0)
 
   val data1: Array[Double] = Array.fill(size)(rng.nextDouble)
   val na1: Mask = Data.mask(rng, size, 0.1)
   val nm1: Mask = Data.mask(rng, size, 0.01)
   val col1: Column[Double] = Column.dense(data1, na1, nm1)
+  val series1: Series[Int, Double] = Series(Index.fromKeys(1 to size: _*), col1)
 }
