@@ -29,8 +29,10 @@ import scala.reflect.ClassTag
 import spire.algebra._
 import spire.std.double._
 import spire.std.int._
+import spire.std.tuples._
 import spire.syntax.monoid._
 import spire.syntax.order._
+import spire.syntax.field._
 import spire.syntax.cfor._
 
 import framian.column._
@@ -1051,6 +1053,120 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
     loop(0, 0)
 
     Series(index, column.reindex(indices))
+  }
+
+  /**
+   * Compute a histogram of the values in this series, using a bucket width of
+   * `stepSize`. This just calls `histogram(min, max, stepSize)`, where `min`
+   * and `max` are the minimum and maximum values in this series.
+   *
+   * @param stepSize the width of each bucket, starting from minimum value in this series
+   * @return a series keyed by the buckets, with values being the count of items
+   */
+  def histogram(stepSize: V)(implicit g: AdditiveSemigroup[V], o: Order[V], ct: ClassTag[V]): Series[(V, V), Int] = {
+    val hist = for {
+      minValue <- min
+      maxValue <- max
+    } yield histogram(minValue, maxValue, stepSize)
+
+    hist.getOrElse(Series.empty[(V, V), Int])
+  }
+
+  /**
+   * Computes a histogram of the values in this series. This will create
+   * contiguous, disjoint buckets starting from `min`, each with width
+   * `stepSize`, except for (possibly) the last. So, we could represent the
+   * buckets like this,
+   *
+   * {{{
+   * [min, min + stepSize), [min + 2 * stepSize), ..., [min + k * stepSize, max]
+   * }}}
+   *
+   * You'll note that the last bucket *includes* `max`. For each bucket, we
+   * calculate the number of values from this series that fall within it. The
+   * [[Series]] returned is keyed by a tuple of the start and end of each
+   * bucket (keep in mind only the last bucket is inclusive on the right).
+   *
+   * @param min      the minimum value to include in the histogram (inclusive)
+   * @param min      the maximum value to include in the histogram (inclusive)
+   * @param stepSize the width of each bucket, starting from min
+   * @return a series keyed by the buckets, with values being the count of items
+   */
+  def histogram(min: V, max: V, stepSize: V)(implicit g: AdditiveSemigroup[V], o: Order[V], ct: ClassTag[V]): Series[(V, V), Int] = {
+    val bucketStarts = Stream
+      .iterate(min)(_ + stepSize)
+      .takeWhile(_ < max)
+      .toArray
+    val index = Index.ordered(bucketStarts)
+    val count = Array.fill(index.size)(0)
+    foreachValues { v =>
+      // The insert index isn't quite what we want. If v exists in the index,
+      // then we can use it directly. If it doesn't, then `-insertIndex - 1`
+      // actually points at the *next* bucket, since that is where it would be
+      // inserted to maintain sorted order. So, we subtract 1 more (hence
+      // `-insertIndex - 2`) so it points at the right bucket. But this isn't
+      // enough! We also need to make sure we don't include values > max in
+      // the histogram and that max is inclusive in the last bucket.
+      val insertIndex = index.search(v)
+      val i = if (insertIndex < 0) -insertIndex - 2
+              else insertIndex
+      if (i == (count.length - 1) && v <= max) {
+          count(count.length - 1) += 1
+      } else if (i >= 0 && i < (count.length - 1)) {
+        count(i) += 1
+      }
+    }
+    val buckets = bucketStarts.map { start =>
+      start -> spire.math.min(max, start + stepSize)
+    }
+    Series(Index.ordered(buckets), Column.dense(count))
+  }
+
+  /**
+   * Compute a histogram of the values in this series, using a bucket width of
+   * `stepSize`. This just calls `histogram(min, max, stepSize)`, where `min`
+   * and `max` are the minimum and maximum values in this series. The values
+   * are the proportion of values that fell into that bucket, as a percentage
+   * of the total size of this series - including NAs and NMs.
+   *
+   * @param stepSize the width of each bucket, starting from minimum value in this series
+   * @return a series keyed by the buckets, with values being the count of items
+   */
+  def normalizedHistogram[A: Field](stepSize: V)(implicit g: AdditiveSemigroup[V], o: Order[V], ct: ClassTag[V]): Series[(V, V), A] = {
+    val hist = for {
+      min <- min
+      max <- max
+    } yield normalizedHistogram[A](min, max, stepSize)
+    hist.getOrElse(Series.empty[(V, V), A])
+  }
+
+  /**
+   * Computes a normalized histogram of the values in this series. This will
+   * create contiguous, disjoint buckets starting from `min`, each with width
+   * `stepSize`, except for (possibly) the last. So, we could represent the
+   * buckets like this,
+   *
+   * {{{
+   * [min, min + stepSize), [min + 2 * stepSize), ..., [min + k * stepSize, max]
+   * }}}
+   *
+   * You'll note that the last bucket *includes* `max`. For each bucket, we
+   * calculate the number of values from this series that fall within it. The
+   * [[Series]] returned is keyed by a tuple of the start and end of each
+   * bucket (keep in mind only the last bucket is inclusive on the right). The
+   * values are the proportion of values that fell into that bucket, as a
+   * percentage of the total size of this series - including NAs and NMs.
+   *
+   * @param min      the minimum value to include in the histogram (inclusive)
+   * @param min      the maximum value to include in the histogram (inclusive)
+   * @param stepSize the width of each bucket, starting from min
+   * @return a series keyed by the buckets, with values being the count of items
+   */
+  def normalizedHistogram[A: Field](min: V, max: V, stepSize: V)(implicit g: AdditiveSemigroup[V], o: Order[V], ct: ClassTag[V]): Series[(V, V), A] = {
+    val n = Field[A].fromInt(index.size)
+    histogram(min, max, stepSize).mapValues { cnt =>
+      Field[A].fromInt(cnt) / n
+    }
   }
 
   override def toString: String =
