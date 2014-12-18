@@ -13,6 +13,7 @@ import spire.std.double._
 import spire.std.int._
 import spire.std.iterable._
 import spire.std.string._
+import spire.std.tuples._
 
 class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
   import Arbitrary.arbitrary
@@ -691,6 +692,52 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
       Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).productNonEmpty must_== NM
       Series.fromCells[String, Int]("a" -> NM, "b" -> NA, "c" -> NA).productNonEmpty must_== NM
       Series.fromCells("a" -> NA, "b" -> Value(2), "c" -> Value(3)).productNonEmpty must_== Value(6)
+    }
+  }
+
+  "histogram" should {
+    "return 0 counts on empty input series" in {
+      Series[String, Int]().histogram(0, 10, 2) must_==
+        Series((0, 2) -> 0, (2, 4) -> 0, (4, 6) -> 0, (6, 8) -> 0, (8, 10) -> 0)
+    }
+
+    "exclude values over max" in {
+      Series(1 -> 1, 2 -> 2, 3 -> 3, 4 -> 4, 5 -> 5).histogram(0, 1, 2) must_==
+        Series((0, 1) -> 1)
+
+      Series(1 -> 1, 2 -> 2, 3 -> 3, 4 -> 4, 5 -> 5, 6 -> 6).histogram(0, 5, 2) must_==
+        Series((0, 2) -> 1, (2, 4) -> 2, (4, 5) -> 2)
+    }
+
+    "max is inclusive" in {
+      Series("a" -> 1, "b" -> 2, "c" -> 3, "d" -> 4, "e" -> 5).histogram(0, 4, 2) must_==
+        Series((0, 2) -> 1, (2, 4) -> 3)
+    }
+
+    "exclude values less than min" in {
+      Series("a" -> 1, "b" -> 2, "c" -> 3, "d" -> 4, "e" -> 5).histogram(2, 6, 2) must_==
+        Series((2, 4) -> 2, (4, 6) -> 2)
+
+      Series("a" -> 1, "b" -> 2, "c" -> 3, "d" -> 4, "e" -> 5).histogram(3, 6, 2) must_==
+        Series((3, 5) -> 2, (5, 6) -> 1)
+    }
+  }
+
+  "normalizedHistogram" should {
+    "return percentage of cells in bucket" in {
+      Series((1 to 25).zipWithIndex: _*).normalizedHistogram[Double](0, 24, 5) must_==
+        Series((0, 5) -> 0.2, (5, 10) -> 0.2, (10, 15) -> 0.2, (15, 20) -> 0.2, (20, 24) -> 0.2)
+    }
+
+    "include NAs and NMs in total size" in {
+      Series.fromCells("a" -> Value(0), "b" -> NA, "c" -> Value(1), "D" -> Value(2)).normalizedHistogram[Double](0, 4, 2) must_==
+        Series((0, 2) -> 0.5, (2, 4) -> 0.25)
+
+      Series.fromCells("a" -> Value(0), "b" -> Value(3), "c" -> NM, "D" -> Value(2)).normalizedHistogram[Double](0, 4, 2) must_==
+        Series((0, 2) -> 0.25, (2, 4) -> 0.5)
+
+      Series.fromCells("a" -> Value(0), "b" -> NA, "c" -> NM, "D" -> Value(2)).normalizedHistogram[Double](0, 4, 2) must_==
+        Series((0, 2) -> 0.25, (2, 4) -> 0.25)
     }
   }
 }
