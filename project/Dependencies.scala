@@ -13,8 +13,6 @@ object Dependencies {
     // Test libraries
     val Specs2             = "2.4.2"
     val ScalaCheck         = "1.11.6"
-
-    val Jmh                = "1.0"
   }
 
   // Compile
