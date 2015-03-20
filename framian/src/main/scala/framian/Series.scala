@@ -312,6 +312,13 @@ final class Series[K,V](val index: Index[K], val column: Column[V]) {
   }
 
   /**
+   * Returns `true` if the series is logically empty. That is, just in case none
+   * of its rows contain a value. Presently, both [[NA]]s and [[NM]]s are not considered
+   * to be values.
+   */
+  def isEmpty: Boolean = !hasValues
+
+  /**
    * Combines 2 series together using the functions provided to handle each
    * case. If a value exists in both `this` and `that`, then `both` is used
    * to combine the value to a new one, otherwise either `left` or `right`
