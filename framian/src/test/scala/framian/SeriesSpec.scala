@@ -44,6 +44,15 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
     }
   }
 
+  "isEmpty" should {
+    "detect an absence of values" in {
+      forAll(arbitrary[Series[String, Int]]) { series =>
+        series.isEmpty must_!= series.values.nonEmpty
+        series.filterByCells(_.isNonValue).isEmpty must_== true
+      }
+    }
+  }
+
   "++" should {
     "concatenate on series after the other" in {
       val s0 = Series.fromCells(1 -> Value("a"), 1 -> Value("b"), 2 -> Value("e"))
