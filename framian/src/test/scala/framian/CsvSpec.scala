@@ -15,9 +15,9 @@ import java.io.{File, BufferedReader, FileReader}
 class CsvSpec extends Specification {
   val csvRoot = "framian/src/test/resources/csvs/"
 
-  val airPassengers = csvRoot +"AirPassengers-test.csv"
-  val airPassengersBadComma = csvRoot +"AirPassengers-badcomma.csv"
-  val autoMPG = csvRoot +"auto-mpg-test.tsv"
+  val airPassengers = csvRoot + "AirPassengers-test.csv"
+  val airPassengersBadComma = csvRoot + "AirPassengers-badcomma.csv"
+  val autoMPG = csvRoot + "auto-mpg-test.tsv"
 
   val defaultRowIndex = Index.fromKeys(0, 1, 2, 3, 4)
   val withColumnRowIndex = Index.fromKeys(0, 1, 2, 3)
@@ -27,37 +27,40 @@ class CsvSpec extends Specification {
     Index.fromKeys(0, 1, 2, 3, 4),
     Series(
       0 -> TypedColumn(Column[Int](
-          NA,
-          Value(1),
-          Value(2),
-          Value(3),
-          Value(4))
-        ).orElse(TypedColumn(Column[String](
-          Value("")
-        ))),
+        NA,
+        Value(1),
+        Value(2),
+        Value(3),
+        Value(4)
+      )).orElse(TypedColumn(Column[String](
+        Value("")
+      ))),
       1 -> TypedColumn(Column[BigDecimal](
-          NA,
-          Value(BigDecimal("1949")),
-          Value(BigDecimal("1949.08333333333")),
-          Value(BigDecimal("1949.16666666667")),
-          Value(BigDecimal("1949.25")))
-        ).orElse(TypedColumn(Column[String](
-          Value("time")
-        ))),
+        NA,
+        Value(BigDecimal("1949")),
+        Value(BigDecimal("1949.08333333333")),
+        Value(BigDecimal("1949.16666666667")),
+        Value(BigDecimal("1949.25"))
+      )).orElse(TypedColumn(Column[String](
+        Value("time")
+      ))),
       2 -> TypedColumn(Column[BigDecimal](
-          NA,
-          Value(BigDecimal("112")),
-          Value(BigDecimal("118")),
-          Value(BigDecimal("132")),
-          Value(BigDecimal("129")))
-        ).orElse(TypedColumn(Column[String](
-          Value("AirPassengers")
-        )))))
+        NA,
+        Value(BigDecimal("112")),
+        Value(BigDecimal("118")),
+        Value(BigDecimal("132")),
+        Value(BigDecimal("129"))
+      )).orElse(TypedColumn(Column[String](
+        Value("AirPassengers")
+      )))
+    )
+  )
   val columnAirPassengers = Frame.fromRows(
-    1 :: BigDecimal(1949)             :: 112 :: HNil,
+    1 :: BigDecimal(1949) :: 112 :: HNil,
     2 :: BigDecimal(1949.08333333333) :: 118 :: HNil,
     3 :: BigDecimal(1949.16666666667) :: 132 :: HNil,
-    4 :: BigDecimal(1949.25)          :: 129 :: HNil)
+    4 :: BigDecimal(1949.25) :: 129 :: HNil
+  )
     .withColIndex(Index.fromKeys("", "time", "AirPassengers"))
     .withRowIndex(withColumnRowIndex)
 
@@ -66,14 +69,15 @@ class CsvSpec extends Specification {
     15.0 :: 8 :: 350.0 :: 165.0 :: 3693 :: 11.5 :: 70 :: 1 :: "buick skylark 320" :: HNil,
     18.0 :: 8 :: 318.0 :: 150.0 :: 3436 :: 11.0 :: 70 :: 1 :: "plymouth satellite" :: HNil,
     16.0 :: 8 :: 304.0 :: 150.0 :: 3433 :: 12.0 :: 70 :: 1 :: "amc rebel sst" :: HNil,
-    17.0 :: 8 :: 302.0 :: 140.0 :: 3449 :: 10.5 :: 70 :: 1 :: "ford torino" :: HNil)
+    17.0 :: 8 :: 302.0 :: 140.0 :: 3449 :: 10.5 :: 70 :: 1 :: "ford torino" :: HNil
+  )
     .withRowIndex(defaultRowIndex)
     .withColIndex(Index.fromKeys(0, 1, 2, 3, 4, 5, 6, 7, 8))
 
   "CsvParser" should {
     "parse air passengers as unlabeled CSV" in {
-       Csv.parsePath(airPassengers).unlabeled.toFrame must_== defaultAirPassengers
-     }
+      Csv.parsePath(airPassengers).unlabeled.toFrame must_== defaultAirPassengers
+    }
 
     "parse air passengers as labeled CSV" in {
       Csv.parsePath(airPassengers).labeled.toFrame must_== columnAirPassengers
@@ -111,9 +115,9 @@ class CsvSpec extends Specification {
         "a,'''','c'''|'''''d''''', ''''",
         TestFormat
       ).rows must_== Vector(
-        Right(CsvRow(Vector(Data("a"), Data("'"), Data("c'")))),
-        Right(CsvRow(Vector(Data("''d''"), Data(" ''''"))))
-      )
+          Right(CsvRow(Vector(Data("a"), Data("'"), Data("c'")))),
+          Right(CsvRow(Vector(Data("''d''"), Data(" ''''"))))
+        )
     }
 
     "respect CsvFormat separator" in {
@@ -149,7 +153,8 @@ class CsvSpec extends Specification {
     "parse CSV with row delimiter in quote" in {
       Csv.parseString("a,'b|c'|'d|e',f", TestFormat).rows must_== Vector(
         Right(CsvRow(Vector(Data("a"), Data("b|c")))),
-        Right(CsvRow(Vector(Data("d|e"), Data("f")))))
+        Right(CsvRow(Vector(Data("d|e"), Data("f"))))
+      )
     }
 
     "parser respects whitespace" in {
@@ -157,7 +162,15 @@ class CsvSpec extends Specification {
       val csv = Csv.parseString(data, CsvFormat.Guess.withRowDelim("|"))
       csv.rows must_== Vector(
         Right(CsvRow(Vector(Data(" a "), Data(" "), Data(" 'a'"), Data("b")))),
-        Right(CsvRow(Vector(Data("  b  "), Data("c  "), Data("   ")))))
+        Right(CsvRow(Vector(Data("  b  "), Data("c  "), Data("   "))))
+      )
     }
+
+    "respect col ordering on export" in {
+      val csv = Csv.fromFrame(new CsvFormat(",", header = true))(columnAirPassengers)
+      val df = csv.labeled.toFrame
+      columnAirPassengers must_== df
+    }
+
   }
 }
