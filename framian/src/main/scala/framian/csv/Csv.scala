@@ -96,11 +96,17 @@ object Csv {
     )
   }
 
-  def fromFrame[Col](format: CsvFormat)(frame: Frame[_, Col]): Csv = {
-    val rows = frame.get(Cols.all[Col].as[CsvRow]).denseIterator.map {
-      case (_, row) => Right(row)
-    }.toVector
-
+  def fromFrame[Row,Col](format: CsvFormat)(frame: Frame[Row, Col]): Csv = {
+    //val rows = frame.get(Cols.all[Col].as[CsvRow]).denseIterator.map {
+    //  case (_, row) => Right(row)
+    //}.toVector
+    val rowIdx = frame.rowKeys.toVector
+    val rows = rowIdx.map{rk => CsvRow(frame.get(Rows(rk)).
+      values.flatMap{_.values}.map{t=>t._2}.map{v => v match {
+        case Value(vv) => CsvCell.Data(vv.toString)
+        case NA => CsvCell.Empty
+        case NM => CsvCell.Invalid}})}.
+      map {r => Right(r)}
     if (format.header) {
       val header = frame.colIndex.toVector.map(_._1.toString)
       LabeledCsv(format, header, rows)
