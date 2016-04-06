@@ -3,9 +3,6 @@ import sbt._
 object Dependencies {
 
   object V {
-    val Play_22            = "2.2.3"
-    val Play_23            = "2.3.5"
-
     val Spire              = "0.8.2"
     val Shapeless          = "2.3.0"
     val Discipline         = "0.2.1"
@@ -17,9 +14,6 @@ object Dependencies {
 
   // Compile
   object Compile {
-    val playJson_22       = "com.typesafe.play"        %% "play-json"               % V.Play_22 % "provided"
-    val playJson_23       = "com.typesafe.play"        %% "play-json"               % V.Play_23 % "provided"
-
     val spire             = "org.spire-math"           %% "spire"                   % V.Spire
     val shapeless         = "com.chuusai"              %% "shapeless"               % V.Shapeless
   }
