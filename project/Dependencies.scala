@@ -31,19 +31,4 @@ object Dependencies {
     val spireLaws       =   "org.spire-math"        %% "spire-scalacheck-binding"    % V.Spire         % "test"
     val discipline      =   "org.typelevel"         %% "discipline"                  % V.Discipline    % "test"
   }
-
-  import sbt.Keys._
-
-  val macroParadise: Seq[Setting[_]] = Seq(
-    libraryDependencies ++= {
-      CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((2, scalaMajor)) if scalaMajor >= 11 =>
-          Seq()
-        case Some((2, 10)) =>
-          Seq(
-            compilerPlugin("org.scalamacros" % "paradise" % "2.0.0" cross CrossVersion.full),
-            "org.scalamacros" %% "quasiquotes" % "2.0.0")
-      }
-    }
-  )
 }

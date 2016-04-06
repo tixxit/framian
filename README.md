@@ -13,7 +13,7 @@
 
 ### Set Up
 
-Framian is available for Scala 2.10.4 or 2.11.x.
+Framian is available for Scala 2.11.x.
 
 If you are using SBT, simply add the following to your `build.sbt`:
 
