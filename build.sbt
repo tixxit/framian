@@ -1,4 +1,4 @@
-organization in ThisBuild := "com.pellucid"
+organization in ThisBuild := "net.tixxit"
 
 licenses in ThisBuild += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
 
@@ -36,7 +36,7 @@ lazy val framian = project.
     // map framian-macros project classes and sources into framian
     mappings in (Compile, packageBin) <++= mappings in (framianMacros, Compile, packageBin),
     mappings in (Compile, packageSrc) <++= mappings in (framianMacros, Compile, packageSrc),
-    Publish.pomDependencyExclusions := Seq("com.pellucid" -> s"framian-macros_${scalaBinaryVersion.value}")
+    Publish.pomDependencyExclusions := Seq("net.tixxit" -> s"framian-macros_${scalaBinaryVersion.value}")
   )
 
 lazy val framianBenchmarks = project.
