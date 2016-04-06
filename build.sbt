@@ -1,18 +1,17 @@
-
 organization in ThisBuild := "com.pellucid"
 
 licenses in ThisBuild += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
 
+scalaVersion in ThisBuild := "2.11.8"
 
-scalaVersion in ThisBuild := "2.11.2"
-
-crossScalaVersions in ThisBuild := Seq("2.10.4", "2.11.2")
-
-scalacOptions in ThisBuild ++= Seq("-deprecation", "-feature", "-unchecked", "-language:higherKinds", "-optimize")
-
+scalacOptions in ThisBuild ++= Seq(
+  "-deprecation",
+  "-feature",
+  "-unchecked",
+  "-language:higherKinds",
+  "-optimize")
 
 maxErrors in ThisBuild := 5
-
 
 resolvers in ThisBuild ++= Seq(
   Resolver.sonatypeRepo("releases"),

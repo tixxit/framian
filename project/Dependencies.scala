@@ -21,8 +21,7 @@ object Dependencies {
     val playJson_23       = "com.typesafe.play"        %% "play-json"               % V.Play_23 % "provided"
 
     val spire             = "org.spire-math"           %% "spire"                   % V.Spire
-    val shapeless_10      = "com.chuusai"               % "shapeless_2.10.4"        % V.Shapeless
-    val shapeless_11      = "com.chuusai"               % "shapeless_2.11"          % V.Shapeless
+    val shapeless         = "com.chuusai"              %% "shapeless"               % V.Shapeless
   }
 
   // Test
