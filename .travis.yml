@@ -5,8 +5,7 @@ jdk:
   - oraclejdk8
   - oraclejdk7
   - openjdk7
-install:
-  - ./.travis-cache.sh
+sudo: false
 script:
   - sbt ++$TRAVIS_SCALA_VERSION -no-share --warn update compile test:compile
   - sbt ++$TRAVIS_SCALA_VERSION -no-share test
