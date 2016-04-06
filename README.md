@@ -13,13 +13,13 @@
 
 ### Set Up
 
-Framian is available for Scala 2.10.4 or 2.11.x.
+Framian is available for Scala 2.11.x.
 
 If you are using SBT, simply add the following to your `build.sbt`:
 
     resolvers += "Pellucid Bintray" at "http://dl.bintray.com/pellucid/maven"
     
-    libraryDependencies += "com.pellucid" %% "framian" % "0.3.3"
+    libraryDependencies += "net.tixxit" %% "framian" % "0.4.0-SNAPSHOT"
     
 ### [Scaladoc](https://pellucidanalytics.github.io/framian/api/current/index.html#framian.package)
 

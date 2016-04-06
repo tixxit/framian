@@ -7,20 +7,13 @@ libraryDependencies ++= {
   import Dependencies._
   Seq(
     Compile.spire,
+    Compile.shapeless,
     Test.discipline,
     Test.specs2,
     Test.scalaCheck,
     Test.spireLaws
   )
 }
-
-libraryDependencies += (
-  CrossVersion.scalaApiVersion(scalaVersion.value) match {
-    case Some((2, x)) if x >= 11 => Dependencies.Compile.shapeless_11
-    case _ => Dependencies.Compile.shapeless_10
-  }
-)
-
 
 initialCommands := """
 | import framian._

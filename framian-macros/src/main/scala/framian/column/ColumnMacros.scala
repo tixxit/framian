@@ -3,15 +3,19 @@ package column
 
 import scala.language.experimental.macros
 
-import spire.macros.{ SyntaxUtil, InlineUtil }
+// Whitebox is required by Spire, but I don't think Spire needs it either.
+import scala.reflect.macros.whitebox.Context
 
-import framian.macroutil.compat.{ Context, freshTermName }
+import spire.macros.{ SyntaxUtil, InlineUtil }
 
 class ColumnMacros[C <: Context](val c: C) {
   import c.universe._
 
   val util = new SyntaxUtil[c.type](c)
   val inliner = new InlineUtil[c.type](c)
+
+  def freshTermName(c: Context, prefix: String): c.universe.TermName =
+    c.universe.TermName(c.freshName(prefix))
 
   private def sanitize[A](e: c.Expr[A]): (c.Tree, List[c.Tree]) =
     if (util.isClean(e)) {

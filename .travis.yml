@@ -1,15 +1,11 @@
 language: scala
 scala:
-- 2.11.2
-- 2.10.4
+  - 2.11.8
 jdk:
-- oraclejdk7
-- openjdk7
-install:
-- ./.travis-cache.sh
+  - oraclejdk8
+  - oraclejdk7
+  - openjdk7
+sudo: false
 script:
-- sbt ++$TRAVIS_SCALA_VERSION -no-share --warn update compile test:compile
-- sbt ++$TRAVIS_SCALA_VERSION -no-share test
-notifications:
-  flowdock:
-    secure: J4wkM5yk5Llrliv2T+/zr6WJkny24nU/oWASHewKBTx9IfeF1EJOSsGAAFTbKCf+DVIVysUwu7fTNnH7+JgPm0OPXmAwSlCxJcMVsutZzdY6CnWpovrVg0FnNV6/Fovz7Npf9SgVh7k1LijHGM7nMcGpFg9pIf5nvtrwytk8K80=
+  - sbt ++$TRAVIS_SCALA_VERSION -no-share --warn update compile test:compile
+  - sbt ++$TRAVIS_SCALA_VERSION -no-share test
