@@ -10,7 +10,7 @@
 ---
 
 [![Build status](https://img.shields.io/travis/tixxit/framian/master.svg)](https://travis-ci.org/tixxit/framian)
-[![Maven Central](https://img.shields.io/maven-central/v/net.tixxit/framian-core_2.11.svg)](https://maven-badges.herokuapp.com/maven-central/net.tixxit/framian-core_2.11)
+[![Maven Central](https://img.shields.io/maven-central/v/net.tixxit/framian_2.11.svg)](https://maven-badges.herokuapp.com/maven-central/net.tixxit/framian_2.11)
 [![Coverage status](https://img.shields.io/codecov/c/github/tixxit/framian/master.svg)](https://codecov.io/github/tixxit/framian)
 
 ### Set Up
