@@ -18,16 +18,16 @@ resolvers in ThisBuild ++= Seq(
   Resolver.typesafeRepo("releases")
 )
 
+addCommandAlias("publishDocs", ";framian/packageDoc;framian/ghpagesPushSite")
+
 lazy val root = project.
   in(file(".")).
   aggregate(framianMacros, framian, framianBenchmarks).
-  settings(
-    publish := (),
-    publishLocal := ()
-  )
+  settings(Publish.skip: _*)
 
 lazy val framianMacros = project.
-  in(file("framian-macros"))
+  in(file("framian-macros")).
+  settings(Publish.skip: _*)
 
 lazy val framian = project.
   in(file("framian")).
@@ -42,4 +42,5 @@ lazy val framian = project.
 lazy val framianBenchmarks = project.
   in(file("framian-benchmarks")).
   enablePlugins(BenchmarkPlugin).
-  dependsOn(framian)
+  dependsOn(framian).
+  settings(Publish.skip: _*)

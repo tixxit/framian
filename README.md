@@ -9,7 +9,9 @@
 
 ---
 
-[![Build Status](https://travis-ci.org/pellucidanalytics/framian.svg?branch=master)](https://travis-ci.org/pellucidanalytics/framian)
+[![Build status](https://img.shields.io/travis/tixxit/framian/master.svg)](https://travis-ci.org/tixxit/framian)
+[![Maven Central](https://img.shields.io/maven-central/v/net.tixxit/framian-core_2.11.svg)](https://maven-badges.herokuapp.com/maven-central/net.tixxit/framian-core_2.11)
+[![Coverage status](https://img.shields.io/codecov/c/github/tixxit/framian/master.svg)](https://codecov.io/github/tixxit/framian)
 
 ### Set Up
 
@@ -17,11 +19,9 @@ Framian is available for Scala 2.11.x.
 
 If you are using SBT, simply add the following to your `build.sbt`:
 
-    resolvers += "Pellucid Bintray" at "http://dl.bintray.com/pellucid/maven"
-    
-    libraryDependencies += "net.tixxit" %% "framian" % "0.4.0-SNAPSHOT"
-    
-### [Scaladoc](https://pellucidanalytics.github.io/framian/api/current/index.html#framian.package)
+    libraryDependencies += "net.tixxit" %% "framian" % "0.4.0"
+
+### [Scaladoc](http://tixxit.github.io/framian/latest/api/)
 
 ### License
 

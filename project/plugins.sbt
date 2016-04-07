@@ -1,13 +1,9 @@
-
 resolvers += Resolver.url("tixxit/sbt-plugins", url("http://dl.bintray.com/tixxit/sbt-plugins"))(Resolver.ivyStylePatterns)
+resolvers += "jgit-repo" at "http://download.eclipse.org/jgit/maven"
 
-// https://issues.scala-lang.org/browse/SI-8772
-// trick from https://github.com/sbt/sbt/issues/1439#issuecomment-51860493
-def customAddSbtPlugin(m: ModuleID) = Defaults.sbtPluginExtra(m, "0.13", "2.10") excludeAll ExclusionRule("org.scala-lang")
-
-libraryDependencies ++= Seq(
-  customAddSbtPlugin("de.johoop" % "jacoco4sbt" % "2.1.6"),
-  customAddSbtPlugin("me.lessis" % "bintray-sbt" % "0.1.2"),
-  customAddSbtPlugin("net.tixxit" % "sbt-benchmark" % "0.1.1")
-)
-
+addSbtPlugin("com.github.gseitz"  % "sbt-release"   % "1.0.0")
+addSbtPlugin("org.xerial.sbt"     % "sbt-sonatype"  % "0.5.0")
+addSbtPlugin("com.typesafe.sbt"   % "sbt-site"      % "1.0.0")
+addSbtPlugin("com.typesafe.sbt"   % "sbt-ghpages"   % "0.5.4")
+addSbtPlugin("org.scoverage"      % "sbt-scoverage" % "1.1.0")
+addSbtPlugin("net.tixxit"         % "sbt-benchmark" % "0.1.1")
