@@ -1,8 +1,8 @@
 package framian
 
 import org.scalacheck._
-import org.specs2.ScalaCheck
-import org.specs2.mutable._
+
+import org.scalatest.prop.{ Checkers, PropertyChecks }
 
 import scala.collection.mutable
 import scala.reflect.ClassTag
@@ -15,7 +15,11 @@ import spire.std.iterable._
 import spire.std.string._
 import spire.std.tuples._
 
-class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
+class SeriesSpec extends FramianSpec
+  with PropertyChecks
+  with Checkers
+  with SeriesClassifiers {
+
   import Arbitrary.arbitrary
   import Prop._
   import SeriesGenerators._
@@ -27,19 +31,19 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
 
   "equals" should {
     "have a sane equality" in {
-      Series("a" -> 0, "b" -> 1, "c" -> 2) must_!= Series("b" -> 1, "a" -> 0, "c" -> 2)
-      Series("a" -> 7) must_== Series(Index.fromKeys("a"), Column.dense(Array(7)))
-      Series("a" -> 7) must_== Series(Index("a" -> 0), Column.eval(_ => Value(7)))
-      Series("a" -> 7) must_== Series(Index("a" -> 42), Column.eval(_ => Value(7)))
-      Series.empty[String, String] must_== Series.empty[String, String]
+      Series("a" -> 0, "b" -> 1, "c" -> 2) should !== (Series("b" -> 1, "a" -> 0, "c" -> 2))
+      Series("a" -> 7) should === (Series(Index.fromKeys("a"), Column.dense(Array(7))))
+      Series("a" -> 7) should === (Series(Index("a" -> 0), Column.eval(_ => Value(7))))
+      Series("a" -> 7) should === (Series(Index("a" -> 42), Column.eval(_ => Value(7))))
+      Series.empty[String, String] should === (Series.empty[String, String])
     }
   }
 
   "hasValues" should {
     "detect values" in {
       forAll(arbitrary[Series[String, Int]]) { series =>
-        series.hasValues must_== series.values.nonEmpty
-        series.filterByCells(_.isNonValue).hasValues must_== false
+        series.hasValues should === (series.values.nonEmpty)
+        series.filterByCells(_.isNonValue).hasValues should === (false)
       }
     }
   }
@@ -47,8 +51,8 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
   "isEmpty" should {
     "detect an absence of values" in {
       forAll(arbitrary[Series[String, Int]]) { series =>
-        series.isEmpty must_!= series.values.nonEmpty
-        series.filterByCells(_.isNonValue).isEmpty must_== true
+        series.isEmpty should !== (series.values.nonEmpty)
+        series.filterByCells(_.isNonValue).isEmpty should === (true)
       }
     }
   }
@@ -57,24 +61,23 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
     "concatenate on series after the other" in {
       val s0 = Series.fromCells(1 -> Value("a"), 1 -> Value("b"), 2 -> Value("e"))
       val s1 = Series.fromCells(0 -> Value("c"), 1 -> Value("d"))
-      (s0 ++ s1) must_== Series.fromCells(
-          1 -> Value("a"), 1 -> Value("b"), 2 -> Value("e"), 0 -> Value("c"), 1 -> Value("d"))
+      (s0 ++ s1) should === (Series.fromCells(
+          1 -> Value("a"), 1 -> Value("b"), 2 -> Value("e"), 0 -> Value("c"), 1 -> Value("d")))
     }
 
-    "respect original traversal order" in{
+    "respect original traversal order" in {
       val s0 = Series.fromCells(2 -> Value("a"), 1 -> Value("b"))
       val s1 = Series.fromCells(1 -> Value("c"), 0 -> Value("d"))
-      (s0 ++ s1) must_== Series.fromCells(
-          2 -> Value("a"), 1 -> Value("b"), 1 -> Value("c"), 0 -> Value("d"))
+      (s0 ++ s1) should === (Series.fromCells(
+          2 -> Value("a"), 1 -> Value("b"), 1 -> Value("c"), 0 -> Value("d")))
     }
   }
 
   "orElse" should {
-
     "merge series with different number of rows" in {
       val s0 = Series.fromCells(1 -> Value("a"), 1 -> Value("b"), 2 -> Value("e"))
       val s1 = Series.fromCells(0 -> Value("c"), 1 -> Value("d"))
-      (s0 orElse s1) must_== Series.fromCells(0 -> Value("c"), 1 -> Value("a"), 1 -> Value("b"), 2 -> Value("e"))
+      (s0 orElse s1) should === (Series.fromCells(0 -> Value("c"), 1 -> Value("a"), 1 -> Value("b"), 2 -> Value("e")))
     }
 
     "always let Value take precedence over all" in {
@@ -83,9 +86,9 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
       val seriesC = Series.fromCells("a" -> NA, "b" -> NM, "c" -> Value("c"))
 
       val mergedSeries = seriesA orElse seriesB orElse seriesC
-      mergedSeries("a") must_== Value("a")
-      mergedSeries("b") must_== Value("b")
-      mergedSeries("c") must_== Value("c")
+      mergedSeries("a") should === (Value("a"))
+      mergedSeries("b") should === (Value("b"))
+      mergedSeries("c") should === (Value("c"))
     }
 
     "merge series from left to right and maintain all keys" in {
@@ -95,27 +98,26 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
       val mergedSeriesOther = seriesOther orElse seriesOne
 
       // Ensure all keys are available, grouping by (one |+| other)
-      mergedSeriesOne("a") must_== Value("a1")
-      mergedSeriesOne("b") must_== Value("b1")
-      mergedSeriesOne("c") must_== Value("c2")
-      mergedSeriesOne("x") must_== Value("x2")
-      mergedSeriesOne("y") must_== NA
+      mergedSeriesOne("a") should === (Value("a1"))
+      mergedSeriesOne("b") should === (Value("b1"))
+      mergedSeriesOne("c") should === (Value("c2"))
+      mergedSeriesOne("x") should === (Value("x2"))
+      mergedSeriesOne("y") should === (NA)
 
       // Ensure all keys are available, grouping by (other |+| one)
-      mergedSeriesOther("a") must_== Value("a1")
-      mergedSeriesOther("b") must_== Value("b2")
-      mergedSeriesOther("c") must_== Value("c2")
-      mergedSeriesOther("x") must_== Value("x2")
-      mergedSeriesOther("y") must_== NA
+      mergedSeriesOther("a") should === (Value("a1"))
+      mergedSeriesOther("b") should === (Value("b2"))
+      mergedSeriesOther("c") should === (Value("c2"))
+      mergedSeriesOther("x") should === (Value("x2"))
+      mergedSeriesOther("y") should === (NA)
     }
   }
 
   "merge" should {
-
     "merge series with different number of rows" in {
       val s0 = Series.fromCells(1 -> Value("a"), 1 -> Value("b"), 2 -> Value("e"))
       val s1 = Series.fromCells(0 -> Value("c"), 1 -> Value("d"))
-      (s0 merge s1) must_== Series.fromCells(0 -> Value("c"), 1 -> Value("ad"), 1 -> Value("b"), 2 -> Value("e"))
+      (s0 merge s1) should === (Series.fromCells(0 -> Value("c"), 1 -> Value("ad"), 1 -> Value("b"), 2 -> Value("e")))
     }
 
     "use Semigroup.op to cogroup values together in merge" in {
@@ -124,19 +126,17 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
 
       forAll(SeriesGenerators.genSeries(arbitrary[Int], arbitrary[Int], (1, 0, 0))) { series =>
         val mergedSeries1 = series.merge(series)
-        series.size must_== mergedSeries1.size
+        series.size should === (mergedSeries1.size)
         series.keys.foreach { key =>
-          mergedSeries1(key).get must_== series(key).get * 2
+          mergedSeries1(key).get should === (series(key).get * 2)
         }
 
         // Merge once more and ensure it becomes triple the original value
         val mergedSeries2 = mergedSeries1 merge series
-        series.size must_== mergedSeries2.size
+        series.size should === (mergedSeries2.size)
         series.keys.foreach { key =>
-          mergedSeries2(key).get must_== series(key).get * 3
+          mergedSeries2(key).get should === (series(key).get * 3)
         }
-
-        ok
       }
     }
 
@@ -146,9 +146,9 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
       val seriesC = Series.fromCells("a" -> NA, "b" -> NM, "c" -> Value("c"))
 
       val mergedSeries = seriesA.merge(seriesB).merge(seriesC)
-      mergedSeries("a") must_== NM
-      mergedSeries("b") must_== NM
-      mergedSeries("c") must_== NM
+      mergedSeries("a") should === (NM)
+      mergedSeries("b") should === (NM)
+      mergedSeries("c") should === (NM)
     }
 
     "always let Value take precedence over NA" in {
@@ -158,15 +158,15 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
 
       // Ensure the Value cells simply clobber the NA cells
       val mergedSeries = seriesA.merge(seriesB).merge(seriesC)
-      mergedSeries("a") must_== Value("a")
-      mergedSeries("b") must_== Value("b")
-      mergedSeries("c") must_== Value("c")
+      mergedSeries("a") should === (Value("a"))
+      mergedSeries("b") should === (Value("b"))
+      mergedSeries("c") should === (Value("c"))
 
       // Ensure further merges of a previously sparse merge operate normally
       val doubleMergedSeries = mergedSeries.merge(seriesC).merge(seriesB).merge(seriesA)
-      doubleMergedSeries("a") must_== Value("aa")
-      doubleMergedSeries("b") must_== Value("bb")
-      doubleMergedSeries("c") must_== Value("cc")
+      doubleMergedSeries("a") should === (Value("aa"))
+      doubleMergedSeries("b") should === (Value("bb"))
+      doubleMergedSeries("c") should === (Value("cc"))
     }
 
     "merge series from left to right and maintain all keys" in {
@@ -176,18 +176,18 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
       val mergedSeriesOther = seriesOther.merge(seriesOne)
 
       // Ensure all keys are available, grouping by (one |+| other)
-      mergedSeriesOne("a") must_== Value("a1")
-      mergedSeriesOne("b") must_== Value("b1b2")
-      mergedSeriesOne("c") must_== NM
-      mergedSeriesOne("x") must_== Value("x2")
-      mergedSeriesOne("y") must_== NA
+      mergedSeriesOne("a") should === (Value("a1"))
+      mergedSeriesOne("b") should === (Value("b1b2"))
+      mergedSeriesOne("c") should === (NM)
+      mergedSeriesOne("x") should === (Value("x2"))
+      mergedSeriesOne("y") should === (NA)
 
       // Ensure all keys are available, grouping by (other |+| one)
-      mergedSeriesOther("a") must_== Value("a1")
-      mergedSeriesOther("b") must_== Value("b2b1")
-      mergedSeriesOther("c") must_== NM
-      mergedSeriesOther("x") must_== Value("x2")
-      mergedSeriesOther("y") must_== NA
+      mergedSeriesOther("a") should === (Value("a1"))
+      mergedSeriesOther("b") should === (Value("b2b1"))
+      mergedSeriesOther("c") should === (NM)
+      mergedSeriesOther("x") should === (Value("x2"))
+      mergedSeriesOther("y") should === (NA)
     }
   }
 
@@ -195,7 +195,7 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
     "map values with original order" in {
       val original = Series("a" -> 1, "b" -> 2, "a" -> 3)
       val expected = Series("a" -> 5, "b" -> 6, "a" -> 7)
-      original.mapValues(_ + 4) must_== expected
+      original.mapValues(_ + 4) should === (expected)
     }
   }
 
@@ -207,7 +207,7 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
         case NA => Value(1)
         case NM => Value(2)
         case Value(_) => Value(3)
-      } must_== expected
+      } should === (expected)
     }
 
     "transform Values" in {
@@ -218,13 +218,13 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
         case Value(2) => NM
         case Value(n) => Value(n + 2)
         case NA | NM => NA
-      } must_== expected
+      } should === (expected)
     }
   }
 
   "cellMapWithKeys" should {
     "map values with their keys" in {
-      forAll(arbitrary[Series[String, Int]]) { series =>
+      check { (series: Series[String, Int]) =>
         classifyEmpty(series) {
           classifySparse(series) {
             classifyMeaningful(series) {
@@ -234,7 +234,7 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
                 case NM => NM
               }
 
-              series.cellMapWithKeys((k, v) => plus5(v)) must_== series.cellMap(plus5)
+              Prop(series.cellMapWithKeys((k, v) => plus5(v)) == series.cellMap(plus5))
             }
           }
         }
@@ -243,16 +243,15 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
   }
 
   "zipMap" should {
-
     "zipMap empty Series" in {
       val empty = Series[String, String]()
-      empty.zipMap(empty)(_ + _) must_== empty
+      empty.zipMap(empty)(_ + _) should === (empty)
     }
 
     "zipMap multiple-values-same-key on both sides" in {
       val a = Series("a" -> 1, "a" -> 2)
       val b = Series("a" -> 3, "a" -> 5)
-      a.zipMap(b)(_ + _) must_== Series("a" -> 4, "a" -> 6, "a" -> 5, "a" -> 7)
+      a.zipMap(b)(_ + _) should === (Series("a" -> 4, "a" -> 6, "a" -> 5, "a" -> 7))
     }
 
     "zipMap like an inner join" in {
@@ -260,14 +259,14 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
       val b = Series("a" -> 2, "b" -> 4, "c" -> 3)
 
       val c = a.zipMap(b) { (x, y) => y * x}
-      c must_== Series("a" -> 2D, "b" -> 12D, "b" -> 16D)
+      c should === (Series("a" -> 2D, "b" -> 12D, "b" -> 16D))
     }
 
     "let NA cells clobber NM and Value cells" in {
       val one = Series.fromCells(   "a" -> Value(1),  "b" -> NA,        "c" -> Value(3),              "d" -> NA,        "d" -> Value(5),  "d" -> NA,        "d" -> Value(7))
       val other = Series.fromCells( "a" -> NA,        "b" -> Value(2),  "c" -> Value(3),  "c" -> NA,  "d" -> Value(5),  "d" -> NM,        "d" -> Value(6),  "d" -> Value(7))
 
-      one.zipMap(other)(_ * _) must_== Series.fromCells(
+      one.zipMap(other)(_ * _) should === (Series.fromCells(
         "a" -> NA,
         "b" -> NA,
         "c" -> Value(9), "c" -> NA,
@@ -275,14 +274,14 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
         "d" -> Value(25), "d" -> NM, "d" -> Value(30), "d" -> Value(35),
         "d" -> NA, "d" -> NA, "d" -> NA, "d" -> NA,
         "d" -> Value(35), "d" -> NM, "d" -> Value(42), "d" -> Value(49)
-      )
+      ))
     }
 
     "let NM cells clobber NA and Value cells" in {
       val one = Series.fromCells(   "a" -> Value(1),  "b" -> NM,        "c" -> Value(3),              "d" -> NM,        "d" -> Value(5),  "d" -> NA,        "d" -> Value(7))
       val other = Series.fromCells( "a" -> NM,        "b" -> Value(2),  "c" -> Value(3),  "c" -> NM,  "d" -> Value(5),  "d" -> NA,        "d" -> Value(6),  "d" -> NM)
 
-      one.zipMap(other)(_ * _) must_== Series.fromCells(
+      one.zipMap(other)(_ * _) should === (Series.fromCells(
         "a" -> NM,
         "b" -> NM,
         "c" -> Value(9), "c" -> NM,
@@ -290,18 +289,19 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
         "d" -> Value(25), "d" -> NA, "d" -> Value(30), "d" -> NM,
         "d" -> NA, "d" -> NA, "d" -> NA, "d" -> NA,
         "d" -> Value(35), "d" -> NA, "d" -> Value(42), "d" -> NM
-      )
+      ))
     }
   }
 
   "filterByValues" should {
     "filter a series by its values" in {
-      forAll(arbitrary[Series[String, Int]]) { series =>
+      check { (series: Series[String, Int]) =>
         classifyEmpty(series) {
           classifySparse(series) {
             classifyMeaningful(series) {
-              series.filterByValues(v => true).values must_== series.values
-              series.filterByValues(v => false) must_== Series.empty[String, Int]
+              Prop.all(
+                Prop(series.filterByValues(v => true).values == series.values),
+                Prop(series.filterByValues(v => false) == Series.empty[String, Int]))
             }
           }
         }
@@ -311,12 +311,13 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
 
   "filterByKeys" should {
     "filter a series by its keys" in {
-      forAll(arbitrary[Series[String, Int]]) { series =>
+      check { (series: Series[String, Int]) =>
         classifyEmpty(series) {
           classifySparse(series) {
             classifyMeaningful(series) {
-              series.filterByKeys(k => true).values must_== series.values
-              series.filterByKeys(k => false) must_== Series.empty[String, Int]
+              Prop.all(
+                Prop(series.filterByKeys(k => true).values == series.values),
+                Prop(series.filterByKeys(k => false) == Series.empty[String, Int]))
             }
           }
         }
@@ -326,12 +327,13 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
 
   "filterEntries" should {
     "filter a series by its key-value pair entries" in {
-      forAll(arbitrary[Series[String, Int]]) { series =>
+      check { (series: Series[String, Int]) =>
         classifyEmpty(series) {
           classifySparse(series) {
             classifyMeaningful(series) {
-              series.filterEntries((k, v) => true) must_== series
-              series.filterEntries((k, v) => false) must_== Series.empty[String, Int]
+              Prop.all(
+                Prop(series.filterEntries((k, v) => true) == series),
+                Prop(series.filterEntries((k, v) => false) == Series.empty[String, Int]))
             }
           }
         }
@@ -341,7 +343,7 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
 
   "foreachDense" should {
     "iterate over all dense key-value pairs" in {
-      forAll(arbitrary[Series[String, Int]]) { series =>
+      check { (series: Series[String, Int]) =>
         classifyEmpty(series) {
           classifySparse(series) {
             classifyMeaningful(series) {
@@ -349,7 +351,8 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
               // filterByValues dense series can be recreated from its output
               val eachDenseEntry = Seq.newBuilder[(String, Int)]
               series.foreachDense((k, v) => eachDenseEntry += ((k, v)))
-              series.filterByValues(v => true) must_== Series(eachDenseEntry.result(): _*)
+
+              Prop(series.filterByValues(v => true) == Series(eachDenseEntry.result(): _*))
             }
           }
         }
@@ -359,13 +362,14 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
 
   "foreachKeys" should {
     "iterate over all keys of a series" in {
-      forAll(arbitrary[Series[String, Int]]) { series =>
+      check { (series: Series[String, Int]) =>
         classifyEmpty(series) {
           classifySparse(series) {
             classifyMeaningful(series) {
               val keyVectorBuilder = Vector.newBuilder[String]
               series.foreachKeys(keyVectorBuilder += _)
-              series.keys must_== keyVectorBuilder.result()
+
+              Prop(series.keys == keyVectorBuilder.result())
             }
           }
         }
@@ -375,13 +379,14 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
 
   "foreachCells" should {
     "iterate over all values of a series as cells, including NMs and NAs" in {
-      forAll(arbitrary[Series[String, Int]]) { series =>
+      check { (series: Series[String, Int]) =>
         classifyEmpty(series) {
           classifySparse(series) {
             classifyMeaningful(series) {
               val cellVectorBuilder = Vector.newBuilder[Cell[Int]]
               series.foreachCells(cellVectorBuilder += _)
-              series.cells must_== cellVectorBuilder.result()
+
+              Prop(series.cells == cellVectorBuilder.result())
             }
           }
         }
@@ -391,13 +396,14 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
 
   "foreachValues" should {
     "iterate over all the values of a series" in {
-      forAll(arbitrary[Series[String, Int]]) { series =>
+      check { (series: Series[String, Int]) =>
         classifyEmpty(series) {
           classifySparse(series) {
             classifyMeaningful(series) {
               val valueVectorBuilder = Vector.newBuilder[Int]
               series.foreachValues(valueVectorBuilder += _)
-              series.values must_== valueVectorBuilder.result()
+
+              Prop(series.values == valueVectorBuilder.result())
             }
           }
         }
@@ -408,11 +414,11 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
   "sorted" should {
     "trivially sort a series" in {
       val a = Series("a" -> 0, "b" -> 1, "c" -> 3).sorted
-      a.sorted must_== a
+      a.sorted should === (a)
     }
 
     "sort an out-of-order series" in {
-      Series("c" -> 0, "a" -> 1, "b" -> 3).sorted must_== Series("a" -> 1, "b" -> 3, "c" -> 0)
+      Series("c" -> 0, "a" -> 1, "b" -> 3).sorted should === (Series("a" -> 1, "b" -> 3, "c" -> 0))
     }
   }
 
@@ -420,26 +426,26 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
     "reduce all values" in {
       val a = Series("a" -> 1D, "b" -> 2D, "c" -> 4D, "d" -> 5D)
       val b = Series("c" -> 1D, "a" -> 2D, "b" -> 4D, "a" -> 5D)
-      a.reduce(reduce.Mean) must_== Value(3D)
-      b.reduce(reduce.Mean) must_== Value(3D)
+      a.reduce(reduce.Mean) should === (Value(3D))
+      b.reduce(reduce.Mean) should === (Value(3D))
     }
 
     "reduce in order" in {
       val a = Series("c" -> 2, "a" -> 1, "b" -> 3)
-      a.mapValues(_ :: Nil).reduce[List[Int]](reduce.MonoidReducer) must_== Value(List(2, 1, 3))
+      a.mapValues(_ :: Nil).reduce[List[Int]](reduce.MonoidReducer) should === (Value(List(2, 1, 3)))
     }
   }
 
   "reduceByKey" should {
     "trivially reduce groups by key" in {
       val a = Series("a" -> 1D, "a" -> 2D, "a" -> 3D)
-      a.reduceByKey(reduce.Count) must_== Series("a" -> 3)
+      a.reduceByKey(reduce.Count) should === (Series("a" -> 3))
     }
 
     "reduce groups by key" in {
       val a = Series("c" -> 1D, "a" -> 2D, "b" -> 4D, "a" -> 5D, "b" -> 2D, "b" -> 1D)
       val expected = Series("a" -> (2D + 5D) / 2, "b" -> (1D + 2D + 4D) / 3, "c" -> 1D)
-      a.reduceByKey(reduce.Mean) must_== expected
+      a.reduceByKey(reduce.Mean) should === (expected)
     }
 
     "reduce groups by key in order" in {
@@ -449,7 +455,7 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
         "b" -> List(3),
         "c" -> List(1, 6, 5)
       )
-      a.mapValues(_ :: Nil).reduceByKey(reduce.MonoidReducer) must_== expected
+      a.mapValues(_ :: Nil).reduceByKey(reduce.MonoidReducer) should === (expected)
     }
   }
 
@@ -461,20 +467,20 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
   "rollForward" should {
     "roll over NAs" in {
       val s = series(1 -> Value("a"), 2 -> NA, 3 -> Value("b"), 4 -> NA, 5 -> NA)
-      s.rollForward must_== series(1 -> Value("a"), 2 -> Value("a"), 3 -> Value("b"), 4 -> Value("b"), 5 -> Value("b"))
+      s.rollForward should === (series(1 -> Value("a"), 2 -> Value("a"), 3 -> Value("b"), 4 -> Value("b"), 5 -> Value("b")))
     }
 
     "skip initial NAs" in {
       val s = series(1 -> NA, 2 -> NA, 3 -> Value("b"), 4 -> NA, 5 -> NA)
-      s.rollForward must_== series(1 -> NA, 2 -> NA, 3 -> Value("b"), 4 -> Value("b"), 5 -> Value("b"))
+      s.rollForward should === (series(1 -> NA, 2 -> NA, 3 -> Value("b"), 4 -> Value("b"), 5 -> Value("b")))
     }
 
     "roll NMs forward" in {
       val s0 = series(1 -> NA, 2 -> NM, 3 -> NA)
       val s1 = series(1 -> Value("a"), 2 -> NM, 3 -> NA, 4 -> Value("b"))
 
-      s0.rollForward must_== series(1 -> NA, 2 -> NM, 3 -> NM)
-      s1.rollForward must_== series(1 -> Value("a"), 2 -> NM, 3 -> NM, 4 -> Value("b"))
+      s0.rollForward should === (series(1 -> NA, 2 -> NM, 3 -> NM))
+      s1.rollForward should === (series(1 -> Value("a"), 2 -> NM, 3 -> NM, 4 -> Value("b")))
     }
   }
 
@@ -483,27 +489,27 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
       val s0 = series(1 -> Value("a"), 2 -> NA, 3 -> NA, 4 -> NA)
       val s1 = series(0 -> NA, 1 -> Value("a"), 2 -> NA, 3 -> NA, 4 -> NM, 5 -> Value("b"))
 
-      s0.rollForwardUpTo(1) must_== series(1 -> Value("a"), 2 -> Value("a"), 3 -> NA, 4 -> NA)
-      s0.rollForwardUpTo(2) must_== series(1 -> Value("a"), 2 -> Value("a"), 3 -> Value("a"), 4 -> NA)
-      s1.rollForwardUpTo(1) must_== series(0 -> NA, 1 -> Value("a"), 2 -> Value("a"), 3 -> NA, 4 -> NM, 5 -> Value("b"))
+      s0.rollForwardUpTo(1) should === (series(1 -> Value("a"), 2 -> Value("a"), 3 -> NA, 4 -> NA))
+      s0.rollForwardUpTo(2) should === (series(1 -> Value("a"), 2 -> Value("a"), 3 -> Value("a"), 4 -> NA))
+      s1.rollForwardUpTo(1) should === (series(0 -> NA, 1 -> Value("a"), 2 -> Value("a"), 3 -> NA, 4 -> NM, 5 -> Value("b")))
     }
 
     "roll NMs" in {
       val s0 = series(1 -> NM, 2 -> NA, 3 -> NA, 4 -> NA)
-      s0.rollForwardUpTo(1) must_== series(1 -> NM, 2 -> NM, 3 -> NA, 4 -> NA)
-      s0.rollForwardUpTo(2) must_== series(1 -> NM, 2 -> NM, 3 -> NM, 4 -> NA)
+      s0.rollForwardUpTo(1) should === (series(1 -> NM, 2 -> NM, 3 -> NA, 4 -> NA))
+      s0.rollForwardUpTo(2) should === (series(1 -> NM, 2 -> NM, 3 -> NM, 4 -> NA))
     }
   }
 
   "find(First|Last)Value" should {
     "get first/last value in series" in {
       val s0 = Series(1 -> "x", 2 -> "y")
-      s0.findFirstValue must_== Some(1 -> "x")
-      s0.findLastValue must_== Some(2 -> "y")
+      s0.findFirstValue should === (Some(1 -> "x"))
+      s0.findLastValue should === (Some(2 -> "y"))
 
       val s1 = Series.fromCells(1 -> NA, 2 -> NM, 3 -> Value("a"), 4 -> NA, 5 -> Value("b"), 6 -> NA)
-      s1.findFirstValue must_== Some(3 -> "a")
-      s1.findLastValue must_== Some(5 -> "b")
+      s1.findFirstValue should === (Some(3 -> "a"))
+      s1.findLastValue should === (Some(5 -> "b"))
     }
   }
 
@@ -511,34 +517,34 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
     "always return None for a series with no keys" in {
       val s = Series[Double, Double]()
       forAll (arbitrary[(Double, Double)]) { case (source, tolerance) =>
-        s.closestKeyTo(source, tolerance) must_== None
+        s.closestKeyTo(source, tolerance) should === (None)
       }
     }
 
     "return the value that is closest to the given key" in {
       val s = Series.fromCells[Double, Double](1d -> NM, 2d -> NA, 3d -> NA, 4d -> NM, 5d -> NM)
-      s.closestKeyTo(6, 1) must_== Some(5d)
-      s.closestKeyTo(6, 0.9) must_== None
-      s.closestKeyTo(4.5, 0.5) must_== Some(4d)
-      s.closestKeyTo(3.5, 0.4) must_== None
+      s.closestKeyTo(6, 1) should === (Some(5d))
+      s.closestKeyTo(6, 0.9) should === (None)
+      s.closestKeyTo(4.5, 0.5) should === (Some(4d))
+      s.closestKeyTo(3.5, 0.4) should === (None)
     }
 
     "always return a value within the tolerance, or None" in {
-      forAll (arbitrary[(Series[Rational, Rational], Rational, Double)]) { case (series, source, toleranceNegative) =>
+      check { (series: Series[Rational, Rational], source: Rational, toleranceNegative: Double) =>
         val tolerance = Math.abs(toleranceNegative)
         series.closestKeyTo(source, tolerance) match {
           case Some(value) => {
             // Ensure the closest key is within the tolerance
             collect("hit") {
-              (source - value).abs.toDouble must be <= tolerance
+              Prop((source - value).abs.toDouble <= tolerance)
             }
           }
           case None => {
             // There was no closest, ensure all keys are outside the tolerance
             collect("miss") {
-              series.keys.forall { key =>
-                (key - source).abs.toDouble must be > tolerance
-              }
+              Prop(series.keys.forall { key =>
+                (key - source).abs.toDouble > tolerance
+              })
             }
           }
         }
@@ -548,17 +554,15 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
 
   "count" should {
     "render the number of items in the series" in {
-      forAll(arbitrary[Series[String, Int]]) { series =>
+      check { (series: Series[String, Int]) =>
         classifyEmpty(series) {
           classifySparse(series) {
             classifyMeaningful(series) {
               if (series.filterByCells(_ == NM).cells.nonEmpty) {
-                series.count must_== NM
+                Prop(series.count == NM)
               } else {
-                series.count must_== Value(series.values.size)
+                Prop(series.count == Value(series.values.size))
               }
-
-              ok
             }
           }
         }
@@ -568,185 +572,185 @@ class SeriesSpec extends Specification with ScalaCheck with SeriesClassifiers {
 
   "first" should {
     "render the first valid value in a series" in {
-      Series[String, Int]().first must_== NA
-      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).first must_== Value(1)
-      Series.fromCells("a" -> NA, "b" -> Value(2), "c" -> Value(3)).first must_== Value(2)
-      Series.fromCells("a" -> NA, "b" -> NA, "c" -> Value(3)).first must_== Value(3)
-      Series.fromCells("a" -> NA, "b" -> NA, "c" -> NA).first must_== NA
-      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> NM).first must_== Value(1)
-      Series.fromCells("a" -> NA, "b" -> NM, "c" -> Value(3)).first must_== NM
-      Series.fromCells("a" -> NA, "b" -> NA, "c" -> NM).first must_== NM
+      Series[String, Int]().first should === (NA)
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).first should === (Value(1))
+      Series.fromCells("a" -> NA, "b" -> Value(2), "c" -> Value(3)).first should === (Value(2))
+      Series.fromCells("a" -> NA, "b" -> NA, "c" -> Value(3)).first should === (Value(3))
+      Series.fromCells("a" -> NA, "b" -> NA, "c" -> NA).first should be (NA)
+      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> NM).first should === (Value(1))
+      Series.fromCells("a" -> NA, "b" -> NM, "c" -> Value(3)).first should === (NM)
+      Series.fromCells("a" -> NA, "b" -> NA, "c" -> NM).first should be (NM)
     }
   }
 
   "firstN" should {
     "render the first N valid values in a series" in {
-      Series[String, Int]().first must_== NA
-      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).firstN(2) must_== Value(List(1, 2))
-      Series.fromCells("a" -> NA, "b" -> Value(2), "c" -> Value(3)).firstN(2) must_== Value(List(2, 3))
-      Series.fromCells("a" -> NA, "b" -> NA, "c" -> Value(3)).firstN(2) must_== NA
-      Series.fromCells("a" -> NA, "b" -> NA, "c" -> NA).firstN(2) must_== NA
-      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NM).firstN(2) must_== Value(List(1, 2))
-      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).firstN(2) must_== NM
-      Series.fromCells("a" -> NA, "b" -> NA, "c" -> NM).firstN(2) must_== NM
-      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> Value(3)).firstN(2) must_== Value(List(1, 3))
+      Series[String, Int]().first should === (NA)
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).firstN(2) should === (Value(List(1, 2)))
+      Series.fromCells("a" -> NA, "b" -> Value(2), "c" -> Value(3)).firstN(2) should === (Value(List(2, 3)))
+      Series.fromCells("a" -> NA, "b" -> NA, "c" -> Value(3)).firstN(2) should === (NA)
+      Series.fromCells("a" -> NA, "b" -> NA, "c" -> NA).firstN(2) should === (NA)
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NM).firstN(2) should === (Value(List(1, 2)))
+      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).firstN(2) should === (NM)
+      Series.fromCells("a" -> NA, "b" -> NA, "c" -> NM).firstN(2) should === (NM)
+      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> Value(3)).firstN(2) should === (Value(List(1, 3)))
     }
   }
 
   "last" should {
     "render the last valid value in a series" in {
-      Series[String, Int]().first must_== NA
-      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).last must_== Value(3)
-      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).last must_== Value(2)
-      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).last must_== Value(1)
-      Series.fromCells("a" -> NA, "b" -> NA, "c" -> NA).last must_== NA
-      Series.fromCells("a" -> NM, "b" -> NM, "c" -> Value(3)).last must_== Value(3)
-      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> NA).last must_== NM
-      Series.fromCells("a" -> NM, "b" -> NA, "c" -> NA).last must_== NM
+      Series[String, Int]().first should === (NA)
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).last should === (Value(3))
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).last should === (Value(2))
+      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).last should === (Value(1))
+      Series.fromCells("a" -> NA, "b" -> NA, "c" -> NA).last should be (NA)
+      Series.fromCells("a" -> NM, "b" -> NM, "c" -> Value(3)).last should === (Value(3))
+      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> NA).last should === (NM)
+      Series.fromCells("a" -> NM, "b" -> NA, "c" -> NA).last should be (NM)
     }
   }
 
   "lastN" should {
     "render the last N valid values in a series" in {
-      Series[String, Int]().lastN(2) must_== NA
-      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).lastN(2) must_== Value(List(2, 3))
-      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).lastN(2) must_== Value(List(1, 2))
-      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).lastN(2) must_== NA
-      Series.fromCells("a" -> NA, "b" -> NA, "c" -> NA).lastN(2) must_== NA
-      Series.fromCells("a" -> NM, "b" -> Value(2), "c" -> Value(3)).lastN(2) must_== Value(List(2, 3))
-      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).lastN(2) must_== NM
-      Series.fromCells("a" -> NM, "b" -> NA, "c" -> NA).lastN(2) must_== NM
-      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> Value(3)).lastN(2) must_== Value(List(1, 3))
+      Series[String, Int]().lastN(2) should === (NA)
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).lastN(2) should === (Value(List(2, 3)))
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).lastN(2) should === (Value(List(1, 2)))
+      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).lastN(2) should === (NA)
+      Series.fromCells("a" -> NA, "b" -> NA, "c" -> NA).lastN(2) should === (NA)
+      Series.fromCells("a" -> NM, "b" -> Value(2), "c" -> Value(3)).lastN(2) should === (Value(List(2, 3)))
+      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).lastN(2) should === (NM)
+      Series.fromCells("a" -> NM, "b" -> NA, "c" -> NA).lastN(2) should === (NM)
+      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> Value(3)).lastN(2) should === (Value(List(1, 3)))
     }
   }
 
   "max" should {
     "render the maximum value in a series" in {
-      Series[String, Int]().max must_== NA
-      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).max must_== Value(3)
-      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).max must_== Value(2)
-      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).max must_== Value(1)
-      Series.fromCells[String, Int]("a" -> NA, "b" -> NA, "c" -> NA).max must_== NA
-      Series.fromCells[String, Int]("a" -> NM, "b" -> Value(2), "c" -> Value(3)).max must_== NM
-      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).max must_== NM
-      Series.fromCells[String, Int]("a" -> NM, "b" -> NA, "c" -> NA).max must_== NM
-      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> Value(3)).max must_== Value(3)
+      Series[String, Int]().max should === (NA)
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).max should === (Value(3))
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).max should === (Value(2))
+      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).max should === (Value(1))
+      Series.fromCells[String, Int]("a" -> NA, "b" -> NA, "c" -> NA).max should === (NA)
+      Series.fromCells[String, Int]("a" -> NM, "b" -> Value(2), "c" -> Value(3)).max should === (NM)
+      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).max should === (NM)
+      Series.fromCells[String, Int]("a" -> NM, "b" -> NA, "c" -> NA).max should === (NM)
+      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> Value(3)).max should === (Value(3))
     }
   }
 
   "min" should {
     "render the minimum value in a series" in {
-      Series[String, Int]().min must_== NA
-      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).min must_== Value(1)
-      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).min must_== Value(1)
-      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).min must_== Value(1)
-      Series.fromCells[String, Int]("a" -> NA, "b" -> NA, "c" -> NA).min must_== NA
-      Series.fromCells[String, Int]("a" -> NM, "b" -> Value(2), "c" -> Value(3)).min must_== NM
-      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).min must_== NM
-      Series.fromCells[String, Int]("a" -> NM, "b" -> NA, "c" -> NA).min must_== NM
-      Series.fromCells("a" -> NA, "b" -> Value(2), "c" -> Value(3)).min must_== Value(2)
+      Series[String, Int]().min should === (NA)
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).min should === (Value(1))
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).min should === (Value(1))
+      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).min should === (Value(1))
+      Series.fromCells[String, Int]("a" -> NA, "b" -> NA, "c" -> NA).min should === (NA)
+      Series.fromCells[String, Int]("a" -> NM, "b" -> Value(2), "c" -> Value(3)).min should === (NM)
+      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).min should === (NM)
+      Series.fromCells[String, Int]("a" -> NM, "b" -> NA, "c" -> NA).min should === (NM)
+      Series.fromCells("a" -> NA, "b" -> Value(2), "c" -> Value(3)).min should === (Value(2))
     }
   }
 
   "sum" should {
     "render a sum of all values in a series" in {
-      Series[String, Int]().sum must_== Value(0)
-      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).sum must_== Value(6)
-      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).sum must_== Value(3)
-      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).sum must_== Value(1)
-      Series.fromCells[String, Int]("a" -> NA, "b" -> NA, "c" -> NA).sum must_== Value(0)
-      Series.fromCells[String, Int]("a" -> NM, "b" -> Value(2), "c" -> Value(3)).sum must_== NM
-      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).sum must_== NM
-      Series.fromCells[String, Int]("a" -> NM, "b" -> NA, "c" -> NA).sum must_== NM
-      Series.fromCells("a" -> NA, "b" -> Value(2), "c" -> Value(3)).sum must_== Value(5)
+      Series[String, Int]().sum should === (Value(0))
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).sum should === (Value(6))
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).sum should === (Value(3))
+      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).sum should === (Value(1))
+      Series.fromCells[String, Int]("a" -> NA, "b" -> NA, "c" -> NA).sum should === (Value(0))
+      Series.fromCells[String, Int]("a" -> NM, "b" -> Value(2), "c" -> Value(3)).sum should === (NM)
+      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).sum should === (NM)
+      Series.fromCells[String, Int]("a" -> NM, "b" -> NA, "c" -> NA).sum should === (NM)
+      Series.fromCells("a" -> NA, "b" -> Value(2), "c" -> Value(3)).sum should === (Value(5))
     }
   }
 
   "sumNonEmpty" should {
     "render a sum of all the values in non-empty series" in {
-      Series[String, Int]().sumNonEmpty must_== NA
-      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).sumNonEmpty must_== Value(6)
-      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).sumNonEmpty must_== Value(3)
-      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).sumNonEmpty must_== Value(1)
-      Series.fromCells[String, Int]("a" -> NA, "b" -> NA, "c" -> NA).sumNonEmpty must_== NA
-      Series.fromCells[String, Int]("a" -> NM, "b" -> Value(2), "c" -> Value(3)).sumNonEmpty must_== NM
-      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).sumNonEmpty must_== NM
-      Series.fromCells[String, Int]("a" -> NM, "b" -> NA, "c" -> NA).sumNonEmpty must_== NM
-      Series.fromCells("a" -> NA, "b" -> Value(2), "c" -> Value(3)).sumNonEmpty must_== Value(5)
+      Series[String, Int]().sumNonEmpty should === (NA)
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).sumNonEmpty should === (Value(6))
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).sumNonEmpty should === (Value(3))
+      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).sumNonEmpty should === (Value(1))
+      Series.fromCells[String, Int]("a" -> NA, "b" -> NA, "c" -> NA).sumNonEmpty should === (NA)
+      Series.fromCells[String, Int]("a" -> NM, "b" -> Value(2), "c" -> Value(3)).sumNonEmpty should === (NM)
+      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).sumNonEmpty should === (NM)
+      Series.fromCells[String, Int]("a" -> NM, "b" -> NA, "c" -> NA).sumNonEmpty should === (NM)
+      Series.fromCells("a" -> NA, "b" -> Value(2), "c" -> Value(3)).sumNonEmpty should === (Value(5))
     }
   }
 
   "product" should {
     "render a product of all values in a series" in {
-      Series[String, Int]().product must_== Value(1)
-      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).product must_== Value(6)
-      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).product must_== Value(2)
-      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).product must_== Value(1)
-      Series.fromCells[String, Int]("a" -> NA, "b" -> NA, "c" -> NA).product must_== Value(1)
-      Series.fromCells[String, Int]("a" -> NM, "b" -> Value(2), "c" -> Value(3)).product must_== NM
-      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).product must_== NM
-      Series.fromCells[String, Int]("a" -> NM, "b" -> NA, "c" -> NA).product must_== NM
-      Series.fromCells("a" -> NA, "b" -> Value(2), "c" -> Value(3)).product must_== Value(6)
+      Series[String, Int]().product should === (Value(1))
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).product should === (Value(6))
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).product should === (Value(2))
+      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).product should === (Value(1))
+      Series.fromCells[String, Int]("a" -> NA, "b" -> NA, "c" -> NA).product should === (Value(1))
+      Series.fromCells[String, Int]("a" -> NM, "b" -> Value(2), "c" -> Value(3)).product should === (NM)
+      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).product should === (NM)
+      Series.fromCells[String, Int]("a" -> NM, "b" -> NA, "c" -> NA).product should === (NM)
+      Series.fromCells("a" -> NA, "b" -> Value(2), "c" -> Value(3)).product should === (Value(6))
     }
   }
 
   "productNonEmpty" should {
     "render a product of all the values in non-empty series" in {
-      Series[String, Int]().productNonEmpty must_== NA
-      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).productNonEmpty must_== Value(6)
-      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).productNonEmpty must_== Value(2)
-      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).productNonEmpty must_== Value(1)
-      Series.fromCells[String, Int]("a" -> NA, "b" -> NA, "c" -> NA).productNonEmpty must_== NA
-      Series.fromCells[String, Int]("a" -> NM, "b" -> Value(2), "c" -> Value(3)).productNonEmpty must_== NM
-      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).productNonEmpty must_== NM
-      Series.fromCells[String, Int]("a" -> NM, "b" -> NA, "c" -> NA).productNonEmpty must_== NM
-      Series.fromCells("a" -> NA, "b" -> Value(2), "c" -> Value(3)).productNonEmpty must_== Value(6)
+      Series[String, Int]().productNonEmpty should === (NA)
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> Value(3)).productNonEmpty should === (Value(6))
+      Series.fromCells("a" -> Value(1), "b" -> Value(2), "c" -> NA).productNonEmpty should === (Value(2))
+      Series.fromCells("a" -> Value(1), "b" -> NA, "c" -> NA).productNonEmpty should === (Value(1))
+      Series.fromCells[String, Int]("a" -> NA, "b" -> NA, "c" -> NA).productNonEmpty should === (NA)
+      Series.fromCells[String, Int]("a" -> NM, "b" -> Value(2), "c" -> Value(3)).productNonEmpty should === (NM)
+      Series.fromCells("a" -> Value(1), "b" -> NM, "c" -> Value(3)).productNonEmpty should === (NM)
+      Series.fromCells[String, Int]("a" -> NM, "b" -> NA, "c" -> NA).productNonEmpty should === (NM)
+      Series.fromCells("a" -> NA, "b" -> Value(2), "c" -> Value(3)).productNonEmpty should === (Value(6))
     }
   }
 
   "histogram" should {
     "return 0 counts on empty input series" in {
-      Series[String, Int]().histogram(0, 10, 2) must_==
-        Series((0, 2) -> 0, (2, 4) -> 0, (4, 6) -> 0, (6, 8) -> 0, (8, 10) -> 0)
+      Series[String, Int]().histogram(0, 10, 2) should === (
+        Series((0, 2) -> 0, (2, 4) -> 0, (4, 6) -> 0, (6, 8) -> 0, (8, 10) -> 0))
     }
 
     "exclude values over max" in {
-      Series(1 -> 1, 2 -> 2, 3 -> 3, 4 -> 4, 5 -> 5).histogram(0, 1, 2) must_==
-        Series((0, 1) -> 1)
+      Series(1 -> 1, 2 -> 2, 3 -> 3, 4 -> 4, 5 -> 5).histogram(0, 1, 2) should === (
+        Series((0, 1) -> 1))
 
-      Series(1 -> 1, 2 -> 2, 3 -> 3, 4 -> 4, 5 -> 5, 6 -> 6).histogram(0, 5, 2) must_==
-        Series((0, 2) -> 1, (2, 4) -> 2, (4, 5) -> 2)
+      Series(1 -> 1, 2 -> 2, 3 -> 3, 4 -> 4, 5 -> 5, 6 -> 6).histogram(0, 5, 2) should === (
+        Series((0, 2) -> 1, (2, 4) -> 2, (4, 5) -> 2))
     }
 
     "max is inclusive" in {
-      Series("a" -> 1, "b" -> 2, "c" -> 3, "d" -> 4, "e" -> 5).histogram(0, 4, 2) must_==
-        Series((0, 2) -> 1, (2, 4) -> 3)
+      Series("a" -> 1, "b" -> 2, "c" -> 3, "d" -> 4, "e" -> 5).histogram(0, 4, 2) should === (
+        Series((0, 2) -> 1, (2, 4) -> 3))
     }
 
     "exclude values less than min" in {
-      Series("a" -> 1, "b" -> 2, "c" -> 3, "d" -> 4, "e" -> 5).histogram(2, 6, 2) must_==
-        Series((2, 4) -> 2, (4, 6) -> 2)
+      Series("a" -> 1, "b" -> 2, "c" -> 3, "d" -> 4, "e" -> 5).histogram(2, 6, 2) should === (
+        Series((2, 4) -> 2, (4, 6) -> 2))
 
-      Series("a" -> 1, "b" -> 2, "c" -> 3, "d" -> 4, "e" -> 5).histogram(3, 6, 2) must_==
-        Series((3, 5) -> 2, (5, 6) -> 1)
+      Series("a" -> 1, "b" -> 2, "c" -> 3, "d" -> 4, "e" -> 5).histogram(3, 6, 2) should === (
+        Series((3, 5) -> 2, (5, 6) -> 1))
     }
   }
 
   "normalizedHistogram" should {
     "return percentage of cells in bucket" in {
-      Series((1 to 25).zipWithIndex: _*).normalizedHistogram[Double](0, 24, 5) must_==
-        Series((0, 5) -> 0.2, (5, 10) -> 0.2, (10, 15) -> 0.2, (15, 20) -> 0.2, (20, 24) -> 0.2)
+      Series((1 to 25).zipWithIndex: _*).normalizedHistogram[Double](0, 24, 5) should === (
+        Series((0, 5) -> 0.2, (5, 10) -> 0.2, (10, 15) -> 0.2, (15, 20) -> 0.2, (20, 24) -> 0.2))
     }
 
     "include NAs and NMs in total size" in {
-      Series.fromCells("a" -> Value(0), "b" -> NA, "c" -> Value(1), "D" -> Value(2)).normalizedHistogram[Double](0, 4, 2) must_==
-        Series((0, 2) -> 0.5, (2, 4) -> 0.25)
+      Series.fromCells("a" -> Value(0), "b" -> NA, "c" -> Value(1), "D" -> Value(2)).normalizedHistogram[Double](0, 4, 2) should === (
+        Series((0, 2) -> 0.5, (2, 4) -> 0.25))
 
-      Series.fromCells("a" -> Value(0), "b" -> Value(3), "c" -> NM, "D" -> Value(2)).normalizedHistogram[Double](0, 4, 2) must_==
-        Series((0, 2) -> 0.25, (2, 4) -> 0.5)
+      Series.fromCells("a" -> Value(0), "b" -> Value(3), "c" -> NM, "D" -> Value(2)).normalizedHistogram[Double](0, 4, 2) should === (
+        Series((0, 2) -> 0.25, (2, 4) -> 0.5))
 
-      Series.fromCells("a" -> Value(0), "b" -> NA, "c" -> NM, "D" -> Value(2)).normalizedHistogram[Double](0, 4, 2) must_==
-        Series((0, 2) -> 0.25, (2, 4) -> 0.25)
+      Series.fromCells("a" -> Value(0), "b" -> NA, "c" -> NM, "D" -> Value(2)).normalizedHistogram[Double](0, 4, 2) should === (
+        Series((0, 2) -> 0.25, (2, 4) -> 0.25))
     }
   }
 }

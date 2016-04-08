@@ -1,7 +1,6 @@
 package framian
 
-import org.specs2.mutable._
-import org.specs2.ScalaCheck
+import org.scalatest.prop.PropertyChecks
 
 import scala.reflect.ClassTag
 import scala.collection.mutable.ArrayBuilder
@@ -11,13 +10,15 @@ import spire.std.string._
 import spire.std.int._
 import spire.syntax.monoid._
 
-class IndexSpec extends Specification with ScalaCheck {
+class IndexSpec extends FramianSpec
+  with PropertyChecks {
+
   import IndexGenerators._
 
   "Index construction" should {
     def checkIndex(idx: Index[String])(pairs: (String, Int)*) = {
-      idx.toList must_== pairs.toList
-      (pairs map (_._1) map (idx search _)) must_== (pairs map (_._2))
+      idx.toList should === (pairs.toList)
+      (pairs map (_._1) map (idx search _)) should === (pairs map (_._2))
     }
 
     "empty" in {
@@ -48,21 +49,24 @@ class IndexSpec extends Specification with ScalaCheck {
   "Index" should {
     "traverse elements in original order" in {
       val idx = Index.fromKeys("c", "a", "b")
-      idx.toList map (_._1) must_== List("c", "a", "b")
+
+      idx.toList map (_._1) should === (List("c", "a", "b"))
     }
 
     "return the index of an element in the original order" in {
       val idx = Index.fromKeys("c", "a", "b")
-      idx get "a" must_== Some(1)
-      idx get "b" must_== Some(2)
-      idx get "c" must_== Some(0)
+
+      idx get "a" should === (Some(1))
+      idx get "b" should === (Some(2))
+      idx get "c" should === (Some(0))
     }
 
     "allow access by iteration order" in {
       val idx = Index.fromKeys("c", "a", "b")
-      idx(0) must_== ("c" -> 0)
-      idx(1) must_== ("a" -> 1)
-      idx(2) must_== ("b" -> 2)
+
+      idx(0) should === ("c" -> 0)
+      idx(1) should === ("a" -> 1)
+      idx(2) should === ("b" -> 2)
     }
 
     "foreach iterates in order" in {
@@ -71,12 +75,13 @@ class IndexSpec extends Specification with ScalaCheck {
       idx foreach { (k, i) =>
         bldr += (k -> i)
       }
-      bldr.result() must_== Array("c" -> 1, "a" -> 3, "b" -> 2)
+
+      bldr.result() should === (Array("c" -> 1, "a" -> 3, "b" -> 2))
     }
 
     "sorted puts things in order" in {
       val idx = Index.fromKeys("c", "a", "b").sorted
-      idx.toList must_== List("a" -> 1, "b" -> 2, "c" -> 0)
+      idx.toList should === (List("a" -> 1, "b" -> 2, "c" -> 0))
     }
 
     "sorted is a stable sort" in {
@@ -84,28 +89,30 @@ class IndexSpec extends Specification with ScalaCheck {
       val idx1 = Index.unordered(Array("a", "a", "b", "b", "c", "c")).sorted
       val idx2 = Index.unordered(Array("c", "c", "b", "b", "a", "a")).sorted
 
-      idx0.toList must_== List("a" -> 2, "a" -> 5, "b" -> 1, "b" -> 4, "c" -> 0, "c" -> 3)
-      idx1.toList must_== List("a" -> 0, "a" -> 1, "b" -> 2, "b" -> 3, "c" -> 4, "c" -> 5)
-      idx2.toList must_== List("a" -> 4, "a" -> 5, "b" -> 2, "b" -> 3, "c" -> 0, "c" -> 1)
+      idx0.toList should === (List("a" -> 2, "a" -> 5, "b" -> 1, "b" -> 4, "c" -> 0, "c" -> 3))
+      idx1.toList should === (List("a" -> 0, "a" -> 1, "b" -> 2, "b" -> 3, "c" -> 4, "c" -> 5))
+      idx2.toList should === (List("a" -> 4, "a" -> 5, "b" -> 2, "b" -> 3, "c" -> 0, "c" -> 1))
     }
 
     "get all rows for single key as Index" in {
       val idx = Index("b" -> 0, "c" -> 2, "a" -> 0, "b" -> 1)
-      idx.getAll("b") must_== Index("b" -> 0, "b" -> 1)
+
+      idx.getAll("b") should === (Index("b" -> 0, "b" -> 1))
     }
 
     "be equal to any empty Index if it is empty" in {
-      Index[String]() must_== Index[String]()
+      Index[String]() should === (Index[String]())
     }
 
     "be equal when they have same key/row pairs" in {
       def idx = Index("a" -> 0, "b" -> 3, "c" -> 2, "c" -> 0)
-      idx must_== idx
+
+      idx should === (idx)
     }
 
-    "be equal only if key/row pairs are equal" ! check {
-      (idx0: Index[String], idx1: Index[String]) => 
-        (idx0 == idx1) must_== (idx0.to[Vector] == idx1.to[Vector])
+    "be equal only if key/row pairs are equal" in forAll {
+      (idx0: Index[String], idx1: Index[String]) =>
+        (idx0 == idx1) should === (idx0.to[Vector] == idx1.to[Vector])
     }
   }
 
@@ -124,39 +131,45 @@ class IndexSpec extends Specification with ScalaCheck {
 
     "group empty index" in {
       val idx = Index[String]()
-      Index.group(idx)(grouper).groups must_== Vector.empty[(String, Int)]
+
+      Index.group(idx)(grouper).groups shouldBe Vector.empty[(String, Int)]
     }
 
     "trivial grouping" in {
       val idx = Index.fromKeys("a", "a", "a")
       val expected = Vector(List("a" -> 0, "a" -> 1, "a" -> 2))
-      Index.group(idx)(grouper).groups must_== expected
+
+      Index.group(idx)(grouper).groups should === (expected)
     }
 
     "group in-order elements" in {
       val idx = Index.fromKeys("a", "b", "c")
       val expected = Vector(List("a" -> 0), List("b" -> 1), List("c" -> 2))
-      Index.group(idx)(grouper).groups must_== expected
+
+      Index.group(idx)(grouper).groups should === (expected)
     }
 
     "group out-of-order elements" in {
       val idx = Index.fromKeys("a", "b", "a", "b")
       val expected = Vector(List("a" -> 0, "a" -> 2), List("b" -> 1, "b" -> 3))
-      Index.group(idx)(grouper).groups must_== expected
+
+      Index.group(idx)(grouper).groups should === (expected)
     }
   }
 
   "reset indices" should {
     "do nothing when indices aren't specified" in {
       val idx0 = Index.fromKeys("a", "c", "b")
-      idx0.resetIndices must_== idx0
+
+      idx0.resetIndices should === (idx0)
 
       val idx1 = Index.fromKeys("a", "b", "c")
-      idx1.resetIndices must_== idx1
+
+      idx1.resetIndices should === (idx1)
     }
 
-    "reset indices in traversal order" ! check { (pairs: Vector[(String, Int)]) =>
-      Index(pairs: _*).resetIndices must_== Index(pairs.map(_._1).toArray)
+    "reset indices in traversal order" in forAll { (pairs: Vector[(String, Int)]) =>
+      Index(pairs: _*).resetIndices should === (Index(pairs.map(_._1).toArray))
     }
   }
 
@@ -181,28 +194,32 @@ class IndexSpec extends Specification with ScalaCheck {
     "cogroup empty indices" in {
       val idx = Index[String]()
       val expected = Vector.empty[Cogroup[String]]
-      Index.cogroup(idx, idx)(cogrouper).groups must_== expected
+
+      Index.cogroup(idx, idx)(cogrouper).groups should === (expected)
     }
 
     "cogroup with 1 group on left" in {
       val lhs = Index.fromKeys("a", "a")
       val rhs = Index[String]()
       val expected = Vector[Cogroup[String]]((List("a" -> 0, "a" -> 1), List()))
-      Index.cogroup(lhs, rhs)(cogrouper).groups must_== expected
+
+      Index.cogroup(lhs, rhs)(cogrouper).groups should === (expected)
     }
 
     "cogroup with 1 group on right" in {
       val lhs = Index[String]()
       val rhs = Index.fromKeys("a", "a")
       val expected = Vector[Cogroup[String]]((List(), List("a" -> 0, "a" -> 1)))
-      Index.cogroup(lhs, rhs)(cogrouper).groups must_== expected
+
+      Index.cogroup(lhs, rhs)(cogrouper).groups should === (expected)
     }
 
     "cogroup with 1 shared group" in {
       val lhs = Index.fromKeys("a", "a")
       val rhs = Index("a" -> 2)
       val expected = Vector[Cogroup[String]]((List("a" -> 0, "a" -> 1), List("a" -> 2)))
-      Index.cogroup(lhs, rhs)(cogrouper).groups must_== expected
+
+      Index.cogroup(lhs, rhs)(cogrouper).groups should === (expected)
     }
 
     "cogroup missing group on left" in {
@@ -210,7 +227,8 @@ class IndexSpec extends Specification with ScalaCheck {
       val rhs = Index.fromKeys("a", "b")
       val expected = Vector[Cogroup[String]]((List("a" -> 0, "a" -> 1), List("a" -> 0)),
         (List(), List("b" -> 1)))
-      Index.cogroup(lhs, rhs)(cogrouper).groups must_== expected
+
+      Index.cogroup(lhs, rhs)(cogrouper).groups should === (expected)
     }
 
     "cogroup in-order indices" in {
@@ -220,7 +238,8 @@ class IndexSpec extends Specification with ScalaCheck {
         (List("a" -> 0, "a" -> 1), List("a" -> 0)),
         (List("b" -> 2), List("b" -> 1)),
         (List(), List("c" -> 2)))
-      Index.cogroup(lhs, rhs)(cogrouper).groups must_== expected
+
+      Index.cogroup(lhs, rhs)(cogrouper).groups should === (expected)
     }
 
     "cogroup out-of-order indices" in {
@@ -230,7 +249,8 @@ class IndexSpec extends Specification with ScalaCheck {
         (List("a" -> 0, "a" -> 2), List("a" -> 1)),
         (List("b" -> 1, "b" -> 3), List("b" -> 2)),
         (List(), List("c" -> 0, "c" -> 3)))
-      Index.cogroup(lhs, rhs)(cogrouper).groups must_== expected
+
+      Index.cogroup(lhs, rhs)(cogrouper).groups should === (expected)
     }
   }
 }

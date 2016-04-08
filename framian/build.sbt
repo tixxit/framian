@@ -8,7 +8,7 @@ libraryDependencies ++= {
     Compile.spire,
     Compile.shapeless,
     Test.discipline,
-    Test.specs2,
+    Test.scalaTest,
     Test.scalaCheck,
     Test.spireLaws
   )
@@ -19,8 +19,6 @@ initialCommands := """
 | import shapeless._
 | import spire.implicits._""".stripMargin('|')
 
-
-testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "junitxml", "console")
 
 Publish.settings
 

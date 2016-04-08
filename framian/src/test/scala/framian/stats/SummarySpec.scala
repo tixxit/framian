@@ -1,8 +1,6 @@
 package framian
 package stats
 
-import org.specs2.mutable._
-
 import spire.algebra._
 import spire.std.string._
 import spire.std.double._
@@ -12,20 +10,19 @@ import shapeless._
 
 import framian.stats.ops._
 
-class SummarySpec extends Specification {
+class SummarySpec extends FramianSpec {
   val stats = List(summary.Mean, summary.Median, summary.Max, summary.Min)
   val statsIndex = Index.fromKeys(stats: _*)
 
   "summary from Frame" should {
     "be empty for empty frame" in {
-      summary(Frame.empty[Int, Int]) must_==
-        Frame.empty[Int, Int].withColIndex(statsIndex)
+      summary(Frame.empty[Int, Int]) should === (Frame.empty[Int, Int].withColIndex(statsIndex))
     }
 
     "be NA for empty col" in {
       val emptyFrame = Series.fromCells[Int, Double](0 -> NA, 1 -> NA, 2 -> NA).toFrame("x")
       val expected = Frame.fill[String, String, Double](List("x"), stats) { (_, _) => NA }
-      summary(emptyFrame) must_== expected
+      summary(emptyFrame) should === (expected)
     }
 
     "summarize dense frame" in {
@@ -40,7 +37,7 @@ class SummarySpec extends Specification {
         3 :: 3 :: 4 :: 2 :: HNil
       ).withColIndex(statsIndex)
 
-      input.summary must_== expected
+      input.summary should === (expected)
     }
 
     "summarize sparse frame" in {
@@ -60,41 +57,40 @@ class SummarySpec extends Specification {
         case (1, summary.Min) => NM
       }
 
-      input.summary must_== expected
+      input.summary should === (expected)
     }
   }
 
   "summary for Series" should {
     "NAs for empty series" in {
-      Series.empty[Int, Double].summary must_==
-        Series.fromCells(stats.map(_ -> NA): _*)
+      Series.empty[Int, Double].summary shouldBe Series.fromCells(stats.map(_ -> NA): _*)
     }
 
     "summarize dense series" in {
-      summary(Series(0 -> 1D, 1 -> 3D, 2 -> 2D)) must_==
+      summary(Series(0 -> 1D, 1 -> 3D, 2 -> 2D)) should === (
         Series(
           summary.Mean -> 2D,
           summary.Median -> 2D,
           summary.Max -> 3D,
-          summary.Min -> 1D)
+          summary.Min -> 1D))
     }
 
     "summarize series with NAs" in {
-      summary(Series.fromCells(0 -> Value(1D), 1 -> NA, 2 -> Value(3D), 3 -> NA, 4 -> Value(2D), 5 -> NA)) must_==
+      summary(Series.fromCells(0 -> Value(1D), 1 -> NA, 2 -> Value(3D), 3 -> NA, 4 -> Value(2D), 5 -> NA)) should === (
         Series(
           summary.Mean -> 2D,
           summary.Median -> 2D,
           summary.Max -> 3D,
-          summary.Min -> 1D)
+          summary.Min -> 1D))
     }
 
     "summarize series with NMs" in {
-      summary(Series.fromCells(0 -> Value(1D), 1 -> NM, 2 -> Value(3D), 3 -> NA, 4 -> Value(2D), 5 -> NA)) must_==
+      summary(Series.fromCells(0 -> Value(1D), 1 -> NM, 2 -> Value(3D), 3 -> NA, 4 -> Value(2D), 5 -> NA)) should === (
         Series.fromCells[String, Double](
           summary.Mean -> NM,
           summary.Median -> NM,
           summary.Max -> NM,
-          summary.Min -> NM)
+          summary.Min -> NM))
     }
   }
 }

@@ -1,8 +1,6 @@
 package framian
 package csv
 
-import org.specs2.mutable._
-
 import spire.algebra._
 import spire.std.string._
 import spire.std.double._
@@ -12,7 +10,7 @@ import spire.std.iterable._
 import shapeless._
 import java.io.{File, BufferedReader, FileReader}
 
-class CsvSpec extends Specification {
+class CsvSpec extends FramianSpec {
   val csvRoot = "framian/src/test/resources/csvs/"
 
   val airPassengers = csvRoot +"AirPassengers-test.csv"
@@ -53,6 +51,7 @@ class CsvSpec extends Specification {
         ).orElse(TypedColumn(Column[String](
           Value("AirPassengers")
         )))))
+
   val columnAirPassengers = Frame.fromRows(
     1 :: BigDecimal(1949)             :: 112 :: HNil,
     2 :: BigDecimal(1949.08333333333) :: 118 :: HNil,
@@ -71,28 +70,6 @@ class CsvSpec extends Specification {
     .withColIndex(Index.fromKeys(0, 1, 2, 3, 4, 5, 6, 7, 8))
 
   "CsvParser" should {
-    "parse air passengers as unlabeled CSV" in {
-       Csv.parsePath(airPassengers).unlabeled.toFrame must_== defaultAirPassengers
-     }
-
-    "parse air passengers as labeled CSV" in {
-      Csv.parsePath(airPassengers).labeled.toFrame must_== columnAirPassengers
-    }
-
-    "parse autoMPG as unlabeled TSV" in {
-      Csv.parsePath(autoMPG).unlabeled.toFrame must_== defaultMPG
-    }
-
-    "parse CSV with separator in quote" in {
-      val data = """a,"b","c,d"|"e,f,g""""
-      val csv = Csv.parseString(data, CsvFormat.Guess.withRowDelim("|"))
-      val frame = csv.unlabeled.toFrame
-      frame.getRow(0) must_== Some(Rec(0 -> "a", 1 -> "b", 2 -> "c,d"))
-      frame[String](1, 0) must_== Value("e,f,g")
-      frame[String](1, 1) must_== NA
-      frame[String](1, 2) must_== NA
-    }
-
     import CsvCell._
 
     val TestFormat = CsvFormat(
@@ -106,58 +83,81 @@ class CsvSpec extends Specification {
       allowRowDelimInQuotes = true
     )
 
+    "parse air passengers as unlabeled CSV" in {
+      Csv.parsePath(airPassengers).unlabeled.toFrame should === (defaultAirPassengers)
+    }
+
+    "parse air passengers as labeled CSV" in {
+      Csv.parsePath(airPassengers).labeled.toFrame should === (columnAirPassengers)
+    }
+
+    "parse autoMPG as unlabeled TSV" in {
+      Csv.parsePath(autoMPG).unlabeled.toFrame should === (defaultMPG)
+    }
+
+    "parse CSV with separator in quote" in {
+      val data = """a,"b","c,d"|"e,f,g""""
+      val csv = Csv.parseString(data, CsvFormat.Guess.withRowDelim("|"))
+      val frame = csv.unlabeled.toFrame
+      frame.getRow(0) should === (Some(Rec(0 -> "a", 1 -> "b", 2 -> "c,d")))
+      frame[String](1, 0) should === (Value("e,f,g"))
+      frame[String](1, 1) should === (NA)
+      frame[String](1, 2) should === (NA)
+    }
+
     "parse escaped quotes" in {
       Csv.parseString(
         "a,'''','c'''|'''''d''''', ''''",
         TestFormat
-      ).rows must_== Vector(
+      ).rows should === (Vector(
         Right(CsvRow(Vector(Data("a"), Data("'"), Data("c'")))),
-        Right(CsvRow(Vector(Data("''d''"), Data(" ''''"))))
+        Right(CsvRow(Vector(Data("''d''"), Data(" ''''")))))
       )
     }
 
     "respect CsvFormat separator" in {
-      Csv.parseString("a,b,c|d,e,f", TestFormat).rows must_==
-        Csv.parseString("a;b;c|d;e;f", TestFormat.withSeparator(";")).rows
+      Csv.parseString("a,b,c|d,e,f", TestFormat).rows should === (
+        Csv.parseString("a;b;c|d;e;f", TestFormat.withSeparator(";")).rows)
     }
 
     "respect CsvFormat quote" in {
-      Csv.parseString("'a,b','b'|d,e", TestFormat).rows must_==
-        Csv.parseString("^a,b^,^b^|d,e", TestFormat.withQuote("^")).rows
+      Csv.parseString("'a,b','b'|d,e", TestFormat).rows should === (
+        Csv.parseString("^a,b^,^b^|d,e", TestFormat.withQuote("^")).rows)
     }
 
     "respect CsvFormat quote escape" in {
-      Csv.parseString("'a''b',''''|' '", TestFormat).rows must_==
-        Csv.parseString("'a\\'b','\\''|' '", TestFormat.withQuoteEscape("\\")).rows
+      Csv.parseString("'a''b',''''|' '", TestFormat).rows should === (
+        Csv.parseString("'a\\'b','\\''|' '", TestFormat.withQuoteEscape("\\")).rows)
     }
 
     "respect CsvFormat empty" in {
-      Csv.parseString("a,N/A,b|N/A,N/A", TestFormat).rows must_==
-        Csv.parseString("a,,b|,", TestFormat.withEmpty("")).rows
+      Csv.parseString("a,N/A,b|N/A,N/A", TestFormat).rows should === (
+        Csv.parseString("a,,b|,", TestFormat.withEmpty("")).rows)
     }
 
     "respect CsvFormat invalid" in {
-      Csv.parseString("a,N/M,b|N/M,N/M", TestFormat).rows must_==
-        Csv.parseString("a,nm,b|nm,nm", TestFormat.withInvalid("nm")).rows
+      Csv.parseString("a,N/M,b|N/M,N/M", TestFormat).rows should === (
+        Csv.parseString("a,nm,b|nm,nm", TestFormat.withInvalid("nm")).rows)
     }
 
     "respect CsvFormat row delimiter" in {
-      Csv.parseString("a,b|c,d|e,f", TestFormat).rows must_==
-        Csv.parseString("a,b\nc,d\ne,f", TestFormat.withRowDelim(CsvRowDelim.Unix)).rows
+      Csv.parseString("a,b|c,d|e,f", TestFormat).rows should === (
+        Csv.parseString("a,b\nc,d\ne,f", TestFormat.withRowDelim(CsvRowDelim.Unix)).rows)
     }
 
     "parse CSV with row delimiter in quote" in {
-      Csv.parseString("a,'b|c'|'d|e',f", TestFormat).rows must_== Vector(
+      Csv.parseString("a,'b|c'|'d|e',f", TestFormat).rows should === (Vector(
         Right(CsvRow(Vector(Data("a"), Data("b|c")))),
-        Right(CsvRow(Vector(Data("d|e"), Data("f")))))
+        Right(CsvRow(Vector(Data("d|e"), Data("f"))))))
     }
 
     "parser respects whitespace" in {
       val data = " a , , 'a','b'|  b  ,c  ,   "
       val csv = Csv.parseString(data, CsvFormat.Guess.withRowDelim("|"))
-      csv.rows must_== Vector(
+
+      csv.rows should === (Vector(
         Right(CsvRow(Vector(Data(" a "), Data(" "), Data(" 'a'"), Data("b")))),
-        Right(CsvRow(Vector(Data("  b  "), Data("c  "), Data("   ")))))
+        Right(CsvRow(Vector(Data("  b  "), Data("c  "), Data("   "))))))
     }
   }
 }

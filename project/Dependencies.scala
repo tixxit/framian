@@ -8,7 +8,7 @@ object Dependencies {
     val Discipline         = "0.2.1"
 
     // Test libraries
-    val Specs2             = "2.4.2"
+    val ScalaTest          = "2.2.6"
     val ScalaCheck         = "1.11.6"
   }
 
@@ -20,7 +20,7 @@ object Dependencies {
 
   // Test
   object Test {
-    val specs2          =   "org.specs2"            %% "specs2"                      % V.Specs2        % "test"
+    val scalaTest       =   "org.scalatest"         %% "scalatest"                   % V.ScalaTest     % "test"
     val scalaCheck      =   "org.scalacheck"        %% "scalacheck"                  % V.ScalaCheck    % "test"
     val spireLaws       =   "org.spire-math"        %% "spire-scalacheck-binding"    % V.Spire         % "test"
     val discipline      =   "org.typelevel"         %% "discipline"                  % V.Discipline    % "test"
