@@ -19,7 +19,7 @@ Framian is available for Scala 2.11.x.
 
 If you are using SBT, simply add the following to your `build.sbt`:
 
-    libraryDependencies += "net.tixxit" %% "framian" % "0.4.0"
+    libraryDependencies += "net.tixxit" %% "framian" % "0.5.0"
 
 ### [Scaladoc](http://tixxit.github.io/framian/latest/api/)
 
