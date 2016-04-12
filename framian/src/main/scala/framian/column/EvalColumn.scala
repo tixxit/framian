@@ -61,7 +61,7 @@ private[framian] case class EvalColumn[A](f: Int => Cell[A]) extends BoxedColumn
 
   def shift(n: Int): Column[A] = EvalColumn { row =>
     try {
-      f(Checked.minus(row, n))
+      f(Checked.checked(row - n))
     } catch { case (_: ArithmeticOverflowException) =>
       // If we overflow, then it means that `row - n` overflowed and, hence,
       // wrapped around. Since `shift` is meant to just shift rows, and not

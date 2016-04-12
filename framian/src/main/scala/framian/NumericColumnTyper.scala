@@ -21,6 +21,8 @@
 
 package framian
 
+import java.math.MathContext
+
 import scala.math.ScalaNumericAnyConversions
 import scala.reflect.{ ClassTag, classTag }
 import scala.{ specialized => spec }
@@ -241,7 +243,7 @@ private[framian] final class BigIntTyper extends NumericColumnTyper[BigInt] {
       n => if (n.isWhole) Some(BigDecimal(n).toBigInt) else None,
       n => Some(n),
       n => if (n.isWhole) Some(n.toBigInt) else None,
-      n => if (n.isWhole) Some(n.numerator) else None,
+      n => if (n.isWhole) Some(n.numerator.toBigInt) else None,
       n => Try(BigInt(n)).toOption,
       None
     )
@@ -265,7 +267,7 @@ private[framian] final class BigDecimalTyper extends NumericColumnTyper[BigDecim
       n => Some(BigDecimal(n)),
       n => Some(BigDecimal(n)),
       n => Some(n),
-      n => Try(n.toBigDecimal).toOption,
+      n => Try(n.toBigDecimal(MathContext.DECIMAL64)).toOption,
       n => Try(BigDecimal(n)).toOption,
       None
     )
