@@ -118,7 +118,7 @@ trait FrameGenerators {
 
   def genFrameWithCol[R: Order: ClassTag, C, A: ClassTag](genFrame: Gen[Frame[R, C]], col: C, genCell: Gen[Cell[A]]): Gen[Frame[R, C]] = {
     genFrame.flatMap { frame =>
-      val seriesGen: Gen[Series[R, A]] = Gen.sequence[Vector, (R, Cell[A])](frame.rowIndex.map { case (key, _) =>
+      val seriesGen: Gen[Series[R, A]] = Gen.sequence[Vector[(R, Cell[A])], (R, Cell[A])](frame.rowIndex.map { case (key, _) =>
         genCell.map(key -> _)
       }).map(Series.fromCells(_))
 
