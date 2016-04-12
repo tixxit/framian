@@ -1,11 +1,15 @@
-package framian.column
+package framian
+package column
 
-import org.specs2.mutable.Specification
-import org.specs2.ScalaCheck
 import org.scalacheck._
 import org.scalacheck.Arbitrary.arbitrary
 
-class MaskSpec extends Specification with ScalaCheck {
+import org.scalatest.prop.{ Checkers, PropertyChecks }
+
+class MaskSpec extends FramianSpec
+  with Checkers
+  with PropertyChecks {
+
   val genMask: Gen[Mask] = for {
     rows0 <- arbitrary[List[Int]]
     rows = rows0.map(_ & 0xFFFF)
@@ -26,68 +30,68 @@ class MaskSpec extends Specification with ScalaCheck {
 
   "+" should {
     "add 0 to empty mask" in {
-      (Mask.empty + 0) must_== Mask(0)
+      (Mask.empty + 0) should === (Mask(0))
     }
 
     "set bit of value added" in check { (mask: Mask, bit: Int) =>
-      (mask + bit)(bit) must beTrue
+      (mask + bit)(bit) == true
     }
   }
 
   "-" should {
     "unset bit of value removed" in check { (mask: Mask, bit: Int) =>
-      (mask - bit)(bit) must beFalse
+      (mask - bit)(bit) == false
     }
 
     "shrink underlying array when top words zero'd out" in {
       val a = Mask(1, 100)
-      (a - 100).max must_== Some(1)
+      (a - 100).max should === (Some(1))
     }
   }
 
   "filter" should {
     "remove bits that are filtered out" in check { (mask: Mask, filter: Filter) =>
-      mask.filter(filter).toSet must_== mask.toSet.filter(filter)
+      mask.filter(filter).toSet == mask.toSet.filter(filter)
     }
   }
 
   "min" should {
     "return minimum set bit" in check { (mask: Mask) =>
-      mask.toSet.reduceOption(_ min _) must_== mask.min
+      mask.toSet.reduceOption(_ min _) == mask.min
     }
 
     "return None for empty Mask" in {
-      Mask.empty.min must beNone
+      Mask.empty.min shouldBe None
     }
   }
 
   "max" should {
     "return maximum set bit" in check { (mask: Mask) =>
-      mask.toSet.reduceOption(_ max _) must_== mask.max
+      mask.toSet.reduceOption(_ max _) == mask.max
     }
 
     "return None for empty Mask" in {
-      Mask.empty.max must beNone
+      Mask.empty.max shouldBe None
     }
   }
 
   "isEmpty" should {
     "return empty iff the mask is empty" in check { (mask: Mask) =>
-      mask.toSet.isEmpty must_== mask.isEmpty
+      mask.toSet.isEmpty == mask.isEmpty
     }
   }
 
   "foreach" should {
-    "iterate over bits in increasing order" in check { (mask: Mask) =>
+    "iterate over bits in increasing order" in forAll { (mask: Mask) =>
       val bldr = List.newBuilder[Int]
       mask.foreach(bldr += _)
-      bldr.result() must beSorted
+      bldr.result() shouldBe sorted
     }
 
     "iterate only over values in the mask" in check { (mask: Mask) =>
       val bldr = List.newBuilder[Int]
       mask.foreach(bldr += _)
-      bldr.result().forall(mask) must beTrue
+      bldr.result().forall(mask) == true
     }
 
     "iterate over all values in mask" in check { (bits0: List[Int]) =>
@@ -95,77 +99,77 @@ class MaskSpec extends Specification with ScalaCheck {
       val mask = Mask(bits1: _*)
       var bits = bits1.toSet
       mask.foreach(i => bits -= i)
-      bits must beEmpty
+      bits.isEmpty == true
     }
   }
 
   "toSet" should {
     "round-trip Mask->Set->Mask" in check { (mask: Mask) =>
-      mask must_== Mask(mask.toSet.toList: _*)
+      mask == Mask(mask.toSet.toList: _*)
     }
 
     "round-trip Set->Mask->Set" in check { (bits0: List[Int]) =>
       val bits = bits0.map(_ & 0xFFFF).toSet
-      Mask(bits.toList: _*).toSet must_== bits
+      Mask(bits.toList: _*).toSet == bits
     }
   }
 
   "|" should {
     "only contain bits from either arguments" in check { (a: Mask, b: Mask) =>
       val mask = (a | b)
-      mask.toSet.forall(i => a(i) || b(i)) must beTrue
+      mask.toSet.forall(i => a(i) || b(i)) == true
     }
 
     "contain all bits from both arguments" in check { (a: Mask, b: Mask) =>
       val mask = a | b
       val bits = a.toSet ++ b.toSet
-      bits.forall(mask) must beTrue
+      bits.forall(mask) == true
     }
   }
 
   "&" should {
     "only contain bits contained in both arguments" in check { (a: Mask, b: Mask) =>
       val mask = (a & b)
-      mask.toSet.forall(i => a(i) && b(i)) must beTrue
+      mask.toSet.forall(i => a(i) && b(i)) == true
     }
 
     "contain all bits that are in both arguments" in check { (a: Mask, b: Mask) =>
       val mask = a & b
       val bits = a.toSet & b.toSet
-      bits.forall(mask) must beTrue
+      bits.forall(mask) == true
     }
 
     "shrink array if top zero'd out" in {
       val a = Mask(1, 100)
       val b = Mask(1, 101)
-      (a & b).max must_== Some(1)
+      (a & b).max should === (Some(1))
     }
   }
 
   "--" should {
     "not contain bits in right-hand side" in check { (a: Mask, b: Mask) =>
       val mask = a -- b
-      b.toSet.forall(i => !mask(i)) must beTrue
+      b.toSet.forall(i => !mask(i)) == true
     }
 
     "contain bits in the lhs but not the rhs" in check { (a: Mask, b: Mask) =>
       val mask = a -- b
       val setBits = a.toSet -- b.toSet
-      setBits.forall(mask) must beTrue
+      setBits.forall(mask) == true
     }
   }
 
   "equals" should {
     "always be equal for equivalent masks" in check { (a: Mask) =>
-      val b = Mask(a.toSet.toSeq: _*)
-      a must_== b
+      a == Mask(a.toSet.toSeq: _*)
     }
 
-    "should not throw IOOE when size are equal but lengths are not" in {
+    "not throw IOOE when size are equal but lengths are not" in {
       val a = Mask(1, 2, 3)
       val b = Mask(1000, 1001, 2000)
-      (a == b) must not(throwA[Exception])
-      (b == a) must not(throwA[Exception])
+
+      noException should be thrownBy (a == b)
+      noException should be thrownBy (b == a)
     }
   }
 }
