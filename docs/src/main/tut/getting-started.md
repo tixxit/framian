@@ -14,7 +14,6 @@ Then, import some things before we get started:
 ```tut
 import framian._
 import framian.csv.Csv
-//import framian.tutorial._
 import java.time.LocalDate
 import spire.implicits._
 ```
