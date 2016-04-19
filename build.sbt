@@ -22,7 +22,7 @@ addCommandAlias("publishDocs", ";framian/packageDoc;framian/ghpagesPushSite")
 
 lazy val root = project.
   in(file(".")).
-  aggregate(framianMacros, framian, framianBenchmarks).
+  aggregate(framianMacros, framian, framianBenchmarks, docs).
   settings(Publish.skip: _*)
 
 lazy val framianMacros = project.
@@ -44,3 +44,9 @@ lazy val framianBenchmarks = project.
   enablePlugins(BenchmarkPlugin).
   dependsOn(framian).
   settings(Publish.skip: _*)
+
+lazy val docs = project.
+  in(file("docs")).
+  dependsOn(framian).
+  settings(Publish.skip: _*).
+  settings(tutSettings: _*)
