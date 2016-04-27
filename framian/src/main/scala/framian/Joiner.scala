@@ -26,13 +26,24 @@ import scala.collection.mutable.{ ArrayBuilder, Builder }
 
 import spire.syntax.cfor._
 
-sealed abstract class Join(val leftOuter: Boolean, val rightOuter: Boolean)
+sealed trait Join {
+  val leftOuter: Boolean
+  val rightOuter: Boolean
+}
+
+sealed trait LeftBiasedJoin extends Join {
+  override val rightOuter: Boolean = false
+}
+
+sealed trait RightBiasedJoin extends Join {
+  override val leftOuter: Boolean = false
+}
 
 object Join {
-  case object Inner extends Join(false, false)
-  case object Left extends Join(true, false)
-  case object Right extends Join(false, true)
-  case object Outer extends Join(true, true)
+  case object Inner extends LeftBiasedJoin with RightBiasedJoin
+  case object Left extends LeftBiasedJoin { override val leftOuter = true }
+  case object Right extends RightBiasedJoin { override val rightOuter = true }
+  case object Outer extends Join { override val leftOuter = true; override val rightOuter = true }
 }
 
 /**

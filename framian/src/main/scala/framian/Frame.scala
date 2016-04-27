@@ -588,6 +588,18 @@ trait Frame[Row, Col] {
 
   def join[L <: HList](them: L)(join: Join)(implicit folder: Frame.SeriesJoinFolder[L, Row, Col]): Frame[Row, Col] =
     them.foldLeft(this)(Frame.joinSeries)
+
+  def joinBy[A: Order: ClassTag](by: Cols[Col, A])(that: Frame[_, Col])(join: LeftBiasedJoin): Frame[Row, Col] = {
+    val reIdx = reindex(by)
+    val joined = reIdx.join(that.reindex(by))(join)
+    joined.withRowIndex(
+      joined.rowIndex.flatMap{ case (r, i) =>
+        reIdx.rowIndex.getAll(r).indices.map(k => (rowIndex.keyAt(k), i))
+      }.unzip match {
+        case (k, v) => Index.ordered(k, v)
+      }
+    )
+  }
 }
 
 object Frame {
