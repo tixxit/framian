@@ -182,6 +182,16 @@ sealed trait Column[+A] { // TODO: Can't specialize in 2.10, but can in 2.11.
    */
   def zipMap[B, C](that: Column[B])(f: (A, B) => C): Column[C]
 
+  /**
+   * Zips values together into 2-tuples. This is equivalent to calling
+   * `left.zipMap(right)((_, _))`.
+   *
+   * @param that the column to zip this column with
+   *
+   * @see [[Column#zipMap]]
+   */
+  def zip[B](that: Column[B]): Column[(B, C)] = zipMap(that)((_, _))
+
   override def toString: String =
     (0 to 5).map(apply(_).toString).mkString("Column(", ", ", ", ...)")
 }
