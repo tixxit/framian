@@ -3,12 +3,12 @@ import sbt._
 object Dependencies {
 
   object V {
-    val Spire              = "0.11.0"
-    val Shapeless          = "2.3.0"
-    val Discipline         = "0.4"
+    val Spire              = "0.13.0"
+    val Shapeless          = "2.3.3"
+    val Discipline         = "0.9.0"
 
     // Test libraries
-    val ScalaTest          = "2.2.6"
+    val ScalaTest          = "3.0.5"
     val ScalaCheck         = "1.12.5"
   }
 

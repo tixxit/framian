@@ -2,14 +2,13 @@ organization in ThisBuild := "net.tixxit"
 
 licenses in ThisBuild += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
 
-scalaVersion in ThisBuild := "2.11.8"
+scalaVersion in Global := "2.12.4"
 
 scalacOptions in ThisBuild ++= Seq(
   "-deprecation",
   "-feature",
   "-unchecked",
-  "-language:higherKinds",
-  "-optimize")
+  "-language:higherKinds")
 
 maxErrors in ThisBuild := 5
 
@@ -49,4 +48,4 @@ lazy val docs = project.
   in(file("docs")).
   dependsOn(framian).
   settings(Publish.skip: _*).
-  settings(tutSettings: _*)
+  enablePlugins(TutPlugin)

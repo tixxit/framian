@@ -2,7 +2,6 @@ package framian
 package reduce
 
 import scala.reflect.ClassTag
-
 import spire.math.Rational
 import spire.std.double._
 import spire.std.bigDecimal._
@@ -166,23 +165,21 @@ class ReducerSpec extends FramianSpec
     }
 
     "return the first n values in a series" in {
-      check { series: Series[Int, Int] =>
+      forAll(arbitrary[MeaningfulSeries[Int, Int]].suchThat(_.series.values.nonEmpty)) { case MeaningfulSeries(series) =>
         classifyEmpty(series) {
           classifySparse(series) {
-            classifyMeaningful(series) {
-              forAll(Gen.choose(1, series.size)) { n =>
-                val takeN = series.cells.filter(_ != NA).take(n)
+            forAll(Gen.choose(1, series.size)) { n =>
+              val takeN = series.cells.filter(_ != NA).take(n)
 
-                if (takeN.contains(NM)) {
-                  // If the firstN contains an NM, the result must be NM
-                  Prop(series.reduce(FirstN[Int](n)) == NM)
-                } else if (takeN.length < n) {
-                  // If there are not enough valid values, the result must be NA
-                  Prop(series.reduce(FirstN[Int](n)) == NA)
-                } else {
-                  // Otherwise, we should have a valid range of only the valid Values
-                  Prop(series.reduce(FirstN[Int](n)) == Value(takeN.map(_.get)))
-                }
+              if (takeN.contains(NM)) {
+                // If the firstN contains an NM, the result must be NM
+                Prop(series.reduce(FirstN[Int](n)) == NM)
+              } else if (takeN.length < n) {
+                // If there are not enough valid values, the result must be NA
+                Prop(series.reduce(FirstN[Int](n)) == NA)
+              } else {
+                // Otherwise, we should have a valid range of only the valid Values
+                Prop(series.reduce(FirstN[Int](n)) == Value(takeN.map(_.get)))
               }
             }
           }
@@ -270,25 +267,21 @@ class ReducerSpec extends FramianSpec
     }
 
     "return the last n values in a series" in {
-      check { series: Series[Int, Int] =>
-        classifyEmpty(series) {
-          classifySparse(series) {
-            classifyMeaningful(series) {
-              forAll(Gen.choose(1, series.size)) { n =>
-                val reduction = series.reduce(LastN[Int](n))
-                val takeN = series.cells.filter(_ != NA).takeRight(n)
+      forAll(arbitrary[MeaningfulSeries[Int, Int]].suchThat(_.series.values.nonEmpty)) { case MeaningfulSeries(series) =>
+        classifySparse(series) {
+          forAll(Gen.choose(1, series.size)) { n =>
+            val reduction = series.reduce(LastN[Int](n))
+            val takeN = series.cells.filter(_ != NA).takeRight(n)
 
-                if (takeN.contains(NM)) {
-                  // If the lastN contains an NM, the result must be NM
-                  Prop(reduction == NM)
-                } else if (takeN.length < n) {
-                  // If there is no valid Value, the result must be NA
-                  Prop(reduction == NA)
-                } else {
-                  // Otherwise, we should have a valid range of only the valid Values
-                  Prop(reduction == Value(takeN.map(_.get)))
-                }
-              }
+            if (takeN.contains(NM)) {
+              // If the lastN contains an NM, the result must be NM
+              Prop(reduction == NM)
+            } else if (takeN.length < n) {
+              // If there is no valid Value, the result must be NA
+              Prop(reduction == NA)
+            } else {
+              // Otherwise, we should have a valid range of only the valid Values
+              Prop(reduction == Value(takeN.map(_.get)))
             }
           }
         }
